@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ร้านอาหาร POS</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f2f0eb;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --card2: #f7f5f0;
+  --border: #e4e0d8;
+  --border2: #d4cfc5;
+  --text: #1a1816;
+  --sub: #6b6358;
+  --muted: #9a9288;
+  --accent: #d4800a;
+  --accent-dim: rgba(212,128,10,0.1);
+  --green: #16a34a;
+  --green-dim: rgba(22,163,74,0.1);
+  --red: #dc2626;
+  --blue: #2563eb;
+  --blue-dim: rgba(37,99,235,0.08);
+  --radius: 14px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;}
+
+/* ── LOGIN ─────────────────────────────────── */
+#login{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);z-index:999;
+  background-image:radial-gradient(ellipse 50% 60% at 80% 20%, rgba(212,128,10,0.08) 0%, transparent 70%);
+}
+.login-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:40px 36px;width:100%;max-width:380px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.1);
+  animation:rise .5s cubic-bezier(.22,1,.36,1);
+}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+.login-icon{width:44px;height:44px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.login-brand{font-family:'Outfit',sans-serif;font-weight:900;font-size:20px;color:var(--text);}
+.login-brand span{color:var(--accent);}
+.login-tagline{font-size:12px;color:var(--muted);margin-top:2px;}
+.lbl{display:block;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;}
+.inp{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:14px;margin-bottom:14px;transition:border-color .2s;}
+.inp:focus{outline:none;border-color:var(--accent);}
+.inp::placeholder{color:var(--muted);}
+.login-btn{width:100%;background:var(--accent);border:none;border-radius:10px;padding:13px;color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:15px;cursor:pointer;transition:opacity .2s;}
+.login-btn:hover{opacity:.88;}
+.login-hint{text-align:center;margin-top:14px;font-size:12px;color:var(--muted);}
+
+/* ── APP SHELL ──────────────────────────────── */
+#app{display:none;height:100vh;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{
+  height:52px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 18px;gap:14px;flex-shrink:0;
+  box-shadow:0 1px 0 var(--border);
+}
+.tb-brand{font-family:'Outfit',sans-serif;font-weight:900;font-size:18px;color:var(--text);}
+.tb-brand em{color:var(--accent);font-style:normal;}
+.tb-sep{width:1px;height:18px;background:var(--border);}
+.tb-time{font-size:12px;color:var(--muted);}
+.tb-gap{flex:1;}
+.tb-kpi{display:flex;flex-direction:column;align-items:flex-end;}
+.tb-kpi-val{font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;color:var(--text);line-height:1;}
+.tb-kpi-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.tb-user{display:flex;align-items:center;gap:7px;background:var(--card2);padding:5px 11px 5px 6px;border-radius:20px;border:1px solid var(--border);}
+.tb-avatar{width:26px;height:26px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;font-family:'Outfit',sans-serif;}
+.tb-uname{font-size:12px;font-weight:600;}
+.tb-logout{background:none;border:1px solid var(--border);border-radius:7px;padding:5px 11px;font-size:11px;color:var(--muted);cursor:pointer;font-family:'Sarabun',sans-serif;transition:all .15s;}
+.tb-logout:hover{border-color:var(--red);color:var(--red);}
+
+/* BODY */
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:56px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;flex-shrink:0;}
+.nav{width:44px;height:44px;border-radius:11px;border:none;background:none;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all .15s;}
+.nav:hover{background:var(--card);color:var(--text);}
+.nav.on{background:var(--accent-dim);color:var(--accent);}
+.nav-ic{font-size:17px;line-height:1;}
+.nav-lb{font-size:8px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.nav-gap{flex:1;}
+
+/* CONTENT */
+.content{flex:1;overflow:hidden;display:flex;}
+.page{display:none;flex:1;overflow:hidden;}
+.page.on{display:flex;}
+
+/* ── POS ──────────────────────────────────── */
+#pg-pos{flex-direction:row;}
+.pos-left{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.pos-right{width:330px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+
+/* Cat strip */
+.cat-strip{display:flex;gap:6px;padding:10px 14px 8px;overflow-x:auto;flex-shrink:0;}
+.cat-strip::-webkit-scrollbar{height:0;}
+.cat-pill{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Sarabun',sans-serif;}
+.cat-pill:hover{border-color:var(--accent);color:var(--text);}
+.cat-pill.on{background:var(--accent);border-color:var(--accent);color:#000;}
+
+/* Search */
+.pos-search{padding:0 14px 8px;flex-shrink:0;position:relative;}
+.pos-search input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 12px 8px 34px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;transition:border-color .2s;}
+.pos-search input:focus{outline:none;border-color:var(--accent);}
+.pos-search input::placeholder{color:var(--muted);}
+.ps-icon{position:absolute;left:25px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;}
+
+/* Product grid */
+.prod-grid{flex:1;overflow-y:auto;padding:2px 14px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px;align-content:start;}
+.prod-grid::-webkit-scrollbar{width:3px;}
+.prod-grid::-webkit-scrollbar-thumb{background:var(--border);}
+.prod-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 11px;cursor:pointer;transition:all .13s;user-select:none;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.prod-card:hover{border-color:var(--accent);background:var(--card2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.prod-card:active{transform:scale(.97);}
+.prod-cat-dot{position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;}
+.prod-name{font-size:12px;font-weight:700;line-height:1.35;margin-bottom:5px;color:var(--text);padding-right:14px;}
+.prod-price{font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;color:var(--accent);}
+.prod-price-note{font-size:10px;color:var(--muted);margin-top:1px;}
+
+/* Cart */
+.cart-hd{padding:13px 14px 10px;border-bottom:1px solid var(--border);}
+.cart-hd-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.cart-hd h3{font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;}
+.order-badge{font-size:11px;color:var(--muted);background:var(--card);padding:3px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Outfit',sans-serif;}
+.pay-toggle{display:flex;background:var(--card);border-radius:8px;padding:3px;gap:2px;border:1px solid var(--border);}
+.pay-opt{flex:1;padding:5px 8px;border-radius:6px;border:none;background:none;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Sarabun',sans-serif;white-space:nowrap;}
+.pay-opt.on{background:var(--accent);color:#000;}
+
+.cart-body{flex:1;overflow-y:auto;padding:6px;}
+.cart-body::-webkit-scrollbar{width:3px;}
+.cart-body::-webkit-scrollbar-thumb{background:var(--border);}
+.cart-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;}
+.cart-empty-ic{font-size:34px;opacity:.15;}
+.cart-empty p{font-size:13px;color:var(--muted);}
+.ci{display:flex;align-items:flex-start;gap:8px;padding:9px 10px;border-radius:10px;background:var(--card2);margin-bottom:5px;animation:popIn .16s ease;border:1px solid var(--border);}
+@keyframes popIn{from{opacity:0;transform:translateX(8px) scale(.97)}to{opacity:1;transform:none}}
+.ci-name{font-size:12px;font-weight:700;line-height:1.3;flex:1;}
+.ci-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.ci-qty{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.qb{width:22px;height:22px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .1s;flex-shrink:0;}
+.qb:hover{border-color:var(--accent);color:var(--accent);}
+.qn{font-size:12px;font-weight:800;width:16px;text-align:center;font-family:'Outfit',sans-serif;}
+
+.cart-foot{padding:11px 13px;border-top:1px solid var(--border);}
+.cart-quick{display:flex;gap:5px;margin-bottom:10px;}
+.qbtn{flex:1;padding:6px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Sarabun',sans-serif;}
+.qbtn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.totals{margin-bottom:11px;}
+.t-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:2px 0;}
+.t-row.big{color:var(--text);font-size:19px;font-weight:800;padding-top:7px;margin-top:5px;border-top:1px solid var(--border);font-family:'Outfit',sans-serif;}
+.charge-btn{width:100%;background:var(--green);border:none;border-radius:11px;padding:14px;color:#fff;font-family:'Outfit',sans-serif;font-weight:900;font-size:15px;cursor:pointer;transition:all .2s;}
+.charge-btn:hover:not(:disabled){opacity:.9;box-shadow:0 6px 20px rgba(34,197,94,.35);}
+.charge-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+
+/* ── PAYMENT MODAL ──────────────────────────── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:390px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.15);animation:rise .22s ease;}
+.modal-hd{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-hd h3{font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;}
+.modal-x{background:var(--card2);border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+.modal-x:hover{background:var(--border);}
+.modal-bd{padding:20px;}
+.pay-total-block{text-align:center;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+.pay-total-lbl{font-size:11px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px;}
+.pay-total-val{font-family:'Outfit',sans-serif;font-size:44px;font-weight:900;color:var(--text);line-height:1;}
+.pm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
+.pm-btn{padding:14px 10px;border-radius:12px;border:1.5px solid var(--border);background:var(--card2);cursor:pointer;text-align:center;transition:all .15s;font-family:'Sarabun',sans-serif;}
+.pm-btn:hover{border-color:var(--accent);}
+.pm-btn.on{border-color:var(--accent);background:var(--accent-dim);}
+.pm-ic{font-size:26px;margin-bottom:5px;}
+.pm-lb{font-size:13px;font-weight:700;color:var(--text);}
+.mf{margin-bottom:14px;}
+.mf label{display:block;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;}
+.mf input{width:100%;background:var(--card2);border:1.5px solid var(--border);border-radius:9px;padding:11px 13px;font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;color:var(--text);}
+.mf input:focus{outline:none;border-color:var(--green);}
+.change-pill{background:var(--green-dim);border:1px solid rgba(34,197,94,.25);border-radius:9px;padding:11px 13px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.change-pill span{font-size:13px;color:var(--green);font-weight:700;}
+.change-pill strong{font-size:20px;font-weight:900;color:var(--green);font-family:'Outfit',sans-serif;}
+.bank-block{background:var(--card2);border:1.5px dashed var(--border2);border-radius:11px;padding:16px;text-align:center;margin-bottom:16px;}
+.bank-block p{font-size:13px;color:var(--muted);margin-bottom:6px;}
+.bank-block strong{font-size:16px;font-weight:800;color:var(--text);}
+.confirm-btn{width:100%;background:var(--green);border:none;border-radius:11px;padding:14px;color:#fff;font-family:'Outfit',sans-serif;font-weight:900;font-size:15px;cursor:pointer;transition:opacity .2s;}
+.confirm-btn:hover{opacity:.88;}
+/* success */
+.success-bd{padding:30px 22px;text-align:center;}
+.suc-ring{width:68px;height:68px;background:var(--green-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 14px;}
+.success-bd h3{font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;margin-bottom:5px;}
+.success-bd p{font-size:13px;color:var(--muted);margin-bottom:20px;}
+.suc-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sbtn{padding:12px;border-radius:10px;border:1px solid var(--border);background:none;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--text);transition:all .15s;}
+.sbtn.primary{background:var(--accent);border-color:var(--accent);color:#000;}
+.sbtn:hover{opacity:.85;}
+
+/* ── REPORTS ──────────────────────────────── */
+.pg-scroll{flex:1;overflow-y:auto;padding:18px 22px 32px;}
+.pg-scroll::-webkit-scrollbar{width:4px;}
+.pg-scroll::-webkit-scrollbar-thumb{background:var(--border);}
+.period-row{display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap;}
+.pd-btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:'Sarabun',sans-serif;transition:all .15s;}
+.pd-btn.on{background:var(--text);border-color:var(--text);color:var(--bg);}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px;margin-bottom:18px;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.kpi-ic{font-size:18px;margin-bottom:4px;}
+.kpi-val{font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;line-height:1;margin-bottom:3px;}
+.kpi-lbl{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
+.kpi-dl{font-size:11px;font-weight:700;margin-top:4px;}
+.up{color:var(--green);} .dn{color:var(--red);} .fl{color:var(--muted);}
+.charts-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+@media(max-width:680px){.charts-2{grid-template-columns:1fr;}}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.chart-card.wide{grid-column:1/-1;}
+.chart-title{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.03em;text-transform:uppercase;margin-bottom:12px;}
+.bar-ch{display:flex;align-items:flex-end;gap:5px;height:86px;}
+.bc-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.bc-bar{width:100%;border-radius:3px 3px 0 0;min-height:3px;cursor:pointer;transition:filter .15s;}
+.bc-bar:hover{filter:brightness(1.2);}
+.bc-lbl{font-size:9px;color:var(--muted);}
+.bc-val{font-size:9px;color:var(--muted);}
+.hbar-list{display:flex;flex-direction:column;gap:9px;}
+.hbar{display:flex;align-items:center;gap:9px;}
+.hbar-rank{font-family:'Outfit',sans-serif;font-size:14px;font-weight:900;color:var(--border2);width:18px;flex-shrink:0;}
+.hbar-info{flex:1;min-width:0;}
+.hbar-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hbar-cnt{font-size:10px;color:var(--muted);}
+.hbar-track{flex:1;height:5px;background:var(--card2);border-radius:3px;}
+.hbar-fill{height:100%;background:var(--accent);border-radius:3px;}
+.hbar-rev{font-size:12px;font-weight:800;color:var(--accent);font-family:'Outfit',sans-serif;flex-shrink:0;}
+.donut-wrap{display:flex;align-items:center;gap:18px;}
+.donut{width:76px;height:76px;border-radius:50%;flex-shrink:0;}
+.dl{display:flex;flex-direction:column;gap:8px;}
+.dl-i{display:flex;align-items:center;gap:7px;font-size:12px;}
+.dl-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
+.dl-n{flex:1;color:var(--sub);}
+.dl-p{font-weight:800;font-family:'Outfit',sans-serif;}
+.tx-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tx-tbl th{text-align:left;padding:8px 9px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.tx-tbl td{padding:10px 9px;border-bottom:1px solid rgba(46,46,46,.6);vertical-align:middle;}
+.tx-tbl tr:hover td{background:var(--card2);}
+.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:800;}
+.b-cash{background:var(--green-dim);color:var(--green);}
+.b-bank{background:var(--blue-dim);color:var(--blue);}
+
+/* ── PRODUCTS ───────────────────────────────── */
+.prod-pg{flex:1;overflow:hidden;flex-direction:column;}
+.ptoolbar{display:flex;gap:8px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.pt-search{flex:1;position:relative;}
+.pt-search input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 11px 8px 32px;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--text);}
+.pt-search input:focus{outline:none;border-color:var(--accent);}
+.pt-si{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;}
+.btn-a{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.btn-a:hover{opacity:.88;}
+.btn-b{padding:8px 13px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-b:hover{border-color:var(--text);color:var(--text);}
+.prod-pg-body{flex:1;overflow-y:auto;padding:14px 20px 24px;}
+.prod-pg-body::-webkit-scrollbar{width:3px;}
+.prod-pg-body::-webkit-scrollbar-thumb{background:var(--border);}
+.sh{display:flex;align-items:center;justify-content:space-between;margin:12px 0 8px;}
+.sh-t{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+.cat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.cat-chip{display:flex;align-items:center;gap:8px;padding:8px 13px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;}
+.cat-dot-sm{width:8px;height:8px;border-radius:50%;}
+.itbl{width:100%;border-collapse:collapse;}
+.itbl th{text-align:left;padding:8px 10px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--card2);}
+.itbl td{padding:10px 10px;border-bottom:1px solid var(--border);font-size:12px;background:var(--surface);}
+.itbl tr:hover td{background:var(--card2);}
+.toggle{width:32px;height:18px;border-radius:9px;background:var(--border);border:none;cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:white;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.toggle.on::after{transform:translateX(14px);}
+.edt{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Sarabun',sans-serif;}
+.edt:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── SETTINGS ───────────────────────────────── */
+.settings-wrap{flex:1;overflow-y:auto;padding:18px 22px 32px;display:grid;grid-template-columns:170px 1fr;gap:18px;align-items:start;}
+.settings-wrap::-webkit-scrollbar{width:3px;}
+.snav{display:flex;flex-direction:column;gap:2px;position:sticky;top:0;}
+.snav-btn{padding:9px 12px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);border:none;background:none;text-align:left;font-family:'Sarabun',sans-serif;display:flex;align-items:center;gap:7px;transition:all .15s;}
+.snav-btn:hover{background:var(--card);color:var(--text);}
+.snav-btn.on{background:var(--accent-dim);color:var(--accent);}
+.sp{display:none;}
+.sp.on{display:block;}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;}
+.sc-title{font-size:13px;font-weight:800;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--border);}
+.sf{margin-bottom:12px;}
+.sf label{display:block;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;}
+.si{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--text);}
+.si.sm{width:130px;}
+.si:focus{outline:none;border-color:var(--accent);}
+.s-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);}
+.s-row:last-child{border-bottom:none;padding-bottom:0;}
+.s-row-lbl{font-size:13px;font-weight:600;}
+.s-row-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+.save-btn{background:var(--accent);border:none;border-radius:9px;padding:9px 20px;color:#fff;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:800;cursor:pointer;margin-top:12px;transition:opacity .15s;}
+.save-btn:hover{opacity:.88;}
+.user-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:var(--card2);margin-bottom:7px;border:1px solid var(--border);}
+.u-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;font-family:'Outfit',sans-serif;}
+.u-nm{font-size:13px;font-weight:700;}
+.u-em{font-size:11px;color:var(--muted);}
+.role-pill{padding:2px 9px;border-radius:5px;font-size:10px;font-weight:800;margin-left:auto;}
+.r-admin{background:rgba(245,166,35,.15);color:var(--accent);}
+.r-manager{background:var(--blue-dim);color:var(--blue);}
+.r-cashier{background:rgba(96,96,85,.15);color:var(--muted);}
+
+/* PH */
+.ph{padding:18px 20px 14px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);}
+.ph h2{font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;line-height:1;margin-bottom:3px;}
+.ph p{font-size:12px;color:var(--muted);}
+.ph-row{display:flex;align-items:flex-end;justify-content:space-between;}
+
+@media(max-width:680px){
+  .pos-right{position:fixed;bottom:0;left:56px;right:0;height:44vh;border-left:none;border-top:1px solid var(--border);z-index:50;}
+  .pos-left{padding-bottom:44vh;}
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .settings-wrap{grid-template-columns:1fr;}
+  .charts-2{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-icon">🍽</div>
+      <div>
+        <div class="login-brand">ร้าน<em>อาหาร</em> POS</div>
+        <div class="login-tagline">ระบบจัดการร้านอาหาร</div>
+      </div>
+    </div>
+    <label class="lbl">อีเมล</label>
+    <input class="inp" type="email" id="l-e" value="admin@restaurant.com" placeholder="admin@restaurant.com">
+    <label class="lbl">รหัสผ่าน</label>
+    <input class="inp" type="password" id="l-p" value="password" placeholder="••••••••">
+    <button class="login-btn" onclick="login()">เข้าสู่ระบบ →</button>
+    <p class="login-hint">Demo: <b>admin@restaurant.com</b> / <b>password</b></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="tb-brand">ร้าน<em>อาหาร</em></div>
+    <div class="tb-sep"></div>
+    <div class="tb-time" id="tb-time"></div>
+    <div class="tb-gap"></div>
+    <div class="tb-kpi"><div class="tb-kpi-val" id="tb-rev">฿0</div><div class="tb-kpi-lbl">วันนี้</div></div>
+    <div class="tb-sep"></div>
+    <div class="tb-kpi"><div class="tb-kpi-val" id="tb-ord">0</div><div class="tb-kpi-lbl">ออเดอร์</div></div>
+    <div class="tb-sep"></div>
+    <button class="tb-user" onclick="goTo('settings',document.getElementById('n-settings'))">
+      <div class="tb-avatar">A</div>
+      <span class="tb-uname">Admin</span>
+    </button>
+    <button class="tb-logout" onclick="logout()">ออกจากระบบ</button>
+  </div>
+
+  <div class="app-body">
+    <div class="sidebar">
+      <button class="nav on" id="n-pos" onclick="goTo('pos',this)"><span class="nav-ic">🛒</span><span class="nav-lb">POS</span></button>
+      <button class="nav" id="n-reports" onclick="goTo('reports',this)"><span class="nav-ic">📊</span><span class="nav-lb">รายงาน</span></button>
+      <button class="nav" id="n-products" onclick="goTo('products',this)"><span class="nav-ic">🍽</span><span class="nav-lb">เมนู</span></button>
+      <div class="nav-gap"></div>
+      <button class="nav" id="n-settings" onclick="goTo('settings',this)"><span class="nav-ic">⚙️</span><span class="nav-lb">ตั้งค่า</span></button>
+    </div>
+
+    <div class="content">
+
+      <!-- ═══ POS ═══ -->
+      <div class="page on" id="pg-pos" style="flex-direction:row">
+        <div class="pos-left">
+          <div class="cat-strip" id="cat-strip"></div>
+          <div class="pos-search">
+            <span class="ps-icon">🔍</span>
+            <input type="text" placeholder="ค้นหาเมนู..." id="menu-srch" oninput="filterMenu()">
+          </div>
+          <div class="prod-grid" id="prod-grid"></div>
+        </div>
+        <div class="pos-right">
+          <div class="cart-hd">
+            <div class="cart-hd-row">
+              <h3>ออเดอร์ปัจจุบัน</h3>
+              <span class="order-badge" id="ord-badge">#1001</span>
+            </div>
+            <div class="pay-toggle">
+              <button class="pay-opt on" id="pt-cash" onclick="setPay('cash',this)">💵 เงินสด</button>
+              <button class="pay-opt" id="pt-bank" onclick="setPay('bank',this)">🏦 โอนเงิน</button>
+            </div>
+          </div>
+          <div class="cart-body" id="cart-body">
+            <div class="cart-empty"><div class="cart-empty-ic">🛒</div><p>แตะเมนูเพื่อเพิ่มออเดอร์</p></div>
+          </div>
+          <div class="cart-foot">
+            <div class="cart-quick">
+              <button class="qbtn" onclick="clearCart()">🗑 ล้าง</button>
+              <button class="qbtn" onclick="addDiscount()">🏷 ส่วนลด</button>
+              <button class="qbtn" onclick="addNote()">📝 หมายเหตุ</button>
+            </div>
+            <div class="totals">
+              <div class="t-row"><span>ยอดรวม</span><span id="c-sub">฿0</span></div>
+              <div class="t-row"><span>ส่วนลด</span><span id="c-disc" style="color:var(--green)">–฿0</span></div>
+              <div class="t-row big"><span>รวมทั้งสิ้น</span><span id="c-total">฿0</span></div>
+            </div>
+            <button class="charge-btn" id="charge-btn" onclick="openPay()" disabled>ยืนยันออเดอร์ — ฿0</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ REPORTS ═══ -->
+      <div class="page" id="pg-reports" style="flex-direction:column">
+        <div class="ph">
+          <div class="ph-row">
+            <div><h2>รายงาน & วิเคราะห์</h2><p>ยอดขาย จำนวนออเดอร์ เมนูขายดี และอื่นๆ</p></div>
+            <button class="btn-b">⬇ ส่งออก CSV</button>
+          </div>
+        </div>
+        <div class="pg-scroll">
+          <div class="period-row">
+            <button class="pd-btn on" onclick="setPd(this,'today')">วันนี้</button>
+            <button class="pd-btn" onclick="setPd(this,'week')">สัปดาห์นี้</button>
+            <button class="pd-btn" onclick="setPd(this,'month')">เดือนนี้</button>
+            <button class="pd-btn" onclick="setPd(this,'custom')">กำหนดเอง</button>
+          </div>
+          <div class="kpi-grid" id="kpi-grid"></div>
+          <div class="charts-2">
+            <div class="chart-card">
+              <div class="chart-title">รายได้รายชั่วโมง</div>
+              <div class="bar-ch" id="rev-bar"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">จำนวนออเดอร์รายชั่วโมง</div>
+              <div class="bar-ch" id="ord-bar"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">เมนูขายดี (Top 8)</div>
+              <div class="hbar-list" id="top-dishes"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">วิธีชำระเงิน</div>
+              <div class="donut-wrap">
+                <div class="donut" style="background:conic-gradient(var(--green) 0% 65%, var(--blue) 65% 100%)"></div>
+                <div class="dl">
+                  <div class="dl-i"><div class="dl-dot" style="background:var(--green)"></div><span class="dl-n">เงินสด</span><span class="dl-p">65%</span></div>
+                  <div class="dl-i"><div class="dl-dot" style="background:var(--blue)"></div><span class="dl-n">โอนเงิน</span><span class="dl-p">35%</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="chart-card wide">
+            <div class="chart-title">รายการออเดอร์ล่าสุด</div>
+            <table class="tx-tbl" id="tx-tbl"></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PRODUCTS ═══ -->
+      <div class="page" id="pg-products" style="flex-direction:column">
+        <div class="ph">
+          <div class="ph-row">
+            <div><h2>จัดการเมนู</h2><p>เพิ่ม แก้ไข และจัดหมวดหมู่เมนูอาหาร</p></div>
+          </div>
+        </div>
+        <div class="ptoolbar">
+          <div class="pt-search"><span class="pt-si">🔍</span><input type="text" placeholder="ค้นหาเมนู..."></div>
+          <button class="btn-b">+ หมวดหมู่</button>
+          <button class="btn-a">+ เพิ่มเมนู</button>
+        </div>
+        <div class="prod-pg-body">
+          <div class="sh"><span class="sh-t">หมวดหมู่</span></div>
+          <div class="cat-chips" id="cat-chips"></div>
+          <div class="sh"><span class="sh-t">เมนูทั้งหมด</span></div>
+          <table class="itbl">
+            <thead><tr><th>ชื่อเมนู</th><th>หมวดหมู่</th><th>ราคา</th><th>ขายวันนี้</th><th>เปิดใช้งาน</th><th></th></tr></thead>
+            <tbody id="items-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ SETTINGS ═══ -->
+      <div class="page" id="pg-settings" style="flex-direction:column">
+        <div class="ph"><h2>ตั้งค่าระบบ</h2><p>การตั้งค่าร้านอาหาร ผู้ใช้งาน และข้อมูล</p></div>
+        <div class="settings-wrap">
+          <div class="snav">
+            <button class="snav-btn on" onclick="swSP('general',this)">🏪 ข้อมูลร้าน</button>
+            <button class="snav-btn" onclick="swSP('users',this)">👥 พนักงาน</button>
+            <button class="snav-btn" onclick="swSP('tax',this)">🧾 ภาษี / สกุลเงิน</button>
+            <button class="snav-btn" onclick="swSP('data',this)">💾 ข้อมูล & สำรอง</button>
+            <button class="snav-btn" onclick="swSP('tech',this)">🧱 Tech Stack</button>
+          </div>
+          <div>
+            <div class="sp on" id="sp-general">
+              <div class="sc">
+                <div class="sc-title">ข้อมูลร้านอาหาร</div>
+                <div class="sf"><label>ชื่อร้าน</label><input class="si" value="ร้านอาหารครัวไทย"></div>
+                <div class="sf"><label>ที่อยู่</label><input class="si" value="ภูเก็ต ประเทศไทย"></div>
+                <div class="sf"><label>เบอร์โทรศัพท์</label><input class="si" value="+66 76 123 456" style="width:220px"></div>
+                <button class="save-btn">บันทึก</button>
+              </div>
+              <div class="sc">
+                <div class="sc-title">ค่าระบบ</div>
+                <div class="s-row"><div><div class="s-row-lbl">เสียงเมื่อได้รับออเดอร์</div><div class="s-row-desc">แจ้งเตือนเสียงเมื่อออเดอร์ใหม่มาถึง</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+                <div class="s-row"><div><div class="s-row-lbl">แสดงยอดขายบนการ์ดเมนู</div><div class="s-row-desc">แสดงจำนวนที่ขายในวันนี้</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+              </div>
+            </div>
+            <div class="sp" id="sp-users">
+              <div class="sc">
+                <div class="sc-title" style="display:flex;align-items:center;justify-content:space-between">พนักงานทั้งหมด <button class="btn-a" style="font-size:11px;padding:5px 11px">+ เชิญ</button></div>
+                <div id="staff-list"></div>
+              </div>
+            </div>
+            <div class="sp" id="sp-tax">
+              <div class="sc">
+                <div class="sc-title">ภาษีและสกุลเงิน</div>
+                <div class="sf"><label>สัญลักษณ์สกุลเงิน</label><input class="si sm" value="฿"></div>
+                <div class="sf"><label>อัตราภาษี VAT (%)</label><input class="si sm" type="number" value="7"></div>
+                <div class="s-row"><div><div class="s-row-lbl">ราคารวม VAT แล้ว</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+                <button class="save-btn">บันทึก</button>
+              </div>
+            </div>
+            <div class="sp" id="sp-data">
+              <div class="sc">
+                <div class="sc-title">ข้อมูลและการสำรอง</div>
+                <div class="s-row"><div><div class="s-row-lbl">ส่งออกออเดอร์ทั้งหมด</div><div class="s-row-desc">ดาวน์โหลด CSV ประวัติทั้งหมด</div></div><button class="btn-b">ดาวน์โหลด</button></div>
+                <div class="s-row"><div><div class="s-row-lbl">ส่งออกรายการเมนู</div></div><button class="btn-b">ดาวน์โหลด</button></div>
+                <div class="s-row"><div><div class="s-row-lbl">นำเข้าเมนูจาก CSV</div></div><button class="btn-b">อัปโหลด</button></div>
+              </div>
+            </div>
+            <div class="sp" id="sp-tech">
+              <div class="sc">
+                <div class="sc-title">Tech Stack</div>
+                <table class="tx-tbl">
+                  <thead><tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr></thead>
+                  <tbody>
+                    <tr><td>Frontend</td><td><b>Next.js 14</b></td><td>App framework</td></tr>
+                    <tr><td>Styling</td><td><b>Tailwind + shadcn/ui</b></td><td>UI components</td></tr>
+                    <tr><td>Database</td><td><b>PostgreSQL</b> (Neon.tech)</td><td>Free hosted DB</td></tr>
+                    <tr><td>ORM</td><td><b>Prisma</b></td><td>Type-safe queries</td></tr>
+                    <tr><td>Auth</td><td><b>NextAuth.js</b></td><td>Login / sessions</td></tr>
+                    <tr><td>Hosting</td><td><b>Cloudflare Pages</b></td><td>Free CDN deploy</td></tr>
+                    <tr><td>Repo</td><td><b>GitHub</b></td><td>CI/CD</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="overlay" id="pay-ov">
+  <div class="modal">
+    <div id="ps1">
+      <div class="modal-hd"><h3>ชำระเงิน</h3><button class="modal-x" onclick="closePay()">✕</button></div>
+      <div class="modal-bd">
+        <div class="pay-total-block">
+          <div class="pay-total-lbl">ยอดที่ต้องชำระ</div>
+          <div class="pay-total-val" id="m-total">฿0</div>
+        </div>
+        <div class="pm-grid">
+          <button class="pm-btn on" id="pmb-cash" onclick="setMM('cash')"><div class="pm-ic">💵</div><div class="pm-lb">เงินสด</div></button>
+          <button class="pm-btn" id="pmb-bank" onclick="setMM('bank')"><div class="pm-ic">🏦</div><div class="pm-lb">โอนเงิน</div></button>
+        </div>
+        <div id="cash-sec">
+          <div class="mf"><label>รับมา (฿)</label><input type="number" id="tendered" placeholder="0" oninput="calcChange()"></div>
+          <div class="change-pill" id="change-row" style="display:none"><span>เงินทอน</span><strong id="change-val">฿0</strong></div>
+        </div>
+        <div id="bank-sec" style="display:none">
+          <div class="bank-block">
+            <p>ให้ลูกค้าโอนมาที่</p>
+            <strong>กสิกรไทย · 123-4-56789-0</strong>
+          </div>
+        </div>
+        <button class="confirm-btn" onclick="confirmOrd()">✓ ยืนยันและบันทึกออเดอร์</button>
+      </div>
+    </div>
+    <div id="ps2" style="display:none">
+      <div class="success-bd">
+        <div class="suc-ring">✅</div>
+        <h3>บันทึกออเดอร์สำเร็จ!</h3>
+        <p id="suc-detail">ออเดอร์ #1001 · เงินสด · ฿0</p>
+        <div class="suc-row">
+          <button class="sbtn" onclick="closePay()">🖨 พิมพ์ใบเสร็จ</button>
+          <button class="sbtn primary" onclick="newOrd()">ออเดอร์ใหม่ →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// REAL MENU DATA — parsed from your input
+// ═══════════════════════════════════════════
+const CATS = [
+  {id:'all',     name:'ทั้งหมด',        color:'#f5a623'},
+  {id:'krapow',  name:'กระเพรา',       color:'#ef4444'},
+  {id:'curry',   name:'เครื่องแกง',    color:'#f97316'},
+  {id:'stir',    name:'ผัดต่างๆ',      color:'#eab308'},
+  {id:'rice',    name:'ข้าวผัด/ราดหน้า',color:'#22c55e'},
+  {id:'somtam',  name:'ส้มตำ/ยำ',       color:'#06b6d4'},
+  {id:'soup',    name:'แกงส้ม/ต้ม',     color:'#8b5cf6'},
+  {id:'seafood', name:'ทะเล/ปลา',       color:'#3b82f6'},
+  {id:'special', name:'พิเศษ',          color:'#ec4899'},
+  {id:'side',    name:'ของเพิ่ม',       color:'#6b7280'},
+];
+
+const MENU = [
+  // กระเพรา
+  {id:1,  name:'กระเพราทะเล + ไข่ดาว',      cat:'krapow',  price:80},
+  {id:2,  name:'กระเพราหมู/ไก่ + ไข่ดาว',  cat:'krapow',  price:70},
+  {id:3,  name:'กระเพราหมูกรอบ + ไข่ดาว',  cat:'krapow',  price:80},
+  // เครื่องแกง
+  {id:4,  name:'เครื่องแกงทะเล + ไข่ดาว',  cat:'curry',   price:80},
+  {id:5,  name:'เครื่องแกงหมูกรอบ + ไข่ดาว',cat:'curry',  price:80},
+  {id:6,  name:'เครื่องแกงหมู/ไก่ + ไข่ดาว',cat:'curry',  price:70},
+  {id:7,  name:'เครื่องแกงกุ้งสะตอ + ไข่ดาว',cat:'curry', price:120},
+  {id:8,  name:'เครื่องแกงหมูสะตอ + ไข่ดาว',cat:'curry',  price:100},
+  // ผัดต่างๆ
+  {id:9,  name:'คะน้าหมูกรอบ + ไข่ดาว',    cat:'stir',    price:80},
+  {id:10, name:'ผัดพริกทะเล + ไข่ดาว',      cat:'stir',    price:80},
+  {id:11, name:'ผัดพริกหมู/ไก่ + ไข่ดาว',  cat:'stir',    price:70},
+  {id:12, name:'ทะเลผัดน้ำพริกเผา + ไข่ดาว',cat:'stir',   price:80},
+  {id:13, name:'หมู/ไก่ผัดน้ำพริกเผา + ไข่ดาว',cat:'stir',price:70},
+  {id:14, name:'ผักกูดผัดไฟแดงหมูกรอบ',      cat:'stir',    price:150},
+  {id:15, name:'หมึกหอมผัดกะปิสะตอ',          cat:'stir',    price:450},
+  {id:16, name:'กุ้งผัดกะปิสะตอ',             cat:'stir',    price:250},
+  {id:17, name:'หมึกไข่ผัดน้ำดำ',             cat:'stir',    price:450},
+  {id:18, name:'ปลากะพงผัดฉ่า',               cat:'stir',    price:250},
+  {id:19, name:'ทะเลกระเทียมพริกไทย',         cat:'stir',    price:250},
+  {id:20, name:'ทะเลผัดผงกะหรี่',              cat:'stir',    price:250},
+  {id:21, name:'คะน้าหมูกรอบ',               cat:'stir',    price:150},
+  {id:22, name:'ใบเหลียงผัดไข่',              cat:'stir',    price:100},
+  // ข้าวผัด / ราดหน้า
+  {id:23, name:'ข้าวผัดทะเล',                cat:'rice',    price:80},
+  {id:24, name:'ข้าวผัดหมู/ไก่',             cat:'rice',    price:70},
+  {id:25, name:'ราดหน้า หมู/ไก่/ทะเล',       cat:'rice',    price:80},
+  {id:26, name:'ผัดซีอิ๊ว หมู/ไก่',          cat:'rice',    price:70},
+  // ส้มตำ / ยำ
+  {id:27, name:'ส้มตำปู ปลาร้า',             cat:'somtam',  price:80},
+  {id:28, name:'ส้มตำไทย',                   cat:'somtam',  price:60},
+  {id:29, name:'ส้มตำข้าวโพดไข่เค็ม',        cat:'somtam',  price:80},
+  {id:30, name:'ส้มตำปู ปลาร้า กุ้งสด',      cat:'somtam',  price:120},
+  {id:31, name:'ยำไข่เยี่ยวม้า',             cat:'somtam',  price:120},
+  {id:32, name:'ยำทะเล',                     cat:'somtam',  price:120},
+  {id:33, name:'ยำวุ้นเส้นทะเล',             cat:'somtam',  price:120},
+  {id:34, name:'ลาบหมู',                     cat:'somtam',  price:120},
+  // แกงส้ม / ต้ม
+  {id:35, name:'แกงส้มกุ้งมังคุดคัด',        cat:'soup',    price:250},
+  {id:36, name:'แกงส้มปลากะพงทุเรียน',       cat:'soup',    price:250},
+  {id:37, name:'แกงส้มกุ้งชะอมไข่',          cat:'soup',    price:200},
+  {id:38, name:'แกงส้มปลาหมึกไข่',           cat:'soup',    price:250},
+  {id:39, name:'ต้มจืดเต้าหู้หมูสับ',        cat:'soup',    price:100},
+  {id:40, name:'ต้มยำทะเลหม้อไฟ',            cat:'soup',    price:250},
+  // ทะเล / ปลา (Premium)
+  {id:41, name:'ปลากะพงทอดน้ำปลา',          cat:'seafood', price:350},
+  {id:42, name:'หมึกไข่ต้มน้ำดำสูตรชาวเล',  cat:'seafood', price:250},
+  {id:43, name:'กุ้งแชบ๊วยซอสมะขาม',         cat:'seafood', price:450},
+  {id:44, name:'ปลาหมึกไข่นึ่งมะนาว',        cat:'seafood', price:250},
+  {id:45, name:'ปลากะพงผัดฉ่า',              cat:'seafood', price:250},
+  {id:46, name:'ปลาหมึกนึ่งมะนาว',           cat:'seafood', price:250},
+  // พิเศษ
+  {id:47, name:'ไก่ทอด',                     cat:'special', price:80},
+  {id:48, name:'หมูสามชั้นทอด',              cat:'special', price:120},
+  {id:49, name:'เฟรนฟราย',                   cat:'special', price:80},
+  // ของเพิ่ม / ข้าว
+  {id:50, name:'ข้าวเปล่า (จาน)',            cat:'side',    price:20},
+  {id:51, name:'ข้าวเปล่า (โถ)',             cat:'side',    price:60},
+];
+
+const SAMPLE_ORDERS = [
+  {id:'#1001',time:'09:20',items:'กระเพราหมู + ข้าวเปล่า 2จาน',pay:'cash',total:160,cust:2},
+  {id:'#1002',time:'10:05',items:'เครื่องแกงกุ้งสะตอ, ส้มตำไทย',pay:'cash',total:180,cust:2},
+  {id:'#1003',time:'10:42',items:'กุ้งแชบ๊วยซอสมะขาม, ข้าวเปล่าโถ',pay:'bank',total:510,cust:3},
+  {id:'#1004',time:'11:18',items:'กระเพราทะเล, ข้าวผัดทะเล',pay:'cash',total:160,cust:2},
+  {id:'#1005',time:'12:03',items:'แกงส้มปลากะพงทุเรียน, ลาบหมู',pay:'bank',total:370,cust:3},
+  {id:'#1006',time:'13:30',items:'ปลากะพงทอดน้ำปลา, ส้มตำปู ปลาร้า กุ้งสด',pay:'cash',total:470,cust:3},
+  {id:'#1007',time:'14:15',items:'หมึกหอมผัดกะปิสะตอ, ข้าวเปล่า 3จาน',pay:'cash',total:510,cust:3},
+  {id:'#1008',time:'15:45',items:'กระเพราหมูกรอบ, ผัดพริกหมู',pay:'bank',total:150,cust:2},
+];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let cart=[], payType='cash', activeCat='all', discount=0, orderNum=1009, modalMethod='cash';
+const todayRev = SAMPLE_ORDERS.reduce((s,o)=>s+o.total,0);
+
+// ═══════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════
+function login(){
+  document.getElementById('login').style.transition='opacity .35s';
+  document.getElementById('login').style.opacity=0;
+  setTimeout(()=>{
+    document.getElementById('login').style.display='none';
+    document.getElementById('app').style.display='flex';
+    init();
+  },350);
+}
+function logout(){
+  document.getElementById('app').style.display='none';
+  const l=document.getElementById('login');
+  l.style.display='flex';l.style.opacity=1;
+}
+document.getElementById('l-p').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+
+// ═══════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════
+function goTo(pg,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+pg).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ═══════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════
+function tick(){
+  const d=new Date();
+  const days=['อา','จ','อ','พ','พฤ','ศ','ส'];
+  document.getElementById('tb-time').textContent=
+    `${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════════
+// POS
+// ═══════════════════════════════════════════
+function buildCats(){
+  document.getElementById('cat-strip').innerHTML=CATS.map(c=>
+    `<button class="cat-pill ${c.id===activeCat?'on':''}" onclick="selCat('${c.id}',this)" style="${c.id===activeCat?'':''}">
+      ${c.name}
+    </button>`
+  ).join('');
+}
+function selCat(id,btn){
+  activeCat=id;
+  document.querySelectorAll('.cat-pill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  buildGrid();
+}
+function filterMenu(){buildGrid(document.getElementById('menu-srch').value);}
+function getCatColor(catId){return (CATS.find(c=>c.id===catId)||CATS[0]).color;}
+function buildGrid(q=''){
+  const list=MENU.filter(p=>{
+    const cOk=activeCat==='all'||p.cat===activeCat;
+    const sOk=!q||p.name.toLowerCase().includes(q.toLowerCase());
+    return cOk&&sOk;
+  });
+  document.getElementById('prod-grid').innerHTML=list.length?list.map(p=>`
+    <div class="prod-card" onclick="addItem(${p.id})">
+      <div class="prod-cat-dot" style="background:${getCatColor(p.cat)}"></div>
+      <div class="prod-name">${p.name}</div>
+      <div class="prod-price">฿${p.price}</div>
+    </div>
+  `).join(''):`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:14px">ไม่พบเมนูที่ค้นหา</div>`;
+}
+function addItem(id){
+  const p=MENU.find(x=>x.id===id);
+  const ex=cart.find(x=>x.id===id);
+  if(ex) ex.qty++; else cart.push({...p,qty:1});
+  renderCart();
+}
+function updQty(id,d){
+  const it=cart.find(x=>x.id===id);
+  if(!it)return;
+  it.qty+=d;
+  if(it.qty<=0) cart=cart.filter(x=>x.id!==id);
+  renderCart();
+}
+function clearCart(){cart=[];discount=0;renderCart();}
+function addDiscount(){
+  const v=prompt('ส่วนลด (฿):');
+  if(v!==null&&!isNaN(v)&&Number(v)>=0){discount=Number(v);renderCart();}
+}
+function addNote(){alert('ฟีเจอร์หมายเหตุจะเปิดใช้งานเมื่อเชื่อมต่อฐานข้อมูลแล้ว');}
+function setPay(t,btn){
+  payType=t;
+  document.querySelectorAll('.pay-opt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function renderCart(){
+  const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const disc=Math.min(discount,sub);
+  const total=sub-disc;
+  if(!cart.length){
+    document.getElementById('cart-body').innerHTML='<div class="cart-empty"><div class="cart-empty-ic">🛒</div><p>แตะเมนูเพื่อเพิ่มออเดอร์</p></div>';
+  } else {
+    document.getElementById('cart-body').innerHTML=cart.map(i=>`
+      <div class="ci">
+        <div style="flex:1">
+          <div class="ci-name">${i.name}</div>
+          <div class="ci-sub">฿${i.price} × ${i.qty} = ฿${(i.price*i.qty).toLocaleString()}</div>
+        </div>
+        <div class="ci-qty">
+          <button class="qb" onclick="updQty(${i.id},-1)">−</button>
+          <span class="qn">${i.qty}</span>
+          <button class="qb" onclick="updQty(${i.id},1)">+</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('c-sub').textContent='฿'+sub.toLocaleString();
+  document.getElementById('c-disc').textContent='–฿'+disc.toLocaleString();
+  document.getElementById('c-total').textContent='฿'+total.toLocaleString();
+  const btn=document.getElementById('charge-btn');
+  btn.textContent=cart.length?`ยืนยันออเดอร์ — ฿${total.toLocaleString()}`:'ยืนยันออเดอร์ — ฿0';
+  btn.disabled=!cart.length;
+}
+
+// ═══════════════════════════════════════════
+// PAYMENT
+// ═══════════════════════════════════════════
+function openPay(){
+  const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const total=sub-Math.min(discount,sub);
+  document.getElementById('m-total').textContent='฿'+total.toLocaleString();
+  document.getElementById('ps1').style.display='block';
+  document.getElementById('ps2').style.display='none';
+  document.getElementById('tendered').value='';
+  document.getElementById('change-row').style.display='none';
+  setMM(payType);
+  document.getElementById('pay-ov').classList.add('open');
+}
+function closePay(){document.getElementById('pay-ov').classList.remove('open');}
+function setMM(m){
+  modalMethod=m;
+  document.getElementById('pmb-cash').classList.toggle('on',m==='cash');
+  document.getElementById('pmb-bank').classList.toggle('on',m==='bank');
+  document.getElementById('cash-sec').style.display=m==='cash'?'block':'none';
+  document.getElementById('bank-sec').style.display=m==='bank'?'block':'none';
+}
+function calcChange(){
+  const t=parseFloat(document.getElementById('m-total').textContent.replace(/[฿,]/g,''))||0;
+  const r=parseFloat(document.getElementById('tendered').value)||0;
+  const row=document.getElementById('change-row');
+  if(r>=t){row.style.display='flex';document.getElementById('change-val').textContent='฿'+(r-t).toLocaleString();}
+  else row.style.display='none';
+}
+function confirmOrd(){
+  const t=document.getElementById('m-total').textContent;
+  document.getElementById('suc-detail').textContent=`ออเดอร์ #${orderNum} · ${modalMethod==='cash'?'เงินสด':'โอนเงิน'} · ${t}`;
+  const tNum=parseFloat(t.replace(/[฿,]/g,''));
+  document.getElementById('tb-rev').textContent='฿'+(todayRev+tNum).toLocaleString();
+  document.getElementById('tb-ord').textContent=(SAMPLE_ORDERS.length+1);
+  document.getElementById('ord-badge').textContent='#'+(++orderNum);
+  document.getElementById('ps1').style.display='none';
+  document.getElementById('ps2').style.display='block';
+}
+function newOrd(){clearCart();closePay();}
+
+// ═══════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════
+const KPIS={
+  today:[
+    {ic:'💰',val:'฿2,510',lbl:'รายได้วันนี้',dl:'↑ 8% vs เมื่อวาน',dir:'up'},
+    {ic:'📋',val:'8',lbl:'จำนวนออเดอร์',dl:'↑ 2 vs ค่าเฉลี่ย',dir:'up'},
+    {ic:'👥',val:'18',lbl:'ลูกค้า',dl:'↑ 3 vs ค่าเฉลี่ย',dir:'up'},
+    {ic:'📈',val:'฿314',lbl:'AOV',dl:'↑ ฿22',dir:'up'},
+    {ic:'🏆',val:'กระเพราหมู',lbl:'เมนูขายดี',dl:'6 จาน',dir:'fl'},
+    {ic:'💵',val:'65%',lbl:'เงินสด',dl:'5 ออเดอร์',dir:'fl'},
+  ],
+  week:[
+    {ic:'💰',val:'฿16,320',lbl:'รายได้สัปดาห์นี้',dl:'↑ 11%',dir:'up'},
+    {ic:'📋',val:'52',lbl:'จำนวนออเดอร์',dl:'↑ 5 vs ก่อนหน้า',dir:'up'},
+    {ic:'👥',val:'112',lbl:'ลูกค้า',dl:'↑ 18',dir:'up'},
+    {ic:'📈',val:'฿314',lbl:'AOV',dl:'–฿6',dir:'dn'},
+    {ic:'🏆',val:'กระเพราทะเล',lbl:'เมนูขายดี',dl:'34 จาน',dir:'fl'},
+    {ic:'💵',val:'61%',lbl:'เงินสด',dl:'32 ออเดอร์',dir:'fl'},
+  ],
+  month:[
+    {ic:'💰',val:'฿64,800',lbl:'รายได้เดือนนี้',dl:'↑ 6%',dir:'up'},
+    {ic:'📋',val:'198',lbl:'จำนวนออเดอร์',dl:'↑ 14',dir:'up'},
+    {ic:'👥',val:'430',lbl:'ลูกค้า',dl:'↑ 36',dir:'up'},
+    {ic:'📈',val:'฿327',lbl:'AOV',dl:'↑ ฿15',dir:'up'},
+    {ic:'🏆',val:'กุ้งแชบ๊วยซอสมะขาม',lbl:'เมนูขายดี',dl:'142 จาน',dir:'fl'},
+    {ic:'💵',val:'63%',lbl:'เงินสด',dl:'125 ออเดอร์',dir:'fl'},
+  ],
+};
+const HOURS=['10','11','12','13','14','15','16','17','18','19','20'];
+const R_H=[420,580,1340,1180,820,640,960,1140,1560,920,460];
+const O_H=[2,3,7,6,4,3,5,6,8,5,3];
+const TOP_DISHES=[
+  {n:'กระเพราหมู/ไก่',cnt:54,rev:3780},
+  {n:'กระเพราทะเล',cnt:41,rev:3280},
+  {n:'กุ้งแชบ๊วยซอสมะขาม',cnt:28,rev:12600},
+  {n:'กระเพราหมูกรอบ',cnt:37,rev:2960},
+  {n:'ส้มตำไทย',cnt:49,rev:2940},
+  {n:'ข้าวผัดหมู/ไก่',cnt:46,rev:3220},
+  {n:'ปลากะพงทอดน้ำปลา',cnt:18,rev:6300},
+  {n:'เครื่องแกงทะเล',cnt:32,rev:2560},
+];
+function setPd(btn,k){
+  document.querySelectorAll('.pd-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  buildKPIs(k);
+}
+function buildKPIs(k){
+  const d=KPIS[k]||KPIS.today;
+  document.getElementById('kpi-grid').innerHTML=d.map(k=>`
+    <div class="kpi">
+      <div class="kpi-ic">${k.ic}</div>
+      <div class="kpi-val">${k.val}</div>
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-dl ${k.dir}">${k.dl}</div>
+    </div>
+  `).join('');
+}
+function buildRevBar(){
+  const mx=Math.max(...R_H);
+  document.getElementById('rev-bar').innerHTML=HOURS.map((h,i)=>`
+    <div class="bc-col">
+      <div class="bc-val">฿${R_H[i]}</div>
+      <div class="bc-bar" style="height:${(R_H[i]/mx*78)}px;background:${R_H[i]===mx?'var(--accent)':'var(--border2)'}"></div>
+      <div class="bc-lbl">${h}</div>
+    </div>
+  `).join('');
+}
+function buildOrdBar(){
+  const mx=Math.max(...O_H);
+  document.getElementById('ord-bar').innerHTML=HOURS.map((h,i)=>`
+    <div class="bc-col">
+      <div class="bc-val">${O_H[i]}</div>
+      <div class="bc-bar" style="height:${(O_H[i]/mx*78)}px;background:${O_H[i]===mx?'var(--blue)':'var(--border2)'}"></div>
+      <div class="bc-lbl">${h}</div>
+    </div>
+  `).join('');
+}
+function buildTopDishes(){
+  const mx=TOP_DISHES[0].cnt;
+  document.getElementById('top-dishes').innerHTML=TOP_DISHES.map((d,i)=>`
+    <div class="hbar">
+      <div class="hbar-rank">${i+1}</div>
+      <div class="hbar-info"><div class="hbar-name">${d.n}</div><div class="hbar-cnt">${d.cnt} จาน</div></div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${(d.cnt/mx*100)}%"></div></div>
+      <div class="hbar-rev">฿${d.rev.toLocaleString()}</div>
+    </div>
+  `).join('');
+}
+function buildTxTable(){
+  document.getElementById('tx-tbl').innerHTML=`
+    <thead><tr><th>ออเดอร์</th><th>เวลา</th><th>รายการ</th><th>ลูกค้า</th><th>ชำระ</th><th style="text-align:right">ยอด</th></tr></thead>
+    <tbody>${SAMPLE_ORDERS.slice().reverse().map(o=>`
+      <tr>
+        <td><b>${o.id}</b></td>
+        <td style="color:var(--muted)">${o.time}</td>
+        <td style="color:var(--sub);max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.items}</td>
+        <td style="text-align:center">${o.cust}</td>
+        <td><span class="badge ${o.pay==='cash'?'b-cash':'b-bank'}">${o.pay==='cash'?'เงินสด':'โอน'}</span></td>
+        <td style="text-align:right;font-weight:800;font-family:'Outfit',sans-serif">฿${o.total.toLocaleString()}</td>
+      </tr>
+    `).join('')}</tbody>
+  `;
+}
+
+// ═══════════════════════════════════════════
+// PRODUCTS PAGE
+// ═══════════════════════════════════════════
+function buildProductsPage(){
+  // cat chips
+  document.getElementById('cat-chips').innerHTML=CATS.filter(c=>c.id!=='all').map(c=>{
+    const cnt=MENU.filter(m=>m.cat===c.id).length;
+    return `<div class="cat-chip"><div class="cat-dot-sm" style="background:${c.color}"></div><span>${c.name}</span><span style="color:var(--muted);font-size:11px">${cnt}</span></div>`;
+  }).join('');
+  // items table
+  const soldMap={1:6,2:9,3:5,23:7,24:8,27:11,28:14,35:3,41:2,43:4};
+  document.getElementById('items-body').innerHTML=MENU.map(p=>`
+    <tr>
+      <td style="font-weight:700">${p.name}</td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:5px;background:var(--card2);color:var(--sub)">${CATS.find(c=>c.id===p.cat)?.name||p.cat}</span></td>
+      <td style="font-weight:800;color:var(--accent);font-family:'Outfit',sans-serif">฿${p.price}</td>
+      <td style="color:var(--muted);font-size:11px">${soldMap[p.id]||Math.floor(Math.random()*8)} จาน</td>
+      <td><button class="toggle on" onclick="this.classList.toggle('on')"></button></td>
+      <td><button class="edt">แก้ไข</button></td>
+    </tr>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════
+function buildStaff(){
+  const staff=[
+    {n:'Admin',e:'admin@restaurant.com',r:'Admin',c:'#f5a623',bg:'rgba(245,166,35,.15)'},
+    {n:'พี่นุ่น',e:'noon@restaurant.com',r:'Manager',c:'#3b82f6',bg:'rgba(59,130,246,.1)'},
+    {n:'น้องโบ',e:'bo@restaurant.com',r:'Cashier',c:'#6b7280',bg:'rgba(107,114,128,.1)'},
+  ];
+  document.getElementById('staff-list').innerHTML=staff.map(u=>`
+    <div class="user-item">
+      <div class="u-av" style="background:${u.bg};color:${u.c}">${u.n[0]}</div>
+      <div><div class="u-nm">${u.n}</div><div class="u-em">${u.e}</div></div>
+      <span class="role-pill r-${u.r.toLowerCase()}">${u.r}</span>
+    </div>
+  `).join('');
+}
+function swSP(id,btn){
+  document.querySelectorAll('.sp').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.snav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('sp-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+function init(){
+  tick(); setInterval(tick,30000);
+  document.getElementById('tb-rev').textContent='฿'+todayRev.toLocaleString();
+  document.getElementById('tb-ord').textContent=SAMPLE_ORDERS.length;
+  buildCats(); buildGrid(); renderCart();
+  buildKPIs('today'); buildRevBar(); buildOrdBar(); buildTopDishes(); buildTxTable();
+  buildProductsPage(); buildStaff();
+}
+</script>
+</body>
+</html>
