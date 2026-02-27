@@ -113,6 +113,15 @@ body {
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* iOS safe area support */
 @supports (padding: env(safe-area-inset-top)) {
   .mobile-safe {

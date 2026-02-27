@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/providers';
 import { useCartStore } from '@/store/cart-store';
-import { LogOut, Settings, User } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 
 const DAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 

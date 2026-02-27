@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ShoppingCart, X } from 'lucide-react';
+import { ShoppingCart, ChevronUp } from 'lucide-react';
 import { MenuGrid } from '@/components/MenuGrid';
 import { Cart } from '@/components/Cart';
 import { CartDrawer } from '@/components/CartDrawer';
@@ -9,8 +9,8 @@ import { useCartStore } from '@/store/cart-store';
 import { useCartTotals } from '@/hooks/useCartTotals';
 
 export default function PosPage() {
-  const [cartOpen, setCartOpen] = useState(false);
-  const { cart, todayRevenue, todayOrders } = useCartStore();
+  const [cartMode, setCartMode] = useState<'closed' | 'peek' | 'open'>('peek');
+  const { cart } = useCartStore();
   const { total } = useCartTotals(cart, 0);
   const itemCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
@@ -18,31 +18,57 @@ export default function PosPage() {
     <div className="flex flex-1 flex-row overflow-hidden">
       {/* Menu Grid - takes full width on mobile, shares on desktop */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <MenuGrid />
+        <MenuGrid cartPeekMode={cartMode === 'peek'} />
       </div>
-      
+
       {/* Desktop Cart - hidden on mobile */}
       <div className="hidden md:block">
         <Cart />
       </div>
-      
-      {/* Mobile Cart Drawer */}
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
-      
-      {/* Mobile Floating Cart Button */}
-      <button
-        type="button"
-        onClick={() => setCartOpen(true)}
-        className="md:hidden fixed bottom-20 right-4 z-40 bg-[#d4800a] text-white rounded-full p-4 shadow-lg flex items-center gap-2 animate-[rise_.2s_ease] touch-target"
-        style={{ animation: itemCount > 0 ? 'none' : undefined }}
+
+      {/* Mobile Cart Drawer - Full Screen Mode */}
+      <CartDrawer
+        open={cartMode === 'open'}
+        onClose={() => setCartMode('peek')}
+      />
+
+      {/* Mobile Cart Peek Bar - Always visible summary */}
+      <div
+        className={`md:hidden fixed left-0 right-0 z-40 bg-white border-t border-[#e4e0d8] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] safe-bottom transition-transform duration-300 ${
+          cartMode === 'open' ? 'translate-y-full' : 'translate-y-0'
+        }`}
+        style={{ bottom: '72px' }} // Position above bottom nav
       >
-        <ShoppingCart className="w-5 h-5" />
-        {itemCount > 0 && (
-          <span className="bg-white text-[#d4800a] text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
-            {itemCount}
-          </span>
+        {/* Peek Mode - Collapsed Summary */}
+        {cartMode === 'peek' && (
+          <div
+            onClick={() => setCartMode('open')}
+            className="flex items-center justify-between px-4 py-3 active:bg-[#f7f5f0] cursor-pointer touch-target"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#d4800a] rounded-full flex items-center justify-center">
+                <ShoppingCart className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-[#1a1816]">
+                  {itemCount > 0 ? `${itemCount} รายการ` : 'ไม่มีรายการ'}
+                </div>
+                <div className="text-xs text-[#9a9288]">
+                  แตะเพื่อดูตะกร้า
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-lg font-extrabold text-[#d4800a] font-heading">
+                  ฿{total.toLocaleString()}
+                </div>
+              </div>
+              <ChevronUp className="w-5 h-5 text-[#9a9288]" />
+            </div>
+          </div>
         )}
-      </button>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, UserPlus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
 import { STAFF } from '@/lib/constants';
 
 const SECTIONS = [
