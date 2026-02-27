@@ -29,21 +29,22 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }
     <button
       type="button"
       onClick={onAdd}
-      className="flex flex-col bg-white border border-[#e4e0d8] rounded-[14px] p-3.5 md:p-3 cursor-pointer transition-all no-select relative text-left touch-target min-h-[100px] md:min-h-[92px] w-full min-w-0 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d4800a] hover:bg-[#f7f5f0] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.97] overflow-hidden"
+      className="flex h-full min-h-[100px] md:min-h-[92px] w-full min-w-0 flex-col overflow-hidden rounded-[14px] border border-[#e4e0d8] bg-white p-3.5 text-left no-select relative shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all cursor-pointer touch-target hover:border-[#d4800a] hover:bg-[#f7f5f0] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.97] md:p-3"
     >
       <div
-        className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full shrink-0 z-[1]"
+        className="absolute top-2.5 right-2.5 z-[1] h-2 w-2 shrink-0 rounded-full"
         style={{ background: color }}
       />
-      {/* Name: fixed space for 2 full lines so second line is never cropped */}
-      <div className="flex-1 min-h-0 flex flex-col justify-start pt-0 pr-5">
-        <div className="text-sm md:text-xs font-bold leading-snug text-[#1a1816] line-clamp-2-safe min-h-[2.75em]">
+      {/* Inner content: takes remaining space so price stays inside the card */}
+      <div className="flex min-h-0 flex-1 flex-col pt-0 pr-5">
+        {/* Name: fixed space for 2 full lines so second line is never cropped */}
+        <div className="min-h-[2.75em] flex-1 text-sm font-bold leading-snug text-[#1a1816] line-clamp-2-safe md:text-xs">
           {product.name}
         </div>
-      </div>
-      {/* Price: always visible at bottom */}
-      <div className="font-heading text-base md:text-[15px] font-extrabold text-[#d4800a] shrink-0 pt-1 mt-auto">
-        ฿{product.price.toLocaleString()}
+        {/* Price: anchored at bottom of content, inside padding */}
+        <div className="mt-auto shrink-0 pt-1.5 font-heading text-base font-extrabold text-[#d4800a] md:text-[15px]">
+          ฿{product.price.toLocaleString()}
+        </div>
       </div>
     </button>
   );
