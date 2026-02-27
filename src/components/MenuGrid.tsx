@@ -6,7 +6,6 @@ import { MENU } from '@/lib/constants';
 import { useFilteredMenu, getCatColor } from '@/hooks/useFilteredMenu';
 import { useCartStore } from '@/store/cart-store';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { Product } from '@/types/pos';
 import { cn } from '@/lib/utils';
@@ -27,27 +26,22 @@ const CATS = [
 function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }) {
   const color = getCatColor(product.cat);
   return (
-    <Button
-      variant="ghost"
+    <button
+      type="button"
       onClick={onAdd}
-      className={cn(
-        "h-auto p-0 bg-white border border-[#e4e0d8] rounded-[14px] p-3.5 md:p-3 no-select relative",
-        "shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d4800a] hover:bg-[#f7f5f0]",
-        "hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.97]",
-        "text-left touch-target min-h-[90px] md:min-h-[80px] flex flex-col justify-between items-start gap-0"
-      )}
+      className="bg-white border border-[#e4e0d8] rounded-[14px] p-3.5 md:p-3 cursor-pointer transition-all no-select relative text-left touch-target min-h-[90px] md:min-h-[80px] block w-full shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d4800a] hover:bg-[#f7f5f0] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.97]"
     >
       <div
         className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full"
         style={{ background: color }}
       />
-      <div className="text-sm md:text-xs font-bold leading-tight mb-2 text-[#1a1816] pr-4 line-clamp-2">
+      <div className="text-sm md:text-xs font-bold leading-snug mb-2 text-[#1a1816] pr-4 line-clamp-2">
         {product.name}
       </div>
-      <div className="font-heading text-base md:text-[15px] font-extrabold text-[#d4800a]">
+      <div className="font-heading text-base md:text-[15px] font-extrabold text-[#d4800a] mt-auto">
         ฿{product.price.toLocaleString()}
       </div>
-    </Button>
+    </button>
   );
 }
 
