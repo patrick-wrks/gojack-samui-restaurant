@@ -2,77 +2,106 @@
 
 This Next.js app is configured for **Cloudflare Pages** with automatic deployment from GitHub.
 
-## Automatic Deployment (GitHub → Cloudflare)
+## How It Works
 
-Every push to `main` or `master` branch automatically deploys to Cloudflare Pages.
-
-### Setup Steps (One-time)
-
-1. **Create a Cloudflare API Token**:
-   - Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → My Profile → API Tokens
-   - Create Token → Use "Custom token" template
-   - Permissions:
-     - Zone:Read (if using custom domain)
-     - Account:Read
-     - Cloudflare Pages:Edit
-   - Copy the generated token
-
-2. **Get your Cloudflare Account ID**:
-   - In Cloudflare Dashboard, look at the right sidebar on any domain
-   - Or find it in the URL: `dash.cloudflare.com/<ACCOUNT_ID>/...`
-
-3. **Add GitHub Secrets**:
-   - Go to your GitHub repo → Settings → Secrets and variables → Actions
-   - Add the following secrets:
-     | Secret Name | Value |
-     |-------------|-------|
-     | `CLOUDFLARE_API_TOKEN` | Your Cloudflare API token from step 1 |
-     | `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare Account ID from step 2 |
-     | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
-     | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
-
-4. **Create Cloudflare Pages Project** (if not exists):
-   - Cloudflare Dashboard → Pages → Create a project
-   - Choose "Direct Upload" (not Git integration)
-   - Project name: `gojack-samui-restaurant`
-   - The GitHub Action will handle uploads
-
-That's it! Now every push to `main` will automatically build and deploy.
-
-## Manual Deploy (Backup Method)
-
-If you need to deploy manually:
-
-```bash
-# Build and deploy in one command
-npm run deploy
+```
+GitHub (your code) → GitHub Actions (builds) → Cloudflare Pages (hosts) → your domain
 ```
 
-Or step by step:
+- Your code lives on **GitHub** (version history, rollbacks)
+- **GitHub Actions** automatically builds on every push
+- **Cloudflare Pages** hosts and serves your app
+- Your domain `gojack-samui.com` points to Cloudflare Pages
+
+## Setup Steps
+
+### 1. Configure GitHub Secrets
+
+Go to your GitHub repo → Settings → Secrets and variables → Actions → New repository secret
+
+Add these 4 secrets:
+
+| Secret Name | How to Get It |
+|-------------|---------------|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare Dashboard → My Profile → API Tokens → Create Token. Use "Custom token" with permissions: Account:Read, Cloudflare Pages:Edit |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Dashboard → any domain page, look at right sidebar for Account ID |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard → Project Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Project Settings → API → Project API keys → `anon/public` |
+
+### 2. Create Cloudflare Pages Project
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Click **Pages** in left sidebar
+3. Click **"Create a project"**
+4. Choose **"Upload an asset"** (not "Connect to Git")
+5. Project name: `gojack-samui-restaurant`
+6. Click **"Create project"**
+
+The GitHub Action will handle all uploads automatically.
+
+### 3. Connect Your Domain
+
+1. In your Cloudflare Pages project, go to **"Custom domains"** tab
+2. Click **"Set up a custom domain"**
+3. Enter: `gojack-samui.com`
+4. Click **"Continue"**
+5. Cloudflare will configure DNS automatically
+
+**Note:** If your domain DNS is managed outside Cloudflare, you'll need to manually add a CNAME record:
+- Name: `@` (or `gojack-samui.com`)
+- Target: `gojack-samui-restaurant.pages.dev`
+
+### 4. Push to Deploy
+
 ```bash
-npm run pages:build
-wrangler pages deploy .vercel/output/static
+git push origin main
 ```
 
-## Build Configuration
+Go to GitHub repo → Actions tab to watch the deployment.
 
-- **Build command:** `npm run pages:build` (runs `npx @cloudflare/next-on-pages`)
-- **Build output directory:** `.vercel/output/static`
-- **Config file:** `wrangler.toml`
+## Checking Deployment Status
+
+1. **GitHub Actions**: GitHub repo → Actions tab
+2. **Cloudflare Pages**: Dashboard → Pages → gojack-samui-restaurant
+
+## Rollback (Go Back in Time)
+
+Since your code is on GitHub, rollback is easy:
+
+```bash
+# View history
+git log --oneline
+
+# Revert to a specific commit
+git revert abc1234
+git push origin main
+
+# OR reset to an earlier commit (destructive)
+git reset --hard abc1234
+git push origin main --force
+```
 
 ## Local Development
 
 ```bash
-# Run the Next.js dev server (http://localhost:3000)
+# Run dev server
 npm run dev
 
-# Test production build locally
+# Build and test production locally
 npm run pages:build
 npx serve .vercel/output/static
 ```
 
-## Supabase Setup
+## Troubleshooting
 
-1. Create a Supabase project and run `schema.sql` in the SQL Editor.
-2. Enable Realtime for the `orders` table (the schema includes `ALTER PUBLICATION supabase_realtime ADD TABLE orders`).
-3. Add Supabase env vars to GitHub Secrets so the build can access them.
+### "Project not found" error in GitHub Actions
+- Make sure you created the Cloudflare Pages project (Step 2 above)
+- Verify the project name matches: `gojack-samui-restaurant`
+
+### Domain shows old GitHub Pages
+- Check DNS records in Cloudflare Dashboard
+- Make sure CNAME points to Cloudflare Pages, not GitHub
+
+### Build fails
+- Check GitHub Actions logs for specific errors
+- Verify all 4 secrets are set correctly
