@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: #f2f0eb;
+  --color-surface: #ffffff;
+  --color-card: #ffffff;
+  --color-card2: #f7f5f0;
+  --color-border: #e4e0d8;
+  --color-border2: #d4cfc5;
+  --color-text: #1a1816;
+  --color-sub: #6b6358;
+  --color-muted: #9a9288;
+  --color-accent: #d4800a;
+  --color-accent-dim: rgba(212, 128, 10, 0.1);
+  --color-green: #16a34a;
+  --color-green-dim: rgba(22, 163, 74, 0.1);
+  --color-red: #dc2626;
+  --color-blue: #2563eb;
+  --color-blue-dim: rgba(37, 99, 235, 0.08);
+  --radius: 14px;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  --font-sans: var(--font-sarabun), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  height: 100%;
+  overflow: hidden;
+}
+
+html {
+  height: 100%;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
