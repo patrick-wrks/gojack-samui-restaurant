@@ -161,12 +161,14 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .line-clamp-safe-2 {
+  /* Two-line clamp with full lines visible (no crop). Use with min-height for 2 lines. */
+  .line-clamp-2-safe {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
+    word-break: break-word;
   }
 }
 

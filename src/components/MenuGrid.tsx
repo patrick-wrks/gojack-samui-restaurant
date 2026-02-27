@@ -29,16 +29,20 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }
     <button
       type="button"
       onClick={onAdd}
-      className="bg-white border border-[#e4e0d8] rounded-[14px] p-3.5 md:p-3 cursor-pointer transition-all no-select relative text-left touch-target min-h-[90px] md:min-h-[80px] block w-full min-w-0 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d4800a] hover:bg-[#f7f5f0] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.97] overflow-hidden"
+      className="flex flex-col bg-white border border-[#e4e0d8] rounded-[14px] p-3.5 md:p-3 cursor-pointer transition-all no-select relative text-left touch-target min-h-[100px] md:min-h-[92px] w-full min-w-0 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d4800a] hover:bg-[#f7f5f0] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.97] overflow-hidden"
     >
       <div
-        className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full shrink-0"
+        className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full shrink-0 z-[1]"
         style={{ background: color }}
       />
-      <div className="text-sm md:text-xs font-bold leading-snug mb-2 text-[#1a1816] pr-4 line-clamp-safe-2 min-h-[2.5em]">
-        {product.name}
+      {/* Name: fixed space for 2 full lines so second line is never cropped */}
+      <div className="flex-1 min-h-0 flex flex-col justify-start pt-0 pr-5">
+        <div className="text-sm md:text-xs font-bold leading-snug text-[#1a1816] line-clamp-2-safe min-h-[2.75em]">
+          {product.name}
+        </div>
       </div>
-      <div className="font-heading text-base md:text-[15px] font-extrabold text-[#d4800a] mt-auto text-truncate-safe">
+      {/* Price: always visible at bottom */}
+      <div className="font-heading text-base md:text-[15px] font-extrabold text-[#d4800a] shrink-0 pt-1 mt-auto">
         ฿{product.price.toLocaleString()}
       </div>
     </button>
@@ -101,7 +105,7 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
       {/* Product Grid - Responsive columns */}
       {/* pb-32 for mobile when cart peek is visible, pb-20 when closed, pb-3.5 for desktop */}
       <div className={cn(
-        "flex-1 overflow-y-auto overflow-x-hidden px-3 md:px-3.5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(148px,1fr))] gap-2.5 md:gap-2 align-content-start momentum-scroll min-w-0",
+        "flex-1 overflow-y-auto overflow-x-hidden px-3 md:px-3.5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2.5 md:gap-2 align-content-start momentum-scroll min-w-0",
         cartPeekMode ? 'pb-36' : 'pb-24 md:pb-3.5'
       )}>
         {filtered.length > 0 ? (
