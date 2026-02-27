@@ -5,6 +5,10 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,14 +25,46 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Verify secrets exist
+        run: |
+          missing=0
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "❌ Missing secret: CLOUDFLARE_API_TOKEN"
+            missing=1
+          fi
+          if [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "❌ Missing secret: CLOUDFLARE_ACCOUNT_ID"
+            missing=1
+          fi
+          if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" ]; then
+            echo "⚠️ Missing secret: NEXT_PUBLIC_SUPABASE_URL (build may fail)"
+          fi
+          if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" ]; then
+            echo "⚠️ Missing secret: NEXT_PUBLIC_SUPABASE_ANON_KEY (build may fail)"
+          fi
+          if [ $missing -eq 1 ]; then
+            echo "Add missing secrets at: GitHub Repo → Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          echo "✅ All required secrets verified"
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build for Cloudflare Pages
+        id: build
         run: npm run pages:build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Verify build output exists
+        run: |
+          if [ ! -d ".vercel/output/static" ]; then
+            echo "❌ Build output not found at .vercel/output/static"
+            exit 1
+          fi
+          echo "✅ Build output verified"
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
@@ -36,3 +72,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy .vercel/output/static --project-name=gojack-samui-restaurant --branch=main
+
+      - name: Deployment Success
+        if: success()
+        run: echo "✅ Deployed to Cloudflare Pages successfully!"
