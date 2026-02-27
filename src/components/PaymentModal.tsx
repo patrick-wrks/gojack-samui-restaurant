@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react';
 import { X, Printer, ArrowRight, Check } from 'lucide-react';
 import type { PaymentMethod } from '@/types/pos';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { cn } from '@/lib/utils';
 
 interface PaymentModalProps {
   open: boolean;
@@ -60,14 +64,16 @@ export function PaymentModal({
 
             <div className="p-4 md:p-4 border-b border-[#e4e0d8] flex items-center justify-between">
               <h3 className="font-heading text-lg md:text-base font-extrabold">ชำระเงิน</h3>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={onClose}
-                className="bg-[#f7f5f0] border-none rounded-full w-9 h-9 md:w-7 md:h-7 cursor-pointer flex items-center justify-center text-[#9a9288] hover:bg-[#e4e0d8] touch-target"
+                className="bg-[#f7f5f0] hover:bg-[#e4e0d8] rounded-full w-9 h-9 md:w-7 md:h-7 text-[#9a9288] touch-target"
               >
                 <X className="w-5 h-5 md:w-4 md:h-4" />
-              </button>
+              </Button>
             </div>
+
             <div className="p-5 md:p-5">
               <div className="text-center mb-6 md:mb-5 pb-5 md:pb-4 border-b border-[#e4e0d8]">
                 <div className="text-xs md:text-[11px] text-[#9a9288] uppercase tracking-wider mb-2 md:mb-1">
@@ -79,46 +85,54 @@ export function PaymentModal({
               </div>
 
               {/* Payment Method Selection */}
-              <div className="grid grid-cols-2 gap-3 md:gap-2 mb-5 md:mb-4">
-                <button
-                  type="button"
-                  onClick={() => setModalMethod('cash')}
-                  className={`py-5 md:py-3 px-3 rounded-2xl md:rounded-xl border-2 text-center transition-all font-sans cursor-pointer touch-target ${
-                    modalMethod === 'cash'
-                      ? 'border-[#d4800a] bg-[rgba(212,128,10,0.1)] shadow-sm'
-                      : 'border-[#e4e0d8] bg-[#f7f5f0] active:border-[#d4800a]'
-                  }`}
+              <ToggleGroup
+                type="single"
+                value={modalMethod}
+                onValueChange={(v) => v && setModalMethod(v as PaymentMethod)}
+                className="grid grid-cols-2 gap-3 md:gap-2 mb-5 md:mb-4 w-full"
+                spacing={0}
+              >
+                <ToggleGroupItem
+                  value="cash"
+                  className={cn(
+                    "flex flex-col items-center py-5 md:py-3 px-3 rounded-2xl md:rounded-xl border-2 text-center transition-all font-sans cursor-pointer touch-target h-auto",
+                    "data-[state=off]:border-[#e4e0d8] data-[state=off]:bg-[#f7f5f0] data-[state=off]:active:border-[#d4800a]",
+                    "data-[state=on]:border-[#d4800a] data-[state=on]:bg-[rgba(212,128,10,0.1)] data-[state=on]:shadow-sm"
+                  )}
                 >
                   <div className="text-[32px] md:text-[26px] mb-2 md:mb-1">💵</div>
                   <div className="text-base md:text-[13px] font-bold text-[#1a1816]">เงินสด</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalMethod('bank')}
-                  className={`py-5 md:py-3 px-3 rounded-2xl md:rounded-xl border-2 text-center transition-all font-sans cursor-pointer touch-target ${
-                    modalMethod === 'bank'
-                      ? 'border-[#d4800a] bg-[rgba(212,128,10,0.1)] shadow-sm'
-                      : 'border-[#e4e0d8] bg-[#f7f5f0] active:border-[#d4800a]'
-                  }`}
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="bank"
+                  className={cn(
+                    "flex flex-col items-center py-5 md:py-3 px-3 rounded-2xl md:rounded-xl border-2 text-center transition-all font-sans cursor-pointer touch-target h-auto",
+                    "data-[state=off]:border-[#e4e0d8] data-[state=off]:bg-[#f7f5f0] data-[state=off]:active:border-[#d4800a]",
+                    "data-[state=on]:border-[#d4800a] data-[state=on]:bg-[rgba(212,128,10,0.1)] data-[state=on]:shadow-sm"
+                  )}
                 >
                   <div className="text-[32px] md:text-[26px] mb-2 md:mb-1">🏦</div>
                   <div className="text-base md:text-[13px] font-bold text-[#1a1816]">โอนเงิน</div>
-                </button>
-              </div>
+                </ToggleGroupItem>
+              </ToggleGroup>
 
               {modalMethod === 'cash' && (
                 <>
-                  <div className="mb-4 md:mb-3.5">
-                    <label className="block text-xs md:text-[10px] font-bold text-[#9a9288] uppercase tracking-wider mb-2 md:mb-1.5">
+                  <div className="mb-4 md:mb-3.5 space-y-2 md:space-y-1.5">
+                    <label className="block text-xs md:text-[10px] font-bold text-[#9a9288] uppercase tracking-wider">
                       รับมา (฿)
                     </label>
-                    <input
+                    <Input
                       type="number"
                       value={tendered}
                       onChange={(e) => setTendered(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-[#f7f5f0] border-2 border-[#e4e0d8] rounded-xl md:rounded-[9px] py-4 md:py-2.5 px-4 md:px-3 font-heading text-3xl md:text-2xl font-extrabold text-[#1a1816] focus:outline-none focus:border-[#16a34a] touch-target text-center"
                       inputMode="numeric"
+                      className={cn(
+                        "w-full bg-[#f7f5f0] border-2 border-[#e4e0d8] rounded-xl md:rounded-[9px]",
+                        "py-4 md:py-2.5 px-4 md:px-3 font-heading text-3xl md:text-2xl font-extrabold text-[#1a1816]",
+                        "touch-target text-center focus:border-[#16a34a]"
+                      )}
                     />
                   </div>
                   {change > 0 && (
@@ -141,14 +155,13 @@ export function PaymentModal({
                 </div>
               )}
 
-              <button
-                type="button"
+              <Button
                 onClick={handleConfirm}
-                className="w-full bg-[#16a34a] border-none rounded-xl md:rounded-[11px] py-5 md:py-3.5 text-white font-heading font-black text-lg md:text-[15px] cursor-pointer active:opacity-90 transition-opacity touch-target shadow-[0_4px_15px_rgba(22,163,74,0.3)] flex items-center justify-center gap-2"
+                className="w-full bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-xl md:rounded-[11px] py-5 md:py-3.5 h-auto text-white font-heading font-black text-lg md:text-[15px] active:opacity-90 touch-target shadow-[0_4px_15px_rgba(22,163,74,0.3)] flex items-center justify-center gap-2"
               >
                 <Check className="w-5 h-5" />
                 ยืนยันและบันทึกออเดอร์
-              </button>
+              </Button>
             </div>
           </>
         ) : (
@@ -161,22 +174,21 @@ export function PaymentModal({
               ออเดอร์ #{orderNum} · {modalMethod === 'cash' ? 'เงินสด' : 'โอนเงิน'} · {totalFormatted}
             </p>
             <div className="grid grid-cols-2 gap-3 md:gap-2">
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={onClose}
-                className="py-4 md:py-3 rounded-xl md:rounded-[10px] border border-[#e4e0d8] bg-transparent font-sans text-sm md:text-[13px] font-bold cursor-pointer text-[#1a1816] active:bg-[#f7f5f0] touch-target flex items-center justify-center gap-2"
+                className="py-4 md:py-3 h-auto rounded-xl md:rounded-[10px] border-[#e4e0d8] bg-transparent font-sans text-sm md:text-[13px] font-bold text-[#1a1816] active:bg-[#f7f5f0] touch-target flex items-center justify-center gap-2"
               >
                 <Printer className="w-4 h-4" />
                 พิมพ์ใบเสร็จ
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={handleNewOrder}
-                className="py-4 md:py-3 rounded-xl md:rounded-[10px] bg-[#d4800a] border border-[#d4800a] text-black font-sans text-sm md:text-[13px] font-bold cursor-pointer active:opacity-85 touch-target flex items-center justify-center gap-2"
+                className="py-4 md:py-3 h-auto rounded-xl md:rounded-[10px] bg-[#d4800a] hover:bg-[#d4800a]/90 border border-[#d4800a] text-black font-sans text-sm md:text-[13px] font-bold active:opacity-85 touch-target flex items-center justify-center gap-2"
               >
                 ออเดอร์ใหม่
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
         )}

@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingCart, BarChart3, UtensilsCrossed, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/pos', label: 'POS', icon: ShoppingCart },
@@ -20,18 +22,22 @@ export function MobileNav() {
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== '/pos' && pathname.startsWith(href));
           return (
-            <Link
+            <Button
               key={href}
-              href={href}
-              className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all min-w-[60px] ${
+              variant="ghost"
+              asChild
+              className={cn(
+                "flex flex-col items-center justify-center py-2 px-3 rounded-xl h-auto min-w-[60px] gap-1",
                 isActive
-                  ? 'bg-[rgba(212,128,10,0.1)] text-[#d4800a]'
-                  : 'bg-transparent text-[#9a9288] active:bg-[#f7f5f0]'
-              }`}
+                  ? 'bg-[rgba(212,128,10,0.1)] text-[#d4800a] hover:bg-[rgba(212,128,10,0.15)] hover:text-[#d4800a]'
+                  : 'bg-transparent text-[#9a9288] hover:bg-[#f7f5f0] hover:text-[#9a9288]'
+              )}
             >
-              <Icon className="w-5 h-5 mb-1" strokeWidth={2} />
-              <span className="text-[10px] font-bold">{label}</span>
-            </Link>
+              <Link href={href}>
+                <Icon className="w-5 h-5" strokeWidth={2} />
+                <span className="text-[10px] font-bold">{label}</span>
+              </Link>
+            </Button>
           );
         })}
       </div>

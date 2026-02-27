@@ -6,6 +6,9 @@ import { useCartStore } from '@/store/cart-store';
 import { useCartTotals } from '@/hooks/useCartTotals';
 import { insertOrder } from '@/lib/orders';
 import { PaymentModal } from './PaymentModal';
+import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { cn } from '@/lib/utils';
 
 interface CartDrawerProps {
   open: boolean;
@@ -112,41 +115,44 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
               </span>
             </div>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-[#f7f5f0] flex items-center justify-center text-[#9a9288] active:bg-[#e4e0d8] transition-colors touch-target"
+            className="w-10 h-10 rounded-full bg-[#f7f5f0] text-[#9a9288] hover:bg-[#e4e0d8] touch-target"
           >
             <ChevronDown className="w-6 h-6" />
-          </button>
+          </Button>
         </div>
 
         {/* Payment Type */}
         <div className="px-4 py-3 border-b border-[#e4e0d8]">
-          <div className="flex bg-[#f7f5f0] rounded-xl p-1 gap-1">
-            <button
-              type="button"
-              onClick={() => setPayType('cash')}
-              className={`flex-1 py-3 px-3 rounded-lg text-sm font-bold transition-all touch-target ${
-                payType === 'cash'
-                  ? 'bg-[#d4800a] text-white shadow-md'
-                  : 'bg-transparent text-[#6b6358]'
-              }`}
+          <ToggleGroup
+            type="single"
+            value={payType}
+            onValueChange={(v) => v && setPayType(v as 'cash' | 'bank')}
+            className="flex bg-[#f7f5f0] rounded-xl p-1 gap-1 w-full"
+            spacing={1}
+          >
+            <ToggleGroupItem
+              value="cash"
+              className={cn(
+                "flex-1 py-3 px-3 rounded-lg text-sm font-bold touch-target data-[state=off]:bg-transparent data-[state=off]:text-[#6b6358]",
+                "data-[state=on]:bg-[#d4800a] data-[state=on]:text-white data-[state=on]:shadow-md"
+              )}
             >
               💵 เงินสด
-            </button>
-            <button
-              type="button"
-              onClick={() => setPayType('bank')}
-              className={`flex-1 py-3 px-3 rounded-lg text-sm font-bold transition-all touch-target ${
-                payType === 'bank'
-                  ? 'bg-[#d4800a] text-white shadow-md'
-                  : 'bg-transparent text-[#6b6358]'
-              }`}
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="bank"
+              className={cn(
+                "flex-1 py-3 px-3 rounded-lg text-sm font-bold touch-target data-[state=off]:bg-transparent data-[state=off]:text-[#6b6358]",
+                "data-[state=on]:bg-[#d4800a] data-[state=on]:text-white data-[state=on]:shadow-md"
+              )}
             >
               🏦 โอนเงิน
-            </button>
-          </div>
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
 
         {/* Cart Items - Flexible height */}
@@ -157,13 +163,12 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <span className="text-4xl">🛒</span>
               </div>
               <p className="text-sm text-[#9a9288]">แตะเมนูเพื่อเพิ่มออเดอร์</p>
-              <button
-                type="button"
+              <Button
                 onClick={onClose}
-                className="mt-2 px-4 py-2 bg-[#d4800a] text-black rounded-lg text-sm font-bold"
+                className="mt-2 bg-[#d4800a] hover:bg-[#d4800a]/90 text-black rounded-lg text-sm font-bold"
               >
                 ไปเลือกเมนู
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="space-y-2">
@@ -178,22 +183,22 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         <div className="px-4 py-4 border-t border-[#e4e0d8] bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
           {/* Action Buttons */}
           <div className="flex gap-2 mb-3">
-            <button
-              type="button"
+            <Button
+              variant="outline"
               onClick={clearCart}
-              className="flex-1 py-2.5 rounded-xl border border-[#e4e0d8] bg-white text-[#9a9288] text-sm font-bold touch-target active:bg-[#f7f5f0] transition-colors flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5 h-auto rounded-xl border-[#e4e0d8] bg-white text-[#9a9288] text-sm font-bold touch-target hover:bg-[#f7f5f0] flex items-center justify-center gap-1.5"
             >
               <Trash2 className="w-4 h-4" />
               ล้าง
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="outline"
               onClick={handleAddDiscount}
-              className="flex-1 py-2.5 rounded-xl border border-[#e4e0d8] bg-white text-[#9a9288] text-sm font-bold touch-target active:bg-[#f7f5f0] transition-colors flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5 h-auto rounded-xl border-[#e4e0d8] bg-white text-[#9a9288] text-sm font-bold touch-target hover:bg-[#f7f5f0] flex items-center justify-center gap-1.5"
             >
               <Tag className="w-4 h-4" />
               ส่วนลด
-            </button>
+            </Button>
           </div>
 
           {/* Summary */}
@@ -215,14 +220,13 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           </div>
 
           {/* Confirm Button */}
-          <button
-            type="button"
+          <Button
             onClick={() => cart.length > 0 && setPaymentOpen(true)}
             disabled={cart.length === 0}
-            className="w-full bg-[#16a34a] border-none rounded-xl py-4 text-white font-heading font-black text-base touch-target transition-all disabled:bg-[#e4e0d8] disabled:text-[#9a9288] disabled:cursor-not-allowed active:opacity-90 shadow-[0_4px_15px_rgba(22,163,74,0.3)]"
+            className="w-full bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-xl py-4 h-auto text-white font-heading font-black text-base touch-target disabled:bg-[#e4e0d8] disabled:text-[#9a9288] active:opacity-90 shadow-[0_4px_15px_rgba(22,163,74,0.3)]"
           >
             ยืนยันออเดอร์ — ฿{total.toLocaleString()}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -254,23 +258,25 @@ function CartLineItem({
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() => updateQty(item.id, -1)}
-          className="w-9 h-9 rounded-lg border border-[#e4e0d8] bg-white text-[#1a1816] text-lg flex items-center justify-center active:bg-[#f7f5f0] active:border-[#d4800a] transition-colors touch-target"
+          className="w-9 h-9 rounded-lg border-[#e4e0d8] bg-white text-[#1a1816] hover:border-[#d4800a] hover:text-[#d4800a] touch-target"
         >
           −
-        </button>
+        </Button>
         <span className="text-base font-extrabold w-6 text-center font-heading">
           {item.qty}
         </span>
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() => updateQty(item.id, 1)}
-          className="w-9 h-9 rounded-lg border border-[#e4e0d8] bg-white text-[#1a1816] text-lg flex items-center justify-center active:bg-[#f7f5f0] active:border-[#d4800a] transition-colors touch-target"
+          className="w-9 h-9 rounded-lg border-[#e4e0d8] bg-white text-[#1a1816] hover:border-[#d4800a] hover:text-[#d4800a] touch-target"
         >
           +
-        </button>
+        </Button>
       </div>
     </div>
   );

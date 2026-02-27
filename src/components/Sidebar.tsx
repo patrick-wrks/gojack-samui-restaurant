@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingCart, BarChart3, UtensilsCrossed, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/pos', label: 'POS', icon: ShoppingCart },
@@ -19,18 +21,23 @@ export function Sidebar() {
       {navItems.map(({ href, label, icon: Icon }) => {
         const isActive = pathname === href || (href !== '/pos' && pathname.startsWith(href));
         return (
-          <Link
+          <Button
             key={href}
-            href={href}
-            className={`w-11 h-11 rounded-[11px] border-none flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
+            variant="ghost"
+            size="icon"
+            asChild
+            className={cn(
+              "w-11 h-11 rounded-[11px] flex flex-col items-center justify-center gap-0.5 h-auto",
               isActive
-                ? 'bg-[rgba(212,128,10,0.1)] text-[#d4800a]'
-                : 'bg-transparent text-[#9a9288] hover:bg-[#ffffff] hover:text-[#1a1816]'
-            }`}
+                ? 'bg-[rgba(212,128,10,0.1)] text-[#d4800a] hover:bg-[rgba(212,128,10,0.15)] hover:text-[#d4800a]'
+                : 'bg-transparent text-[#9a9288] hover:bg-white hover:text-[#1a1816]'
+            )}
           >
-            <Icon className="w-[17px] h-[17px]" strokeWidth={2} />
-            <span className="text-[8px] font-bold uppercase tracking-wide">{label}</span>
-          </Link>
+            <Link href={href}>
+              <Icon className="w-[17px] h-[17px]" strokeWidth={2} />
+              <span className="text-[8px] font-bold uppercase tracking-wide">{label}</span>
+            </Link>
+          </Button>
         );
       })}
       <div className="flex-1" />
