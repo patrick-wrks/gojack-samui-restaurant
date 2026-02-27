@@ -10,14 +10,14 @@ export default function AppLayout({
 }) {
   return (
     <AuthGuard>
-      <div className="h-screen flex flex-col bg-[#f2f0eb]">
+      <div className="h-screen flex flex-col bg-[#f2f0eb] min-w-0 overflow-hidden">
         <Topbar />
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden min-w-0 min-h-0">
           {/* Desktop Sidebar - hidden on mobile */}
-          <div className="hidden md:block">
+          <div className="hidden md:block shrink-0">
             <Sidebar />
           </div>
-          <main className="flex-1 overflow-hidden flex">{children}</main>
+          <main className="flex-1 overflow-hidden flex min-w-0 min-h-0">{children}</main>
         </div>
         {/* Mobile Bottom Navigation */}
         <MobileNav />

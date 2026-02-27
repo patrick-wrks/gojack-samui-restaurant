@@ -29,16 +29,16 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }
     <button
       type="button"
       onClick={onAdd}
-      className="bg-white border border-[#e4e0d8] rounded-[14px] p-3.5 md:p-3 cursor-pointer transition-all no-select relative text-left touch-target min-h-[90px] md:min-h-[80px] block w-full shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d4800a] hover:bg-[#f7f5f0] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.97]"
+      className="bg-white border border-[#e4e0d8] rounded-[14px] p-3.5 md:p-3 cursor-pointer transition-all no-select relative text-left touch-target min-h-[90px] md:min-h-[80px] block w-full min-w-0 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#d4800a] hover:bg-[#f7f5f0] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.97] overflow-hidden"
     >
       <div
-        className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full"
+        className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full shrink-0"
         style={{ background: color }}
       />
-      <div className="text-sm md:text-xs font-bold leading-snug mb-2 text-[#1a1816] pr-4 line-clamp-2">
+      <div className="text-sm md:text-xs font-bold leading-snug mb-2 text-[#1a1816] pr-4 line-clamp-safe-2 min-h-[2.5em]">
         {product.name}
       </div>
-      <div className="font-heading text-base md:text-[15px] font-extrabold text-[#d4800a] mt-auto">
+      <div className="font-heading text-base md:text-[15px] font-extrabold text-[#d4800a] mt-auto text-truncate-safe">
         ฿{product.price.toLocaleString()}
       </div>
     </button>
@@ -58,7 +58,7 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Category Pills - Horizontal Scroll */}
-      <div className="flex gap-2.5 px-3 md:px-3.5 py-3 md:py-2.5 overflow-x-auto shrink-0 scrollbar-hide momentum-scroll">
+      <div className="flex gap-2.5 px-3 md:px-3.5 py-3 md:py-2.5 overflow-x-auto overflow-y-hidden shrink-0 scrollbar-hide momentum-scroll min-w-0">
         <ToggleGroup
           type="single"
           value={activeCat}
@@ -83,8 +83,8 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
       </div>
 
       {/* Search Bar */}
-      <div className="px-3 md:px-3.5 pb-3 md:pb-2 shrink-0 relative">
-        <Search className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 md:w-3 h-5 md:h-3 text-[#9a9288] pointer-events-none" />
+      <div className="px-3 md:px-3.5 pb-3 md:pb-2 shrink-0 relative min-w-0">
+        <Search className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 md:w-3 h-5 md:h-3 text-[#9a9288] pointer-events-none shrink-0" />
         <Input
           type="text"
           placeholder="ค้นหาเมนู..."
@@ -101,7 +101,7 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
       {/* Product Grid - Responsive columns */}
       {/* pb-32 for mobile when cart peek is visible, pb-20 when closed, pb-3.5 for desktop */}
       <div className={cn(
-        "flex-1 overflow-y-auto px-3 md:px-3.5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(148px,1fr))] gap-2.5 md:gap-2 align-content-start momentum-scroll",
+        "flex-1 overflow-y-auto overflow-x-hidden px-3 md:px-3.5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(148px,1fr))] gap-2.5 md:gap-2 align-content-start momentum-scroll min-w-0",
         cartPeekMode ? 'pb-36' : 'pb-24 md:pb-3.5'
       )}>
         {filtered.length > 0 ? (

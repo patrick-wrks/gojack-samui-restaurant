@@ -36,27 +36,27 @@ export function Topbar() {
   }, []);
 
   return (
-    <header className="h-[52px] bg-white border-b border-[#e4e0d8] flex items-center px-3 md:px-4 gap-2 md:gap-3.5 shrink-0 shadow-[0_1px_0_#e4e0d8] safe-top">
+    <header className="h-[52px] bg-white border-b border-[#e4e0d8] flex items-center px-3 md:px-4 gap-2 md:gap-3.5 shrink-0 shadow-[0_1px_0_#e4e0d8] safe-top min-w-0 overflow-hidden">
       {/* Logo */}
-      <div className="font-heading font-black text-base md:text-lg text-[#1a1816] shrink-0">
+      <div className="font-heading font-black text-base md:text-lg text-[#1a1816] shrink-0 min-w-0 overflow-hidden text-truncate-safe">
         ร้าน<span className="text-[#d4800a]">อาหาร</span>
       </div>
 
-      <Separator orientation="vertical" className="hidden sm:block h-[18px] bg-[#e4e0d8]" />
-      <div className="hidden sm:block text-xs text-[#9a9288]">{time}</div>
+      <Separator orientation="vertical" className="hidden sm:block h-[18px] bg-[#e4e0d8] shrink-0" />
+      <div className="hidden sm:block text-xs text-[#9a9288] shrink-0 text-truncate-safe min-w-0">{time}</div>
 
-      <div className="flex-1" />
+      <div className="flex-1 min-w-0" />
 
       {/* Stats - shown on larger screens */}
-      <div className="hidden md:flex flex-col items-end">
-        <span className="font-heading text-[15px] font-extrabold text-[#1a1816] leading-none">
+      <div className="hidden md:flex flex-col items-end min-w-0 overflow-hidden">
+        <span className="font-heading text-[15px] font-extrabold text-[#1a1816] leading-none text-truncate-safe max-w-full">
           ฿{todayRevenue.toLocaleString()}
         </span>
         <span className="text-[9px] text-[#9a9288] uppercase tracking-wider">วันนี้</span>
       </div>
-      <Separator orientation="vertical" className="hidden md:block h-[18px] bg-[#e4e0d8]" />
-      <div className="hidden md:flex flex-col items-end">
-        <span className="font-heading text-[15px] font-extrabold text-[#1a1816] leading-none">
+      <Separator orientation="vertical" className="hidden md:block h-[18px] bg-[#e4e0d8] shrink-0" />
+      <div className="hidden md:flex flex-col items-end min-w-0 overflow-hidden">
+        <span className="font-heading text-[15px] font-extrabold text-[#1a1816] leading-none text-truncate-safe max-w-full">
           {todayOrders}
         </span>
         <span className="text-[9px] text-[#9a9288] uppercase tracking-wider">ออเดอร์</span>

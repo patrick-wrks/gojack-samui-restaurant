@@ -103,14 +103,14 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         </div>
 
         {/* Header */}
-        <div className="px-4 py-3 border-b border-[#e4e0d8] flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#d4800a] rounded-full flex items-center justify-center">
+        <div className="px-4 py-3 border-b border-[#e4e0d8] flex items-center justify-between gap-3 shrink-0 min-w-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 bg-[#d4800a] rounded-full flex items-center justify-center shrink-0">
               <span className="text-lg">🛒</span>
             </div>
-            <div>
-              <h3 className="font-heading text-lg font-extrabold">ออเดอร์ปัจจุบัน</h3>
-              <span className="text-xs text-[#9a9288] font-heading">
+            <div className="min-w-0 overflow-hidden">
+              <h3 className="font-heading text-lg font-extrabold text-truncate-safe">ออเดอร์ปัจจุบัน</h3>
+              <span className="text-xs text-[#9a9288] font-heading text-truncate-safe block">
                 #{orderNum} · {cart.reduce((sum, i) => sum + i.qty, 0)} รายการ
               </span>
             </div>
@@ -119,7 +119,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-[#f7f5f0] text-[#9a9288] hover:bg-[#e4e0d8] touch-target"
+            className="w-10 h-10 shrink-0 rounded-full bg-[#f7f5f0] text-[#9a9288] hover:bg-[#e4e0d8] touch-target"
           >
             <ChevronDown className="w-6 h-6" />
           </Button>
@@ -182,40 +182,40 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         {/* Footer Actions & Summary */}
         <div className="px-4 py-4 border-t border-[#e4e0d8] bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
           {/* Action Buttons */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-3 min-w-0">
             <Button
               variant="outline"
               onClick={clearCart}
-              className="flex-1 py-2.5 h-auto rounded-xl border-[#e4e0d8] bg-white text-[#9a9288] text-sm font-bold touch-target hover:bg-[#f7f5f0] flex items-center justify-center gap-1.5"
+              className="flex-1 min-w-0 py-2.5 h-auto rounded-xl border-[#e4e0d8] bg-white text-[#9a9288] text-sm font-bold touch-target hover:bg-[#f7f5f0] flex items-center justify-center gap-1.5 text-truncate-safe overflow-hidden"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 shrink-0" />
               ล้าง
             </Button>
             <Button
               variant="outline"
               onClick={handleAddDiscount}
-              className="flex-1 py-2.5 h-auto rounded-xl border-[#e4e0d8] bg-white text-[#9a9288] text-sm font-bold touch-target hover:bg-[#f7f5f0] flex items-center justify-center gap-1.5"
+              className="flex-1 min-w-0 py-2.5 h-auto rounded-xl border-[#e4e0d8] bg-white text-[#9a9288] text-sm font-bold touch-target hover:bg-[#f7f5f0] flex items-center justify-center gap-1.5 text-truncate-safe overflow-hidden"
             >
-              <Tag className="w-4 h-4" />
+              <Tag className="w-4 h-4 shrink-0" />
               ส่วนลด
             </Button>
           </div>
 
           {/* Summary */}
-          <div className="mb-3 space-y-1.5 py-2 border-y border-[#e4e0d8]">
-            <div className="flex justify-between text-sm text-[#9a9288]">
-              <span>ยอดรวม</span>
-              <span>฿{subtotal.toLocaleString()}</span>
+          <div className="mb-3 space-y-1.5 py-2 border-y border-[#e4e0d8] min-w-0">
+            <div className="flex justify-between items-center gap-2 text-sm text-[#9a9288] min-w-0">
+              <span className="shrink-0">ยอดรวม</span>
+              <span className="text-truncate-safe min-w-0 text-right">฿{subtotal.toLocaleString()}</span>
             </div>
             {discountAmount > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-[#9a9288]">ส่วนลด</span>
-                <span className="text-[#16a34a]">–฿{discountAmount.toLocaleString()}</span>
+              <div className="flex justify-between items-center gap-2 text-sm min-w-0">
+                <span className="text-[#9a9288] shrink-0">ส่วนลด</span>
+                <span className="text-[#16a34a] text-truncate-safe min-w-0 text-right">–฿{discountAmount.toLocaleString()}</span>
               </div>
             )}
-            <div className="flex justify-between text-xl font-extrabold pt-2 text-[#1a1816] font-heading">
-              <span>รวมทั้งสิ้น</span>
-              <span className="text-[#d4800a]">฿{total.toLocaleString()}</span>
+            <div className="flex justify-between items-center gap-2 text-xl font-extrabold pt-2 text-[#1a1816] font-heading min-w-0">
+              <span className="shrink-0">รวมทั้งสิ้น</span>
+              <span className="text-[#d4800a] text-truncate-safe min-w-0 text-right">฿{total.toLocaleString()}</span>
             </div>
           </div>
 
@@ -223,7 +223,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           <Button
             onClick={() => cart.length > 0 && setPaymentOpen(true)}
             disabled={cart.length === 0}
-            className="w-full bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-xl py-4 h-auto text-white font-heading font-black text-base touch-target disabled:bg-[#e4e0d8] disabled:text-[#9a9288] active:opacity-90 shadow-[0_4px_15px_rgba(22,163,74,0.3)]"
+            className="w-full min-w-0 bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-xl py-4 h-auto text-white font-heading font-black text-base touch-target disabled:bg-[#e4e0d8] disabled:text-[#9a9288] active:opacity-90 shadow-[0_4px_15px_rgba(22,163,74,0.3)] text-truncate-safe"
           >
             ยืนยันออเดอร์ — ฿{total.toLocaleString()}
           </Button>
@@ -250,10 +250,10 @@ function CartLineItem({
   const updateQty = useCartStore((s) => s.updateQty);
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-[#f7f5f0] border border-[#e4e0d8]">
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-bold text-[#1a1816] leading-tight">{item.name}</div>
-        <div className="text-xs text-[#9a9288] mt-0.5">
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-[#f7f5f0] border border-[#e4e0d8] min-w-0 overflow-hidden">
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="text-sm font-bold text-[#1a1816] leading-tight text-truncate-safe">{item.name}</div>
+        <div className="text-xs text-[#9a9288] mt-0.5 text-truncate-safe">
           ฿{item.price} × {item.qty} = <span className="font-bold text-[#d4800a]">฿{(item.price * item.qty).toLocaleString()}</span>
         </div>
       </div>

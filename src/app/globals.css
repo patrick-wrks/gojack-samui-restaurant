@@ -154,6 +154,20 @@ body {
   .momentum-scroll {
     -webkit-overflow-scrolling: touch;
   }
+
+  /* Bulletproof text: never overflow container */
+  .text-truncate-safe {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .line-clamp-safe-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
 }
 
 /* Mobile-specific animations */

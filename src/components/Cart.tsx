@@ -52,14 +52,14 @@ export function Cart() {
 
   return (
     <>
-      <div className="w-[330px] bg-white border-l border-[#e4e0d8] flex flex-col shrink-0">
+      <div className="w-[330px] min-w-[280px] max-w-[100vw] bg-white border-l border-[#e4e0d8] flex flex-col shrink-0 overflow-hidden">
         {/* Header */}
-        <div className="p-3.5 border-b border-[#e4e0d8]">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-heading text-sm font-extrabold">ออเดอร์ปัจจุบัน</h3>
+        <div className="p-3.5 border-b border-[#e4e0d8] shrink-0">
+          <div className="flex items-center justify-between gap-2 mb-2 min-w-0">
+            <h3 className="font-heading text-sm font-extrabold text-truncate-safe min-w-0">ออเดอร์ปัจจุบัน</h3>
             <Badge
               variant="outline"
-              className="text-[11px] text-[#9a9288] bg-white py-0.5 px-2 rounded-md border-[#e4e0d8] font-heading"
+              className="text-[11px] text-[#9a9288] bg-white py-0.5 px-2 rounded-md border-[#e4e0d8] font-heading shrink-0 text-truncate-safe max-w-[80px]"
             >
               #{orderNum}
             </Badge>
@@ -95,7 +95,7 @@ export function Cart() {
         </div>
 
         {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-1.5">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-1.5 min-h-0">
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center gap-1.5">
               <div className="text-[34px] opacity-15">🛒</div>
@@ -109,53 +109,53 @@ export function Cart() {
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-[#e4e0d8]">
+        <div className="p-3 border-t border-[#e4e0d8] shrink-0 min-w-0">
           {/* Action Buttons */}
-          <div className="flex gap-1.5 mb-2.5">
+          <div className="flex gap-1.5 mb-2.5 min-w-0">
             <Button
               variant="outline"
               onClick={clearCart}
-              className="flex-1 py-1.5 h-auto rounded-lg border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold hover:border-[#d4800a] hover:text-[#d4800a] hover:bg-[rgba(212,128,10,0.1)]"
+              className="flex-1 min-w-0 py-1.5 h-auto rounded-lg border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold hover:border-[#d4800a] hover:text-[#d4800a] hover:bg-[rgba(212,128,10,0.1)] text-truncate-safe overflow-hidden"
             >
               🗑 ล้าง
             </Button>
             <Button
               variant="outline"
               onClick={handleAddDiscount}
-              className="flex-1 py-1.5 h-auto rounded-lg border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold hover:border-[#d4800a] hover:text-[#d4800a] hover:bg-[rgba(212,128,10,0.1)]"
+              className="flex-1 min-w-0 py-1.5 h-auto rounded-lg border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold hover:border-[#d4800a] hover:text-[#d4800a] hover:bg-[rgba(212,128,10,0.1)] text-truncate-safe overflow-hidden"
             >
               🏷 ส่วนลด
             </Button>
             <Button
               variant="outline"
               onClick={handleAddNote}
-              className="flex-1 py-1.5 h-auto rounded-lg border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold hover:border-[#d4800a] hover:text-[#d4800a] hover:bg-[rgba(212,128,10,0.1)]"
+              className="flex-1 min-w-0 py-1.5 h-auto rounded-lg border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold hover:border-[#d4800a] hover:text-[#d4800a] hover:bg-[rgba(212,128,10,0.1)] text-truncate-safe overflow-hidden"
             >
               📝 หมายเหตุ
             </Button>
           </div>
 
           {/* Summary */}
-          <div className="mb-2.5 space-y-0.5">
-            <div className="flex justify-between text-xs text-[#9a9288] py-0.5">
-              <span>ยอดรวม</span>
-              <span>฿{subtotal.toLocaleString()}</span>
+          <div className="mb-2.5 space-y-0.5 min-w-0">
+            <div className="flex justify-between items-center gap-2 text-xs text-[#9a9288] py-0.5 min-w-0">
+              <span className="shrink-0">ยอดรวม</span>
+              <span className="text-truncate-safe min-w-0 text-right">฿{subtotal.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between text-xs py-0.5">
-              <span className="text-[#9a9288]">ส่วนลด</span>
-              <span className="text-[#16a34a]">–฿{discountAmount.toLocaleString()}</span>
+            <div className="flex justify-between items-center gap-2 text-xs py-0.5 min-w-0">
+              <span className="text-[#9a9288] shrink-0">ส่วนลด</span>
+              <span className="text-[#16a34a] text-truncate-safe min-w-0 text-right">–฿{discountAmount.toLocaleString()}</span>
             </div>
             <Separator className="my-1.5 bg-[#e4e0d8]" />
-            <div className="flex justify-between text-[19px] font-extrabold pt-2 text-[#1a1816] font-heading">
-              <span>รวมทั้งสิ้น</span>
-              <span>฿{total.toLocaleString()}</span>
+            <div className="flex justify-between items-center gap-2 text-[19px] font-extrabold pt-2 text-[#1a1816] font-heading min-w-0">
+              <span className="shrink-0">รวมทั้งสิ้น</span>
+              <span className="text-truncate-safe min-w-0 text-right">฿{total.toLocaleString()}</span>
             </div>
           </div>
 
           <Button
             onClick={() => cart.length > 0 && setPaymentOpen(true)}
             disabled={cart.length === 0}
-            className="w-full bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-[11px] py-3.5 h-auto text-white font-heading font-black text-[15px] disabled:bg-[#e4e0d8] disabled:text-[#9a9288] hover:opacity-90 hover:shadow-[0_6px_20px_rgba(34,197,94,0.35)]"
+            className="w-full min-w-0 bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-[11px] py-3.5 h-auto text-white font-heading font-black text-[15px] disabled:bg-[#e4e0d8] disabled:text-[#9a9288] hover:opacity-90 hover:shadow-[0_6px_20px_rgba(34,197,94,0.35)] text-truncate-safe"
           >
             ยืนยันออเดอร์ — ฿{total.toLocaleString()}
           </Button>
@@ -182,10 +182,10 @@ function CartLineItem({
   const updateQty = useCartStore((s) => s.updateQty);
 
   return (
-    <div className="flex items-start gap-2 p-2 rounded-[10px] bg-[#f7f5f0] mb-1.5 border border-[#e4e0d8] animate-[popIn_.16s_ease]">
-      <div className="flex-1 min-w-0">
-        <div className="text-xs font-bold leading-tight text-[#1a1816]">{item.name}</div>
-        <div className="text-[11px] text-[#9a9288] mt-0.5">
+    <div className="flex items-start gap-2 p-2 rounded-[10px] bg-[#f7f5f0] mb-1.5 border border-[#e4e0d8] animate-[popIn_.16s_ease] min-w-0 overflow-hidden">
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="text-xs font-bold leading-tight text-[#1a1816] text-truncate-safe">{item.name}</div>
+        <div className="text-[11px] text-[#9a9288] mt-0.5 text-truncate-safe">
           ฿{item.price} × {item.qty} = ฿{(item.price * item.qty).toLocaleString()}
         </div>
       </div>

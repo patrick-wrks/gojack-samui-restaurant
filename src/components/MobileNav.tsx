@@ -17,8 +17,8 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e0d8] z-50 safe-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-      <div className="flex items-center justify-around py-2 px-4">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e0d8] z-50 safe-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)] overflow-hidden">
+      <div className="flex items-center justify-around py-2 px-4 min-w-0">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== '/pos' && pathname.startsWith(href));
           return (
@@ -27,15 +27,15 @@ export function MobileNav() {
               variant="ghost"
               asChild
               className={cn(
-                "flex flex-col items-center justify-center py-2 px-3 rounded-xl h-auto min-w-[60px] gap-1",
+                "flex flex-col items-center justify-center py-2 px-3 rounded-xl h-auto min-w-0 flex-1 max-w-[25%] gap-1 overflow-hidden",
                 isActive
                   ? 'bg-[rgba(212,128,10,0.1)] text-[#d4800a] hover:bg-[rgba(212,128,10,0.15)] hover:text-[#d4800a]'
                   : 'bg-transparent text-[#9a9288] hover:bg-[#f7f5f0] hover:text-[#9a9288]'
               )}
             >
-              <Link href={href}>
-                <Icon className="w-5 h-5" strokeWidth={2} />
-                <span className="text-[10px] font-bold">{label}</span>
+              <Link href={href} className="flex flex-col items-center justify-center gap-1 min-w-0 w-full overflow-hidden">
+                <Icon className="w-5 h-5 shrink-0" strokeWidth={2} />
+                <span className="text-[10px] font-bold text-truncate-safe block max-w-full">{label}</span>
               </Link>
             </Button>
           );

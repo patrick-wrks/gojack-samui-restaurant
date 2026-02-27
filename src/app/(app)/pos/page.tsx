@@ -43,28 +43,28 @@ export default function PosPage() {
         {cartMode === 'peek' && (
           <div
             onClick={() => setCartMode('open')}
-            className="flex items-center justify-between px-4 py-3 active:bg-[#f7f5f0] cursor-pointer touch-target"
+            className="flex items-center justify-between gap-3 px-4 py-3 active:bg-[#f7f5f0] cursor-pointer touch-target min-w-0 overflow-hidden"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#d4800a] rounded-full flex items-center justify-center">
+            <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
+              <div className="w-10 h-10 bg-[#d4800a] rounded-full flex items-center justify-center shrink-0">
                 <ShoppingCart className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <div className="text-sm font-bold text-[#1a1816]">
+              <div className="min-w-0 overflow-hidden">
+                <div className="text-sm font-bold text-[#1a1816] text-truncate-safe">
                   {itemCount > 0 ? `${itemCount} รายการ` : 'ไม่มีรายการ'}
                 </div>
-                <div className="text-xs text-[#9a9288]">
+                <div className="text-xs text-[#9a9288] text-truncate-safe">
                   แตะเพื่อดูตะกร้า
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <div className="text-lg font-extrabold text-[#d4800a] font-heading">
+            <div className="flex items-center gap-3 shrink-0 min-w-0 overflow-hidden">
+              <div className="text-right min-w-0 overflow-hidden">
+                <div className="text-lg font-extrabold text-[#d4800a] font-heading text-truncate-safe">
                   ฿{total.toLocaleString()}
                 </div>
               </div>
-              <ChevronUp className="w-5 h-5 text-[#9a9288]" />
+              <ChevronUp className="w-5 h-5 text-[#9a9288] shrink-0" />
             </div>
           </div>
         )}

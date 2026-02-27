@@ -54,7 +54,7 @@ export function PaymentModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-[300] flex items-end md:items-center justify-center backdrop-blur-sm animate-[fadeIn_.15s_ease]">
-      <div className="bg-white border border-[#e4e0d8] rounded-t-[24px] md:rounded-[20px] w-full md:w-auto md:max-w-[390px] md:mx-4 overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.2)] md:shadow-[0_20px_60px_rgba(0,0,0,0.15)] animate-[slideUp_.25s_cubic-bezier(.22,1,.36,1)] md:animate-[rise_.22s_ease] max-h-[90vh] md:max-h-none overflow-y-auto">
+      <div className="bg-white border border-[#e4e0d8] rounded-t-[24px] md:rounded-[20px] w-full md:w-auto md:max-w-[390px] md:mx-4 overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.2)] md:shadow-[0_20px_60px_rgba(0,0,0,0.15)] animate-[slideUp_.25s_cubic-bezier(.22,1,.36,1)] md:animate-[rise_.22s_ease] max-h-[90vh] md:max-h-none overflow-y-auto min-w-0 max-w-[calc(100vw-2rem)]">
         {step === 'form' ? (
           <>
             {/* Handle for mobile */}
@@ -75,11 +75,11 @@ export function PaymentModal({
             </div>
 
             <div className="p-5 md:p-5">
-              <div className="text-center mb-6 md:mb-5 pb-5 md:pb-4 border-b border-[#e4e0d8]">
+              <div className="text-center mb-6 md:mb-5 pb-5 md:pb-4 border-b border-[#e4e0d8] min-w-0 overflow-hidden">
                 <div className="text-xs md:text-[11px] text-[#9a9288] uppercase tracking-wider mb-2 md:mb-1">
                   ยอดที่ต้องชำระ
                 </div>
-                <div className="font-heading text-[52px] md:text-[44px] font-black text-[#1a1816] leading-none">
+                <div className="font-heading text-[52px] md:text-[44px] font-black text-[#1a1816] leading-none overflow-hidden text-ellipsis break-all">
                   {totalFormatted}
                 </div>
               </div>
@@ -136,9 +136,9 @@ export function PaymentModal({
                     />
                   </div>
                   {change > 0 && (
-                    <div className="bg-[rgba(22,163,74,0.1)] border border-[rgba(34,197,94,0.25)] rounded-xl md:rounded-[9px] py-4 md:py-2.5 px-4 md:px-3 flex justify-between items-center mb-4 md:mb-3.5">
-                      <span className="text-base md:text-[13px] text-[#16a34a] font-bold">เงินทอน</span>
-                      <strong className="text-2xl md:text-xl font-black text-[#16a34a] font-heading">
+                    <div className="bg-[rgba(22,163,74,0.1)] border border-[rgba(34,197,94,0.25)] rounded-xl md:rounded-[9px] py-4 md:py-2.5 px-4 md:px-3 flex justify-between items-center gap-2 mb-4 md:mb-3.5 min-w-0">
+                      <span className="text-base md:text-[13px] text-[#16a34a] font-bold shrink-0">เงินทอน</span>
+                      <strong className="text-2xl md:text-xl font-black text-[#16a34a] font-heading text-truncate-safe min-w-0 text-right">
                         ฿{change.toLocaleString()}
                       </strong>
                     </div>
@@ -157,9 +157,9 @@ export function PaymentModal({
 
               <Button
                 onClick={handleConfirm}
-                className="w-full bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-xl md:rounded-[11px] py-5 md:py-3.5 h-auto text-white font-heading font-black text-lg md:text-[15px] active:opacity-90 touch-target shadow-[0_4px_15px_rgba(22,163,74,0.3)] flex items-center justify-center gap-2"
+                className="w-full min-w-0 bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-xl md:rounded-[11px] py-5 md:py-3.5 h-auto text-white font-heading font-black text-lg md:text-[15px] active:opacity-90 touch-target shadow-[0_4px_15px_rgba(22,163,74,0.3)] flex items-center justify-center gap-2 text-truncate-safe overflow-hidden"
               >
-                <Check className="w-5 h-5" />
+                <Check className="w-5 h-5 shrink-0" />
                 ยืนยันและบันทึกออเดอร์
               </Button>
             </div>
@@ -170,7 +170,7 @@ export function PaymentModal({
               ✅
             </div>
             <h3 className="font-heading text-[26px] md:text-[22px] font-black mb-2 md:mb-1">บันทึกออเดอร์สำเร็จ!</h3>
-            <p className="text-base md:text-[13px] text-[#9a9288] mb-6 md:mb-5">
+            <p className="text-base md:text-[13px] text-[#9a9288] mb-6 md:mb-5 break-words overflow-hidden min-w-0">
               ออเดอร์ #{orderNum} · {modalMethod === 'cash' ? 'เงินสด' : 'โอนเงิน'} · {totalFormatted}
             </p>
             <div className="grid grid-cols-2 gap-3 md:gap-2">

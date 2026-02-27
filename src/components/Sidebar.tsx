@@ -27,15 +27,15 @@ export function Sidebar() {
             size="icon"
             asChild
             className={cn(
-              "w-11 h-11 rounded-[11px] flex flex-col items-center justify-center gap-0.5 h-auto",
+              "w-11 h-11 rounded-[11px] flex flex-col items-center justify-center gap-0.5 h-auto min-w-0 overflow-hidden",
               isActive
                 ? 'bg-[rgba(212,128,10,0.1)] text-[#d4800a] hover:bg-[rgba(212,128,10,0.15)] hover:text-[#d4800a]'
                 : 'bg-transparent text-[#9a9288] hover:bg-white hover:text-[#1a1816]'
             )}
           >
-            <Link href={href}>
-              <Icon className="w-[17px] h-[17px]" strokeWidth={2} />
-              <span className="text-[8px] font-bold uppercase tracking-wide">{label}</span>
+            <Link href={href} className="flex flex-col items-center justify-center gap-0.5 min-w-0 w-full overflow-hidden">
+              <Icon className="w-[17px] h-[17px] shrink-0" strokeWidth={2} />
+              <span className="text-[8px] font-bold uppercase tracking-wide text-truncate-safe max-w-full block">{label}</span>
             </Link>
           </Button>
         );

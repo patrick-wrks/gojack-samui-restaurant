@@ -24,7 +24,7 @@ export function LoginForm() {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-[#f2f0eb] z-[999] bg-[radial-gradient(ellipse_50%_60%_at_80%_20%,rgba(212,128,10,0.08)_0%,transparent_70%)] px-4 safe-top safe-bottom">
-      <Card className="w-full max-w-[400px] md:max-w-[380px] border-[#e4e0d8] shadow-[0_20px_60px_rgba(0,0,0,0.1)] animate-[rise_.5s_cubic-bezier(.22,1,.36,1)] rounded-[24px] md:rounded-[20px]">
+      <Card className="w-full max-w-[400px] md:max-w-[380px] border-[#e4e0d8] shadow-[0_20px_60px_rgba(0,0,0,0.1)] animate-[rise_.5s_cubic-bezier(.22,1,.36,1)] rounded-[24px] md:rounded-[20px] overflow-hidden min-w-0">
         <CardHeader className="pb-4">
           {/* Logo Header */}
           <div className="flex items-center gap-3">
@@ -98,7 +98,7 @@ export function LoginForm() {
           </form>
 
           {/* Demo Info */}
-          <p className="text-center mt-5 md:mt-3.5 text-sm md:text-xs text-[#9a9288]">
+          <p className="text-center mt-5 md:mt-3.5 text-sm md:text-xs text-[#9a9288] break-words overflow-hidden min-w-0">
             Demo: <b>admin@restaurant.com</b> / <b>password</b>
           </p>
         </CardContent>
