@@ -26,6 +26,12 @@
 :root {
   --background: var(--color-bg);
   --foreground: var(--color-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  height: 100%;
+  touch-action: manipulation;
 }
 
 body {
@@ -34,10 +40,8 @@ body {
   font-family: var(--font-sans);
   height: 100%;
   overflow: hidden;
-}
-
-html {
-  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .scrollbar-hide {
@@ -50,4 +54,69 @@ html {
 
 .font-heading {
   font-family: var(--font-heading);
+}
+
+/* Mobile-first responsive utilities */
+@layer utilities {
+  /* Safe area insets for mobile devices with notches */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Touch-friendly minimum sizes */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent text selection on interactive elements */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Smooth momentum scrolling on iOS */
+  .momentum-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Mobile-specific animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* iOS safe area support */
+@supports (padding: env(safe-area-inset-top)) {
+  .mobile-safe {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
