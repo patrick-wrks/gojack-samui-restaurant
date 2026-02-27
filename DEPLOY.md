@@ -1,4 +1,4 @@
-# Cloudflare Pages Deployment
+# Cloudflare Pages Deployment ✓
 
 This Next.js app is configured for **Cloudflare Pages** with automatic deployment from GitHub.
 
