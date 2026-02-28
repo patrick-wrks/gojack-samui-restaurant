@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sarabun, Outfit } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./providers";
@@ -15,6 +15,10 @@ const outfit = Outfit({
   weight: ["400", "600", "700", "800", "900"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#FA3E3E",
+};
+
 export const metadata: Metadata = {
   title: "ร้านอาหาร POS",
   description: "ระบบจัดการร้านอาหาร",
@@ -28,7 +32,6 @@ export const metadata: Metadata = {
     icon: "/icon.png",
     apple: "/apple-icon.png",
   },
-  themeColor: "#FA3E3E",
 };
 
 export default function RootLayout({
