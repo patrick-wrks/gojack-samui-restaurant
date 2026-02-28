@@ -14,7 +14,7 @@ export default function AppLayout({
     <AuthGuard>
       <MenuLoader />
       <StoreLoader />
-      <div className="h-screen flex flex-col bg-[#f2f0eb] min-w-0 overflow-hidden">
+      <div className="h-screen-safe flex flex-col bg-[#f2f0eb] min-w-0 overflow-hidden">
         <Topbar />
         <div className="flex flex-1 overflow-hidden min-w-0 min-h-0">
           {/* Desktop Sidebar - hidden on mobile */}

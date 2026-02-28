@@ -63,7 +63,7 @@ export default function PosPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-lg font-bold text-green-600 font-heading tabular-nums">
+              <span className="text-lg font-bold text-[#1a1816] font-heading tabular-nums">
                 {currency}{total.toLocaleString()}
               </span>
               <ChevronUp className="w-5 h-5 text-[#9a9288]" />

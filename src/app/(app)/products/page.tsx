@@ -260,7 +260,7 @@ export default function ProductsPage() {
                             {cat?.name ?? p.cat}
                           </span>
                         </td>
-                        <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white font-extrabold text-green-600 font-heading">
+                        <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white font-extrabold text-[#1a1816] font-heading">
                           {currency}{p.price}
                         </td>
                         <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white align-middle">
@@ -343,7 +343,7 @@ export default function ProductsPage() {
                     </div>
                   </div>
                     <div className="flex items-center justify-between">
-                      <span className="font-heading text-lg font-extrabold text-green-600">
+                      <span className="font-heading text-lg font-extrabold text-[#1a1816]">
                         {currency}{p.price}
                       </span>
                       <div className="flex items-center gap-1.5">

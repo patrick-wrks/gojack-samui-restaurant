@@ -17,6 +17,9 @@ const outfit = Outfit({
 
 export const viewport: Viewport = {
   themeColor: "#FA3E3E",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {

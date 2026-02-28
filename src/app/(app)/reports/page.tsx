@@ -328,7 +328,7 @@ export default function ReportsPage() {
                           style={{ width: `${(d.cnt / maxDish) * 100}%` }}
                         />
                       </div>
-                      <span className="text-sm md:text-xs font-extrabold text-green-600 font-heading shrink-0">
+                      <span className="text-sm md:text-xs font-extrabold text-[#1a1816] font-heading shrink-0">
                         {currency}{d.rev.toLocaleString()}
                       </span>
                     </div>

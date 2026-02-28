@@ -94,9 +94,9 @@ Insert `orders` with `status: 'open'`, `table_number`, `total` (from items), `pa
 Return orders with `status = 'open'`, optionally with `order_items`, for the Tables page (e.g. by `table_number`).
 - `**fetchOpenOrderByTable(tableNumber: string)`**  
 Return a single open order (with items) for that table, or null.
-- `**addItemsToOpenOrder(orderId: string, items: { product_id, product_name, qty, price_at_sale }[])**`  
+- `**addItemsToOpenOrder(orderId: string, items: { product_id, product_name, qty, price_at_sale }[])`**  
 Append rows to `order_items` for that `order_id`; optionally recalc and update `orders.total` for the open order.
-- `**completeOrder(orderId: string, paymentMethod: PaymentMethod, total: number)**`  
+- `**completeOrder(orderId: string, paymentMethod: PaymentMethod, total: number)`**  
 Update the order: `status = 'completed'`, `payment_method = paymentMethod`, `total = total`. No new row; this order then appears in reports.
 - **Order number:** Keep using `getNextOrderNumber()` when **creating** an open order so each open order has a unique display number. When completing, do not create a new order; only update. So analytics still see one order per table session.
 
@@ -179,4 +179,41 @@ Tables 1–N (N configurable, e.g. 1–10 or from settings). For each table show
 | **Bugs/constraints** | Relax `payment_method` and `status` in DB; keep reports and POS behavior; ensure order numbers and types updated. |
 | **QA**               | Multi-table open orders, checkout one by one, verify in reports; POS and build/lint.                              |
 
+
+---
+
+## Implementation review (completed)
+
+### ✅ Complete vs plan
+
+
+| Area                   | Status | Notes                                                                                                                                        |
+| ---------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DB migration (007)** | ✅      | `table_number`, status includes `'open'`, `payment_method` nullable, CHECKs and index.                                                       |
+| **Order API**          | ✅      | `createOpenOrder`, `fetchOpenOrders`, `fetchOpenOrderByTable`, `addItemsToOpenOrder`, `completeOrder`; `getNextOrderNumber` uses all orders. |
+| **Types**              | ✅      | `OrderStatus` and `OrderWithItems` in `orders.ts` include `table_number`, `status`; `pos.ts` has `OrderStatus` and `OrderWithTable`.         |
+| **Tables page**        | ✅      | Grid of tables, create/open order, MenuGrid add items, order summary, “Request bill” → PaymentModal → `completeOrder`.                       |
+| **Realtime**           | ✅      | `useOrdersRealtime(loadOpenOrders)` refreshes list on order changes.                                                                         |
+| **Nav**                | ✅      | Sidebar and MobileNav link to `/tables` (โต๊ะ, LayoutGrid).                                                                                  |
+| **Reports**            | ✅      | `fetchOrdersWithItems` filters `status = 'completed'`; table orders appear after checkout.                                                   |
+| **POS**                | ✅      | Unchanged; no `table_number`, orders created as completed.                                                                                   |
+
+
+### ⚠️ Gaps and bugs
+
+1. **Error handling on Tables page**
+  `createOpenOrder` and `addItemsToOpenOrder` are in `try/finally` with no `catch`. On failure the user gets no message (only spinner stops). **Fix:** Add local error state and show a short message (e.g. below header or inline) when create/add fails; clear on retry or navigation.
+2. **Detail view vs realtime**
+  When viewing one table’s order, `loadOpenOrders()` still runs on realtime. If another device/tab updates that same table, `openOrders` updates but `detailOrder` is not refreshed, so the open detail view can be stale. **Fix:** When `openOrders` changes and `selectedTable` is set, set `detailOrder` from `openOrdersByTable[selectedTable]` if present (and optionally keep current if we’re the one who just updated).
+3. **Quantity edit/remove (optional)**
+  Plan says “optional quantity edit/remove”. Current UI only lists items; no change qty or remove line. Acceptable as optional; add later if needed (would require `order_items.id` in API and update/delete helpers).
+4. **List key for order items**
+  Order items are rendered with `key={idx}`. Prefer `key={item.id}` when `order_items.id` is exposed for stability and future edit/remove.
+5. **Double-tap “Add order”**
+  Fast double-click on a table with no order could call `createOpenOrder` twice and create two open orders for the same table. Low risk; can add a short guard (e.g. disable button while `adding` for that table, or re-check `fetchOpenOrderByTable` right before create).
+
+### Summary
+
+- **Feature is complete** relative to the plan: DB, API, Types, Tables page, nav, reports, POS, realtime all aligned.
+- **Recommended fixes:** (1) show errors for create/add on Tables page, (2) sync `detailOrder` from refreshed `openOrders` when in detail view. Optional later: quantity edit/remove, `order_items.id` in response and keys, and double-create guard.
 

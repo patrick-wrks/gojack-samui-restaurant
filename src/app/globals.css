@@ -114,8 +114,10 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Use dvh on mobile so layout matches visible viewport (avoids 100vh issues with URL bar) */
 html {
   height: 100%;
+  min-height: 100dvh;
   touch-action: manipulation;
 }
 
@@ -130,6 +132,7 @@ html {
 body {
   font-family: var(--font-sans);
   height: 100%;
+  min-height: 100dvh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -141,6 +144,20 @@ body {
 
 /* Use shadcn's no-scrollbar utility instead of duplicating; keep scrollbar-hide as alias for compatibility */
 @layer utilities {
+  /* Full viewport height using dvh so mobile (Safari/Chrome) doesn't overflow or show gaps */
+  .h-screen-safe {
+    height: 100vh;
+    height: 100dvh;
+  }
+  .min-h-screen-safe {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  /* Mobile drawer height (CartDrawer) – full height so CTA sits above nav; dvh for iOS */
+  .h-drawer-mobile {
+    height: 100vh;
+    height: 100dvh;
+  }
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
@@ -215,6 +232,48 @@ body {
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes addFeedback {
+  0% {
+    transform: translateY(20px) scale(0.9);
+    opacity: 0;
+  }
+  30% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-20px) scale(0.9);
+    opacity: 0;
   }
 }
 

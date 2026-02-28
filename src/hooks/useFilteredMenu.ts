@@ -8,13 +8,33 @@ export function useFilteredMenu(
   search: string
 ): Product[] {
   return useMemo(() => {
-    return menu.filter((p) => {
+    const filtered = menu.filter((p) => {
       const cOk = activeCat === 'all' || p.cat === activeCat;
       const sOk =
         !search.trim() ||
         p.name.toLowerCase().includes(search.toLowerCase());
       return cOk && sOk;
     });
+
+    if (activeCat !== 'all') {
+      return filtered;
+    }
+
+    // For "ทั้งหมด" (all) tab: group by category, then order categories by item count (most to least)
+    const byCat = new Map<string, Product[]>();
+    for (const p of filtered) {
+      const list = byCat.get(p.cat) ?? [];
+      list.push(p);
+      byCat.set(p.cat, list);
+    }
+    const catIdsByCount = [...byCat.entries()]
+      .sort((a, b) => b[1].length - a[1].length)
+      .map(([cat]) => cat);
+    const result: Product[] = [];
+    for (const catId of catIdsByCount) {
+      result.push(...(byCat.get(catId) ?? []));
+    }
+    return result;
   }, [menu, activeCat, search]);
 }
 

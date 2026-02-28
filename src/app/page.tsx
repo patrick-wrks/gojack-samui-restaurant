@@ -21,7 +21,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="h-screen bg-[#f2f0eb]">
+    <div className="h-screen-safe bg-[#f2f0eb]">
       <LoginForm />
     </div>
   );

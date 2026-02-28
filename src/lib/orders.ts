@@ -24,6 +24,8 @@ export interface OrderWithItems {
   table_number: string | null;
   created_at: string;
   order_items: {
+    id: string;
+    product_id: number | null;
     product_name: string;
     qty: number;
     price_at_sale: number;
@@ -150,6 +152,7 @@ export async function fetchOrdersWithItems(
       table_number,
       created_at,
       order_items (
+        id,
         product_name,
         qty,
         price_at_sale
@@ -303,6 +306,8 @@ export async function fetchOpenOrders(): Promise<OrderWithItems[]> {
       table_number,
       created_at,
       order_items (
+        id,
+        product_id,
         product_name,
         qty,
         price_at_sale
@@ -337,6 +342,8 @@ export async function fetchOpenOrderByTable(
       table_number,
       created_at,
       order_items (
+        id,
+        product_id,
         product_name,
         qty,
         price_at_sale
@@ -421,6 +428,75 @@ export async function completeOrder(
     console.error('[completeOrder] Error:', error);
     throw new OrderInsertError(
       error.message || 'Failed to complete order',
+      error
+    );
+  }
+}
+
+/**
+ * Update the quantity of an order item and recalculate the order total.
+ */
+export async function updateOrderItemQuantity(
+  itemId: string,
+  qty: number
+): Promise<void> {
+  if (!supabase) {
+    throw new OrderInsertError('Supabase client not configured');
+  }
+
+  const { error } = await supabase
+    .from('order_items')
+    .update({ qty })
+    .eq('id', itemId);
+
+  if (error) {
+    console.error('[updateOrderItemQuantity] Error:', error);
+    throw new OrderInsertError(
+      error.message || 'Failed to update item quantity',
+      error
+    );
+  }
+
+  // Recalculate order total from all items
+  const { data: item } = await supabase
+    .from('order_items')
+    .select('order_id')
+    .eq('id', itemId)
+    .single();
+  if (item?.order_id) {
+    const { data: existingItems } = await supabase
+      .from('order_items')
+      .select('qty, price_at_sale')
+      .eq('order_id', item.order_id);
+    const total =
+      (existingItems ?? []).reduce(
+        (sum, r) => sum + Number(r.qty) * Number(r.price_at_sale),
+        0
+      );
+    await supabase
+      .from('orders')
+      .update({ total })
+      .eq('id', item.order_id);
+  }
+}
+
+/**
+ * Delete an order item.
+ */
+export async function deleteOrderItem(itemId: string): Promise<void> {
+  if (!supabase) {
+    throw new OrderInsertError('Supabase client not configured');
+  }
+
+  const { error } = await supabase
+    .from('order_items')
+    .delete()
+    .eq('id', itemId);
+
+  if (error) {
+    console.error('[deleteOrderItem] Error:', error);
+    throw new OrderInsertError(
+      error.message || 'Failed to delete item',
       error
     );
   }
