@@ -8,6 +8,7 @@ import { insertOrder } from '@/lib/orders';
 import { PaymentModal } from './PaymentModal';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import type { PaymentMethod } from '@/types/pos';
 
 export function Cart() {
   const {
@@ -43,24 +44,17 @@ export function Cart() {
     window.alert('ฟีเจอร์หมายเหตุจะเปิดใช้งานเมื่อเชื่อมต่อฐานข้อมูลแล้ว');
   };
 
-  const handleConfirmOrder = async () => {
+  const handleConfirmOrder = async (method: PaymentMethod) => {
     const nextOrderNum = orderNum + 1;
-    try {
-      await insertOrder({
-        orderNumber: nextOrderNum,
-        total,
-        paymentMethod: payType,
-        items: cart,
-      });
-      addTodayOrder(total);
-      incrementOrderNum();
-      clearCart();
-    } catch (error) {
-      console.error('Failed to save order:', error);
-      window.alert(
-        'ไม่สามารถบันทึกออเดอร์ได้ กรุณาลองใหม่อีกครั้ง\n(Could not save order, please try again)'
-      );
-    }
+    await insertOrder({
+      orderNumber: nextOrderNum,
+      total,
+      paymentMethod: method,
+      items: cart,
+    });
+    addTodayOrder(total);
+    incrementOrderNum();
+    clearCart();
   };
 
   return (

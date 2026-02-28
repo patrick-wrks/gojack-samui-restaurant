@@ -7,6 +7,7 @@ import { useCartTotals } from '@/hooks/useCartTotals';
 import { useCurrencySymbol } from '@/store/store-settings-store';
 import { insertOrder } from '@/lib/orders';
 import { PaymentModal } from './PaymentModal';
+import type { PaymentMethod } from '@/types/pos';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -40,25 +41,18 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
     }
   };
 
-  const handleConfirmOrder = async () => {
+  const handleConfirmOrder = async (method: PaymentMethod) => {
     const nextOrderNum = orderNum + 1;
-    try {
-      await insertOrder({
-        orderNumber: nextOrderNum,
-        total,
-        paymentMethod: payType,
-        items: cart,
-      });
-      addTodayOrder(total);
-      incrementOrderNum();
-      clearCart();
-      onClose();
-    } catch (error) {
-      console.error('Failed to save order:', error);
-      window.alert(
-        'ไม่สามารถบันทึกออเดอร์ได้ กรุณาลองใหม่อีกครั้ง\n(Could not save order, please try again)'
-      );
-    }
+    await insertOrder({
+      orderNumber: nextOrderNum,
+      total,
+      paymentMethod: method,
+      items: cart,
+    });
+    addTodayOrder(total);
+    incrementOrderNum();
+    clearCart();
+    onClose();
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {

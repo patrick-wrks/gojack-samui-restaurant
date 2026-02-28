@@ -15,7 +15,7 @@ interface PaymentModalProps {
   total: number;
   payType: PaymentMethod;
   orderNum: number;
-  onConfirm: () => void;
+  onConfirm: (method: PaymentMethod) => Promise<void>;
 }
 
 export function PaymentModal({
@@ -26,9 +26,11 @@ export function PaymentModal({
   orderNum,
   onConfirm,
 }: PaymentModalProps) {
-  const [step, setStep] = useState<'form' | 'success'>('form');
+  const [step, setStep] = useState<'form' | 'success' | 'error'>('form');
   const [modalMethod, setModalMethod] = useState<PaymentMethod>(payType);
   const [tendered, setTendered] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const currency = useCurrencySymbol();
   const store = useStoreSettingsStore((s) => s.store);
 
@@ -42,6 +44,7 @@ export function PaymentModal({
       setStep('form');
       setModalMethod(payType);
       setTendered('');
+      setErrorMsg('');
     }
   }, [open, payType]);
 
@@ -49,9 +52,20 @@ export function PaymentModal({
   const tenderedNum = parseFloat(tendered) || 0;
   const change = tenderedNum >= total ? tenderedNum - total : 0;
 
-  const handleConfirm = () => {
-    onConfirm();
-    setStep('success');
+  const handleConfirm = async () => {
+    setIsSaving(true);
+    try {
+      await onConfirm(modalMethod);
+      setStep('success');
+    } catch (error) {
+      console.error('Payment confirmation failed:', error);
+      setErrorMsg(
+        error instanceof Error ? error.message : 'ไม่สามารถบันทึกออเดอร์ได้'
+      );
+      setStep('error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleNewOrder = () => {
@@ -174,12 +188,28 @@ export function PaymentModal({
                 </div>
               )}
 
+              {errorMsg && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                  ❌ {errorMsg}
+                </div>
+              )}
+
               <Button
                 onClick={handleConfirm}
-                className="w-full min-w-0 bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-xl md:rounded-[11px] py-5 md:py-3.5 h-auto text-white font-heading font-black text-lg md:text-[15px] active:opacity-90 touch-target shadow-[0_4px_15px_rgba(22,163,74,0.3)] flex items-center justify-center gap-2 text-truncate-safe overflow-hidden"
+                disabled={isSaving}
+                className="w-full min-w-0 bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-xl md:rounded-[11px] py-5 md:py-3.5 h-auto text-white font-heading font-black text-lg md:text-[15px] active:opacity-90 touch-target shadow-[0_4px_15px_rgba(22,163,74,0.3)] flex items-center justify-center gap-2 text-truncate-safe overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Check className="w-5 h-5 shrink-0" />
-                ยืนยันและบันทึกออเดอร์
+                {isSaving ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5 shrink-0" />
+                    ยืนยันและบันทึกออเดอร์
+                  </>
+                )}
               </Button>
             </div>
           </>
