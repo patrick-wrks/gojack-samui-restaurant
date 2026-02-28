@@ -5,16 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/providers';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
+    if (authLoading) return;
     if (!isLoggedIn) {
       router.replace('/');
     }
-  }, [isLoggedIn, router]);
+  }, [isLoggedIn, authLoading, router]);
 
-  if (!isLoggedIn) {
+  if (authLoading || !isLoggedIn) {
     return null;
   }
 

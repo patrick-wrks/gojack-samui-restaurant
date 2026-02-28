@@ -105,3 +105,6 @@ npx serve .vercel/output/static
 ### Build fails
 - Check GitHub Actions logs for specific errors
 - Verify all 4 secrets are set correctly
+
+### Login shows "แอปยังไม่ได้ตั้งค่า (ไม่มี Supabase)"
+- Auth requires Supabase. If `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` are missing (or wrong), the app disables login and shows this message. Add both secrets in GitHub Actions and set the same env vars in Cloudflare Pages (Settings → Environment variables) so the built app can authenticate staff.
