@@ -15,34 +15,50 @@ function ProductCard({ product, onAdd, currency }: { product: Product; onAdd: ()
   const categories = getCategoriesForUI();
   const color = getCatColor(product.cat, categories);
   const categoryName = categories.find((c) => c.id === product.cat)?.name ?? product.cat;
+  
   return (
     <button
       type="button"
       onClick={onAdd}
       className={cn(
-        'group flex h-full min-h-[132px] sm:min-h-[128px] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-[#e8e4de] bg-white text-left no-select',
-        'shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 cursor-pointer touch-target',
-        'hover:border-[#d4cfc5] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-0.5',
-        'active:scale-[0.98] active:shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
-        'p-3.5 md:p-3 relative'
+        // Fixed height for consistency across all tabs
+        'h-[120px] sm:h-[130px]',
+        // Flex layout for content distribution
+        'flex flex-col justify-between',
+        // Visual styling
+        'w-full bg-white rounded-xl border border-[#e4e0d8]',
+        'p-3 sm:p-3.5',
+        'shadow-[0_1px_3px_rgba(0,0,0,0.04)]',
+        'transition-all duration-200 ease-out',
+        'hover:border-[#d4800a] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5',
+        'active:scale-[0.98]',
+        'text-left cursor-pointer touch-target'
       )}
     >
-      {/* Category accent – left edge */}
+      {/* Category color indicator - top right */}
       <div
-        className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full shrink-0"
-        style={{ background: color }}
+        className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full shrink-0"
+        style={{ backgroundColor: color }}
+        aria-hidden="true"
       />
-      <div className="flex min-h-0 flex-1 flex-col pl-2 gap-0.5">
-        <div className="min-h-[2.5em] text-sm font-semibold leading-snug text-[#1a1816] line-clamp-2-safe md:text-xs overflow-hidden">
+      
+      {/* Main content area */}
+      <div className="flex flex-col gap-1 pr-4">
+        {/* Product name - 2 lines max */}
+        <h3 className="text-sm font-semibold text-[#1a1816] leading-snug line-clamp-2-safe">
           {product.name}
-        </div>
-        <div className="text-[11px] text-[#6b6358] truncate md:text-[10px] shrink-0">
+        </h3>
+        
+        {/* Category name */}
+        <span className="text-xs text-[#9a9288] truncate">
           {categoryName}
-        </div>
-        <div className="mt-auto shrink-0 pt-1.5 font-heading text-[15px] font-bold text-[#1a1816] md:text-sm tabular-nums">
-          {currency}{product.price.toLocaleString()}
-        </div>
+        </span>
       </div>
+      
+      {/* Price - always at bottom */}
+      <span className="text-base font-bold text-[#d4800a] font-heading tabular-nums">
+        {currency}{product.price.toLocaleString()}
+      </span>
     </button>
   );
 }
@@ -62,10 +78,11 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
   const addItem = useCartStore((s) => s.addItem);
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Section: Categories + Search – single header block */}
-      <div className="shrink-0 px-4 md:px-5 pt-4 md:pt-5 pb-3 space-y-3">
-        <div className="flex gap-2 overflow-x-auto overflow-y-hidden scrollbar-hide momentum-scroll min-w-0 -mx-1 px-1">
+    <div className="flex flex-col h-full overflow-hidden bg-[#f8f6f2]">
+      {/* Header - Categories + Search */}
+      <div className="shrink-0 px-3 sm:px-4 pt-3 sm:pt-4 pb-2 sm:pb-3 space-y-3 bg-white border-b border-[#e4e0d8]">
+        {/* Category pills */}
+        <div className="flex gap-2 overflow-x-auto overflow-y-hidden scrollbar-hide momentum-scroll">
           <ToggleGroup
             type="single"
             value={activeCat}
@@ -78,9 +95,11 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
                 key={c.id}
                 value={c.id}
                 className={cn(
-                  'px-4 py-2 rounded-lg text-[13px] font-semibold whitespace-nowrap border font-sans transition-all duration-200 touch-target h-auto',
-                  'data-[state=off]:border-transparent data-[state=off]:bg-[#eeebe6] data-[state=off]:text-[#6b6358] data-[state=off]:hover:bg-[#e8e4de] data-[state=off]:hover:text-[#1a1816]',
-                  'data-[state=on]:bg-[#1a1816] data-[state=on]:border-[#1a1816] data-[state=on]:text-white data-[state=on]:shadow-sm'
+                  'px-3 sm:px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap',
+                  'border transition-all duration-200 touch-target h-auto',
+                  'data-[state=off]:border-[#e4e0d8] data-[state=off]:bg-white data-[state=off]:text-[#6b6358]',
+                  'data-[state=off]:hover:border-[#d4800a] data-[state=off]:hover:text-[#1a1816]',
+                  'data-[state=on]:bg-[#d4800a] data-[state=on]:border-[#d4800a] data-[state=on]:text-white'
                 )}
               >
                 {c.name}
@@ -89,42 +108,59 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
           </ToggleGroup>
         </div>
 
+        {/* Search bar */}
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9a9288] pointer-events-none shrink-0" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9a9288] pointer-events-none" />
           <Input
             type="text"
             placeholder="ค้นหาเมนู..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className={cn(
-              'w-full bg-white border-[#e8e4de] rounded-lg h-10 pl-10 pr-3 text-[14px] text-[#1a1816]',
-              'placeholder:text-[#9a9288] touch-target focus:border-[#1a1816] focus:ring-2 focus:ring-[#1a1816]/10'
-            )}
+            className="w-full h-10 pl-10 pr-4 bg-[#f8f6f2] border-[#e4e0d8] rounded-lg text-sm text-[#1a1816] placeholder:text-[#9a9288] focus:border-[#d4800a] focus:ring-2 focus:ring-[#d4800a]/10"
           />
         </div>
       </div>
 
-      {/* Product grid – fixed cell size so every tab shows same card dimensions */}
+      {/* Product grid - CONSISTENT across all tabs */}
       <div
         className={cn(
-          'flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-5 momentum-scroll min-w-0',
-          'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
-          'grid-auto-rows-[132px] sm:grid-auto-rows-[128px] gap-3 sm:gap-2.5 align-content-start',
-          cartPeekMode ? 'pb-36' : 'pb-24 md:pb-5'
+          // Scrollable area
+          'flex-1 overflow-y-auto overflow-x-hidden',
+          // Consistent padding
+          'px-3 sm:px-4 py-3 sm:py-4',
+          // Grid: same columns on all screen sizes
+          'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+          // Fixed row height for consistency (cards align perfectly)
+          'grid-rows-[repeat(auto-fill,120px)] sm:grid-rows-[repeat(auto-fill,130px)]',
+          // Consistent gap - this never changes
+          'gap-3 sm:gap-4',
+          // Align items to start (no stretching)
+          'items-start content-start',
+          // Bottom padding for mobile cart
+          cartPeekMode ? 'pb-32' : 'pb-20'
         )}
       >
         {loading ? (
-          <div className="col-span-full flex flex-col items-center justify-center py-16 text-[#6b6358] text-[14px]">
-            <div className="w-8 h-8 rounded-full border-2 border-[#e8e4de] border-t-[#1a1816] animate-spin mb-3" />
-            กำลังโหลดเมนู...
+          <div className="col-span-full flex flex-col items-center justify-center py-16 text-[#9a9288]">
+            <div className="w-10 h-10 rounded-full border-3 border-[#e4e0d8] border-t-[#d4800a] animate-spin mb-4" />
+            <p className="text-sm">กำลังโหลดเมนู...</p>
           </div>
         ) : filtered.length > 0 ? (
+          // Cards directly in grid - no wrapper divs
           filtered.map((p) => (
-            <ProductCard key={p.id} product={p} onAdd={() => addItem(p.id)} currency={currency} />
+            <ProductCard 
+              key={p.id} 
+              product={p} 
+              onAdd={() => addItem(p.id)} 
+              currency={currency} 
+            />
           ))
         ) : (
-          <div className="col-span-full flex flex-col items-center justify-center py-16 text-[#6b6358] text-[14px]">
-            ไม่พบเมนูที่ค้นหา
+          <div className="col-span-full flex flex-col items-center justify-center py-16 text-[#9a9288]">
+            <div className="w-16 h-16 rounded-full bg-[#f2f0eb] flex items-center justify-center mb-3">
+              <Search className="w-6 h-6 text-[#9a9288]" />
+            </div>
+            <p className="text-sm">ไม่พบเมนูที่ค้นหา</p>
           </div>
         )}
       </div>

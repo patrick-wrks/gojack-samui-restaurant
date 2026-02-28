@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { CartItem, PaymentMethod } from '@/types/pos';
 import { useMenuStore } from '@/store/menu-store';
+import { getNextOrderNumber, fetchTodayStats } from '@/lib/orders';
 
 export interface CartStore {
   cart: CartItem[];
@@ -16,18 +17,17 @@ export interface CartStore {
   setPayType: (method: PaymentMethod) => void;
   incrementOrderNum: () => void;
   addTodayOrder: (total: number) => void;
+  initOrderNum: () => Promise<void>;
+  refreshTodayStats: () => Promise<void>;
 }
-
-const INITIAL_ORDER_NUM = 1009;
-const initialTodayRevenue = 2510; // from SAMPLE_ORDERS sum
 
 export const useCartStore = create<CartStore>((set) => ({
   cart: [],
   payType: 'cash',
   discount: 0,
-  orderNum: INITIAL_ORDER_NUM,
-  todayRevenue: initialTodayRevenue,
-  todayOrders: 8,
+  orderNum: 1,
+  todayRevenue: 0,
+  todayOrders: 0,
 
   addItem: (productId) => {
     const product = useMenuStore.getState().products.find((p) => p.id === productId);
@@ -74,4 +74,14 @@ export const useCartStore = create<CartStore>((set) => ({
       todayRevenue: s.todayRevenue + total,
       todayOrders: s.todayOrders + 1,
     })),
+
+  initOrderNum: async () => {
+    const nextNum = await getNextOrderNumber();
+    set({ orderNum: nextNum });
+  },
+
+  refreshTodayStats: async () => {
+    const stats = await fetchTodayStats();
+    set({ todayRevenue: stats.revenue, todayOrders: stats.orders });
+  },
 }));

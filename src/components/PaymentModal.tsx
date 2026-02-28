@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Printer, ArrowRight, Check } from 'lucide-react';
 import type { PaymentMethod } from '@/types/pos';
-import { useCurrencySymbol } from '@/store/store-settings-store';
+import { useCurrencySymbol, useStoreSettingsStore } from '@/store/store-settings-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -30,6 +30,12 @@ export function PaymentModal({
   const [modalMethod, setModalMethod] = useState<PaymentMethod>(payType);
   const [tendered, setTendered] = useState('');
   const currency = useCurrencySymbol();
+  const store = useStoreSettingsStore((s) => s.store);
+
+  const bankName = store?.bank_name || '';
+  const bankAccount = store?.bank_account_number || '';
+  const bankAccountName = store?.bank_account_name || '';
+  const hasBankInfo = bankName && bankAccount;
 
   useEffect(() => {
     if (open) {
@@ -151,9 +157,20 @@ export function PaymentModal({
               {modalMethod === 'bank' && (
                 <div className="bg-[#f7f5f0] border-2 border-dashed border-[#d4cfc5] rounded-xl md:rounded-[11px] p-5 md:p-4 text-center mb-5 md:mb-4">
                   <p className="text-sm md:text-[13px] text-[#9a9288] mb-2 md:mb-1.5">ให้ลูกค้าโอนมาที่</p>
-                  <strong className="text-lg md:text-base font-extrabold text-[#1a1816]">
-                    กสิกรไทย · 123-4-56789-0
-                  </strong>
+                  {hasBankInfo ? (
+                    <div className="space-y-1">
+                      <strong className="text-lg md:text-base font-extrabold text-[#1a1816] block">
+                        {bankName} · {bankAccount}
+                      </strong>
+                      {bankAccountName && (
+                        <span className="text-sm md:text-[12px] text-[#6b6358] block">{bankAccountName}</span>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm md:text-[13px] text-[#dc2626]">
+                      ยังไม่ได้ตั้งค่าบัญชีธนาคาร<br/>กรุณาตั้งค่าในเมนู ตั้งค่าระบบ
+                    </p>
+                  )}
                 </div>
               )}
 

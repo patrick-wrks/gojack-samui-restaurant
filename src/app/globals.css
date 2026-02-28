@@ -1,10 +1,23 @@
+/**
+ * Global styles – Tailwind v4 + shadcn/ui
+ * Single source of truth for theme tokens to avoid conflicts.
+ * Import order: tailwind → tw-animate → shadcn (then our overrides).
+ *
+ * Turbopack: Use `npm run dev:turbo` for faster dev server. If Tailwind
+ * utilities don't apply correctly with Turbopack, use `npm run dev` (webpack).
+ */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
+/* ==========================================================================
+   Theme (Tailwind v4) – design tokens used by utilities (bg-*, rounded-*, etc.)
+   Keep radius and custom colors here; semantic tokens live in :root below.
+   ========================================================================== */
 @theme inline {
+  /* App-specific tokens */
   --color-bg: #f2f0eb;
   --color-surface: #ffffff;
   --color-card: #ffffff;
@@ -25,6 +38,7 @@
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
   --font-sans: var(--font-sarabun), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  /* Shadcn semantic tokens → Tailwind (do not duplicate values; reference :root) */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -61,9 +75,12 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* ==========================================================================
+   :root – semantic tokens only (shadcn + app). Do NOT redefine --radius here;
+   it lives in @theme above so Tailwind and components share one value (14px).
+   ========================================================================== */
 :root {
   -webkit-tap-highlight-color: transparent;
-  --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -102,7 +119,6 @@ html {
   touch-action: manipulation;
 }
 
-/* Prevent zoom on input focus on iOS/mobile (browsers zoom when font-size < 16px) */
 @media screen and (max-width: 768px) {
   input,
   select,
@@ -119,21 +135,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
 .font-heading {
   font-family: var(--font-heading);
 }
 
-/* Mobile-first responsive utilities */
+/* Use shadcn's no-scrollbar utility instead of duplicating; keep scrollbar-hide as alias for compatibility */
 @layer utilities {
-  /* Safe area insets for mobile devices with notches */
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
@@ -146,31 +153,22 @@ body {
   .safe-right {
     padding-right: env(safe-area-inset-right);
   }
-
-  /* Touch-friendly minimum sizes */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
   }
-
-  /* Prevent text selection on interactive elements */
   .no-select {
     -webkit-user-select: none;
     user-select: none;
   }
-
-  /* Smooth momentum scrolling on iOS */
   .momentum-scroll {
     -webkit-overflow-scrolling: touch;
   }
-
-  /* Bulletproof text: never overflow container */
   .text-truncate-safe {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  /* Two-line clamp with full lines visible (no crop). Use with min-height for 2 lines. */
   .line-clamp-2-safe {
     overflow: hidden;
     display: -webkit-box;
@@ -179,9 +177,16 @@ body {
     line-clamp: 2;
     word-break: break-word;
   }
+  /* Alias: same as shadcn no-scrollbar, so we don't duplicate logic */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-/* Mobile-specific animations */
 @keyframes slideUp {
   from {
     transform: translateY(100%);
@@ -213,7 +218,6 @@ body {
   }
 }
 
-/* iOS safe area support */
 @supports (padding: env(safe-area-inset-top)) {
   .mobile-safe {
     padding-top: env(safe-area-inset-top);

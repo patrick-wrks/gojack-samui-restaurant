@@ -18,10 +18,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-const SOLD_MAP: Record<number, number> = {
-  1: 6, 2: 9, 3: 5, 23: 7, 24: 8, 27: 11, 28: 14, 35: 3, 41: 2, 43: 4,
-};
-
 export default function ProductsPage() {
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
@@ -244,9 +240,6 @@ export default function ProductsPage() {
                       ราคา
                     </th>
                     <th className="text-left py-2 px-2.5 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8] bg-[#f7f5f0]">
-                      ขายวันนี้
-                    </th>
-                    <th className="text-left py-2 px-2.5 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8] bg-[#f7f5f0]">
                       เปิดใช้งาน
                     </th>
                     <th className="text-left py-2 px-2.5 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8] bg-[#f7f5f0]">
@@ -257,7 +250,6 @@ export default function ProductsPage() {
                 <tbody>
                   {filteredMenu.map((p) => {
                     const cat = categories.find((c) => c.id === p.cat);
-                    const sold = SOLD_MAP[p.id] ?? Math.floor(Math.random() * 8);
                     return (
                       <tr key={p.id} className="hover:bg-[#f7f5f0]">
                         <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white font-bold">
@@ -270,9 +262,6 @@ export default function ProductsPage() {
                         </td>
                         <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white font-extrabold text-[#d4800a] font-heading">
                           {currency}{p.price}
-                        </td>
-                        <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white text-[11px] text-[#9a9288]">
-                          {sold} จาน
                         </td>
                         <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white align-middle">
                           <button
@@ -322,7 +311,6 @@ export default function ProductsPage() {
             <div className="md:hidden space-y-3 pb-4">
               {filteredMenu.map((p) => {
                 const cat = categories.find((c) => c.id === p.cat);
-                const sold = SOLD_MAP[p.id] ?? Math.floor(Math.random() * 8);
                 return (
                   <div
                     key={p.id}
@@ -355,12 +343,9 @@ export default function ProductsPage() {
                     </div>
                   </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="font-heading text-lg font-extrabold text-[#d4800a]">
-                          {currency}{p.price}
-                        </span>
-                        <span className="text-xs text-[#9a9288]">ขาย {sold} จาน</span>
-                      </div>
+                      <span className="font-heading text-lg font-extrabold text-[#d4800a]">
+                        {currency}{p.price}
+                      </span>
                       <div className="flex items-center gap-1.5">
                         <button
                           type="button"

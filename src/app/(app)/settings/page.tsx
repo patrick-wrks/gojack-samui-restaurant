@@ -1,29 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
-import { STAFF } from '@/lib/constants';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStoreSettingsStore } from '@/store/store-settings-store';
 import { updateStore } from '@/lib/store-settings';
 
 const SECTIONS = [
   { id: 'general', label: 'ข้อมูลร้าน', icon: '🏪' },
-  { id: 'users', label: 'พนักงาน', icon: '👥' },
+  { id: 'payment', label: 'การชำระเงิน', icon: '💳' },
   { id: 'tax', label: 'ภาษี / สกุลเงิน', icon: '🧾' },
   { id: 'data', label: 'ข้อมูล & สำรอง', icon: '💾' },
-  { id: 'tech', label: 'Tech Stack', icon: '🧱' },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]['id'];
 
-const TECH_ROWS = [
-  { layer: 'Frontend', tech: 'Next.js 15', purpose: 'App framework' },
-  { layer: 'Styling', tech: 'Tailwind + shadcn/ui', purpose: 'UI components' },
-  { layer: 'Database', tech: 'PostgreSQL (Supabase)', purpose: 'Hosted DB' },
-  { layer: 'Auth', tech: 'Client session', purpose: 'Login / demo' },
-  { layer: 'Hosting', tech: 'Cloudflare Pages', purpose: 'CDN deploy' },
-  { layer: 'Repo', tech: 'GitHub', purpose: 'CI/CD' },
-];
 
 export default function SettingsPage() {
   const [active, setActive] = useState<SectionId>('general');
@@ -140,8 +130,12 @@ function SettingsContent({ active, isMobile = false }: { active: SectionId; isMo
   const [currencySymbol, setCurrencySymbol] = useState('฿');
   const [taxRate, setTaxRate] = useState(7);
   const [pricesIncludeTax, setPricesIncludeTax] = useState(true);
+  const [bankName, setBankName] = useState('');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
+  const [bankAccountName, setBankAccountName] = useState('');
   const [generalSaving, setGeneralSaving] = useState(false);
   const [taxSaving, setTaxSaving] = useState(false);
+  const [bankSaving, setBankSaving] = useState(false);
 
   useEffect(() => {
     if (store) {
@@ -151,6 +145,9 @@ function SettingsContent({ active, isMobile = false }: { active: SectionId; isMo
       setCurrencySymbol(store.currency_symbol);
       setTaxRate(store.tax_rate);
       setPricesIncludeTax(store.prices_include_tax);
+      setBankName(store.bank_name);
+      setBankAccountNumber(store.bank_account_number);
+      setBankAccountName(store.bank_account_name);
     }
   }, [store]);
 
@@ -173,6 +170,17 @@ function SettingsContent({ active, isMobile = false }: { active: SectionId; isMo
     setTaxSaving(true);
     const updated = await updateStore({ currency_symbol: currencySymbol.trim() || '฿', tax_rate: taxRate, prices_include_tax: pricesIncludeTax });
     setTaxSaving(false);
+    if (updated) await loadStore();
+  };
+
+  const handleSaveBank = async () => {
+    setBankSaving(true);
+    const updated = await updateStore({
+      bank_name: bankName.trim(),
+      bank_account_number: bankAccountNumber.trim(),
+      bank_account_name: bankAccountName.trim(),
+    });
+    setBankSaving(false);
     if (updated) await loadStore();
   };
 
@@ -222,48 +230,42 @@ function SettingsContent({ active, isMobile = false }: { active: SectionId; isMo
         </>
       )}
 
-      {active === 'users' && (
+      {active === 'payment' && (
         <div className={cardClass}>
-          <div className={`${sectionTitleClass} flex items-center justify-between`}>
-            พนักงานทั้งหมด
-            <button
-              type="button"
-              className={`flex items-center gap-1 bg-[#d4800a] border-none rounded-lg text-white font-extrabold cursor-pointer ${isMobile ? 'py-2 px-3 text-xs' : 'py-1 px-2.5 text-[11px]'}`}
-            >
-              {isMobile ? <UserPlus className="w-4 h-4" /> : '+'}
-              {isMobile ? 'เชิญ' : 'เชิญ'}
-            </button>
+          <div className={sectionTitleClass}>บัญชีธนาคารสำหรับรับโอน</div>
+          <div className="mb-4">
+            <label className={labelClass}>ชื่อธนาคาร</label>
+            <input
+              type="text"
+              value={bankName}
+              onChange={(e) => setBankName(e.target.value)}
+              placeholder="เช่น กสิกรไทย, ไทยพาณิชย์"
+              className={inputClass}
+            />
           </div>
-          <div className="space-y-3">
-            {STAFF.map((u) => (
-              <div
-                key={u.e}
-                className={`flex items-center gap-3 ${isMobile ? 'p-3' : 'p-2.5'} rounded-[12px] md:rounded-[10px] bg-[#f7f5f0] border border-[#e4e0d8] touch-target`}
-              >
-                <div
-                  className={`${isMobile ? 'w-10 h-10' : 'w-8 h-8'} rounded-full flex items-center justify-center font-extrabold ${isMobile ? 'text-sm' : 'text-xs'} font-heading`}
-                  style={{ background: u.bg, color: u.c }}
-                >
-                  {u.n[0]}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className={`${isMobile ? 'text-sm' : 'text-[13px]'} font-bold truncate`}>{u.n}</div>
-                  <div className={`${isMobile ? 'text-xs' : 'text-[11px]'} text-[#9a9288] truncate`}>{u.e}</div>
-                </div>
-                <span
-                  className={`py-1 md:py-0.5 px-2 md:px-2 rounded-md ${isMobile ? 'text-xs' : 'text-[10px]'} font-extrabold shrink-0 ${
-                    u.r === 'Admin'
-                      ? 'bg-[rgba(245,166,35,0.15)] text-[#d4800a]'
-                      : u.r === 'Manager'
-                        ? 'bg-[rgba(59,130,246,0.1)] text-[#2563eb]'
-                        : 'bg-[rgba(107,114,128,0.15)] text-[#9a9288]'
-                  }`}
-                >
-                  {u.r}
-                </span>
-              </div>
-            ))}
+          <div className="mb-4">
+            <label className={labelClass}>เลขที่บัญชี</label>
+            <input
+              type="text"
+              value={bankAccountNumber}
+              onChange={(e) => setBankAccountNumber(e.target.value)}
+              placeholder="XXX-X-XXXXX-X"
+              className={`${inputClass} max-w-[280px]`}
+            />
           </div>
+          <div className="mb-4">
+            <label className={labelClass}>ชื่อบัญชี</label>
+            <input
+              type="text"
+              value={bankAccountName}
+              onChange={(e) => setBankAccountName(e.target.value)}
+              placeholder="ชื่อที่ปรากฏในบัญชี"
+              className={inputClass}
+            />
+          </div>
+          <button type="button" onClick={handleSaveBank} disabled={bankSaving} className={btnClass}>
+            {bankSaving ? 'กำลังบันทึก...' : 'บันทึก'}
+          </button>
         </div>
       )}
 
@@ -331,44 +333,6 @@ function SettingsContent({ active, isMobile = false }: { active: SectionId; isMo
         </div>
       )}
 
-      {active === 'tech' && (
-        <div className={cardClass}>
-          <div className={sectionTitleClass}>Tech Stack</div>
-          {/* Desktop Table */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full border-collapse text-xs">
-              <thead>
-                <tr>
-                  <th className="text-left py-2 px-2 text-[10px] font-bold text-[#9a9288] uppercase border-b border-[#e4e0d8]">Layer</th>
-                  <th className="text-left py-2 px-2 text-[10px] font-bold text-[#9a9288] uppercase border-b border-[#e4e0d8]">Technology</th>
-                  <th className="text-left py-2 px-2 text-[10px] font-bold text-[#9a9288] uppercase border-b border-[#e4e0d8]">Purpose</th>
-                </tr>
-              </thead>
-              <tbody>
-                {TECH_ROWS.map((r) => (
-                  <tr key={r.layer}>
-                    <td className="py-2.5 px-2 border-b border-[#e4e0d8]">{r.layer}</td>
-                    <td className="py-2.5 px-2 border-b border-[#e4e0d8] font-bold">{r.tech}</td>
-                    <td className="py-2.5 px-2 border-b border-[#e4e0d8]">{r.purpose}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/* Mobile Card List */}
-          <div className="md:hidden space-y-3">
-            {TECH_ROWS.map((r) => (
-              <div key={r.layer} className="p-3 rounded-xl bg-[#f7f5f0] border border-[#e4e0d8]">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-[#9a9288] font-bold">{r.layer}</span>
-                  <span className="text-sm font-bold text-[#1a1816]">{r.tech}</span>
-                </div>
-                <div className="text-xs text-[#6b6358]">{r.purpose}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </>
   );
 }

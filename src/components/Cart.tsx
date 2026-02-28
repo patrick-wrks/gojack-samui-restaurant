@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCartStore } from '@/store/cart-store';
 import { useCartTotals } from '@/hooks/useCartTotals';
 import { useCurrencySymbol } from '@/store/store-settings-store';
@@ -21,10 +21,18 @@ export function Cart() {
     clearCart,
     incrementOrderNum,
     addTodayOrder,
+    initOrderNum,
+    refreshTodayStats,
   } = useCartStore();
   const { subtotal, discountAmount, total } = useCartTotals(cart, discount);
   const currency = useCurrencySymbol();
   const [paymentOpen, setPaymentOpen] = useState(false);
+
+  // Initialize order number from database on mount
+  useEffect(() => {
+    initOrderNum();
+    refreshTodayStats();
+  }, [initOrderNum, refreshTodayStats]);
 
   const handleAddDiscount = () => {
     const v = window.prompt(`ส่วนลด (${currency}):`);
@@ -52,14 +60,14 @@ export function Cart() {
 
   return (
     <>
-      <div className="w-[340px] min-w-[300px] max-w-[100vw] flex flex-col shrink-0 overflow-hidden bg-white border-l border-[#e8e4de] shadow-[ -4px_0_24px_rgba(0,0,0,0.04)]">
+      <div className="w-[340px] h-full flex flex-col bg-white border-l border-[#e4e0d8]">
         {/* Header */}
-        <div className="p-4 border-b border-[#e8e4de] shrink-0 bg-[#faf9f7]">
-          <div className="flex items-center justify-between gap-2 mb-3 min-w-0">
-            <h3 className="font-heading text-[13px] font-bold uppercase tracking-wider text-[#6b6358] min-w-0 text-truncate-safe">
+        <div className="p-4 border-b border-[#e4e0d8] bg-[#faf9f7]">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <h3 className="font-heading text-sm font-bold uppercase tracking-wide text-[#6b6358]">
               ออเดอร์ปัจจุบัน
             </h3>
-            <span className="text-[12px] font-semibold text-[#1a1816] font-heading tabular-nums shrink-0">
+            <span className="text-xs font-semibold text-[#1a1816] font-heading bg-[#f2f0eb] px-2 py-1 rounded">
               #{orderNum}
             </span>
           </div>
@@ -68,15 +76,15 @@ export function Cart() {
             type="single"
             value={payType}
             onValueChange={(v) => v && setPayType(v as 'cash' | 'bank')}
-            className="flex bg-[#eeebe6] rounded-lg p-0.5 gap-0.5 w-full"
+            className="flex bg-[#f2f0eb] rounded-lg p-1 gap-1"
             spacing={0}
           >
             <ToggleGroupItem
               value="cash"
               className={cn(
-                'flex-1 py-2 px-3 rounded-md text-[12px] font-semibold font-sans whitespace-nowrap transition-all duration-200',
+                'flex-1 py-2 px-2 rounded-md text-xs font-semibold transition-all',
                 'data-[state=off]:bg-transparent data-[state=off]:text-[#6b6358]',
-                'data-[state=on]:bg-[#1a1816] data-[state=on]:text-white'
+                'data-[state=on]:bg-[#d4800a] data-[state=on]:text-white'
               )}
             >
               💵 เงินสด
@@ -84,9 +92,9 @@ export function Cart() {
             <ToggleGroupItem
               value="bank"
               className={cn(
-                'flex-1 py-2 px-3 rounded-md text-[12px] font-semibold font-sans whitespace-nowrap transition-all duration-200',
+                'flex-1 py-2 px-2 rounded-md text-xs font-semibold transition-all',
                 'data-[state=off]:bg-transparent data-[state=off]:text-[#6b6358]',
-                'data-[state=on]:bg-[#1a1816] data-[state=on]:text-white'
+                'data-[state=on]:bg-[#d4800a] data-[state=on]:text-white'
               )}
             >
               🏦 โอนเงิน
@@ -94,68 +102,70 @@ export function Cart() {
           </ToggleGroup>
         </div>
 
-        {/* Cart items */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 min-h-0">
+        {/* Cart Items */}
+        <div className="flex-1 overflow-y-auto p-3 min-h-0">
           {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center gap-3 py-8">
-              <div className="w-14 h-14 rounded-full bg-[#f0eeea] flex items-center justify-center text-2xl">
+            <div className="h-full flex flex-col items-center justify-center gap-2 py-8">
+              <div className="w-14 h-14 rounded-full bg-[#f2f0eb] flex items-center justify-center text-2xl">
                 🛒
               </div>
-              <p className="text-[13px] text-[#6b6358] text-center max-w-[180px]">
+              <p className="text-sm text-[#9a9288] text-center">
                 แตะเมนูเพื่อเพิ่มออเดอร์
               </p>
             </div>
           ) : (
             <div className="space-y-2">
-              {cart.map((i) => (
-                <CartLineItem key={i.id} item={i} currency={currency} />
+              {cart.map((item) => (
+                <CartLineItem key={item.id} item={item} currency={currency} />
               ))}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[#e8e4de] shrink-0 min-w-0 bg-[#faf9f7]">
-          <div className="flex gap-2 mb-3 min-w-0">
+        <div className="p-4 border-t border-[#e4e0d8] bg-[#faf9f7]">
+          {/* Action Buttons */}
+          <div className="flex gap-2 mb-3">
             <Button
               variant="outline"
               onClick={clearCart}
-              className="flex-1 min-w-0 py-2 h-auto rounded-lg border-[#e8e4de] bg-white text-[#6b6358] text-[12px] font-semibold hover:bg-[#f0eeea] hover:border-[#d4cfc5] hover:text-[#1a1816] text-truncate-safe overflow-hidden"
+              className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#d4800a]"
             >
               🗑 ล้าง
             </Button>
             <Button
               variant="outline"
               onClick={handleAddDiscount}
-              className="flex-1 min-w-0 py-2 h-auto rounded-lg border-[#e8e4de] bg-white text-[#6b6358] text-[12px] font-semibold hover:bg-[#f0eeea] hover:border-[#d4cfc5] hover:text-[#1a1816] text-truncate-safe overflow-hidden"
+              className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#d4800a]"
             >
               🏷 ส่วนลด
             </Button>
             <Button
               variant="outline"
               onClick={handleAddNote}
-              className="flex-1 min-w-0 py-2 h-auto rounded-lg border-[#e8e4de] bg-white text-[#6b6358] text-[12px] font-semibold hover:bg-[#f0eeea] hover:border-[#d4cfc5] hover:text-[#1a1816] text-truncate-safe overflow-hidden"
+              className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#d4800a]"
             >
               📝 หมายเหตุ
             </Button>
           </div>
 
-          <div className="mb-3 space-y-1.5 py-2 min-w-0">
-            <div className="flex justify-between items-center gap-2 text-[12px] text-[#6b6358] min-w-0">
-              <span className="shrink-0">ยอดรวม</span>
-              <span className="text-[#1a1816] font-medium tabular-nums text-right text-truncate-safe min-w-0">
+          {/* Summary */}
+          <div className="mb-3 space-y-1.5 py-2 border-y border-[#e4e0d8]">
+            <div className="flex justify-between items-center text-xs text-[#6b6358]">
+              <span>ยอดรวม</span>
+              <span className="text-[#1a1816] font-medium tabular-nums">
                 {currency}{subtotal.toLocaleString()}
               </span>
             </div>
-            <div className="flex justify-between items-center gap-2 text-[12px] min-w-0">
-              <span className="text-[#6b6358] shrink-0">ส่วนลด</span>
-              <span className="text-[#16a34a] font-medium tabular-nums text-right text-truncate-safe min-w-0">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-[#6b6358]">ส่วนลด</span>
+              <span className="text-green-600 font-medium tabular-nums">
                 –{currency}{discountAmount.toLocaleString()}
               </span>
             </div>
-            <div className="border-t border-[#e8e4de] pt-2 mt-2 flex justify-between items-center gap-2 min-w-0">
-              <span className="text-[13px] font-bold text-[#1a1816] shrink-0">รวมทั้งสิ้น</span>
-              <span className="text-lg font-bold text-[#1a1816] font-heading tabular-nums text-right text-truncate-safe min-w-0">
+            <div className="flex justify-between items-center pt-2 border-t border-[#e4e0d8]">
+              <span className="text-sm font-bold text-[#1a1816]">รวมทั้งสิ้น</span>
+              <span className="text-lg font-bold text-[#d4800a] font-heading tabular-nums">
                 {currency}{total.toLocaleString()}
               </span>
             </div>
@@ -165,9 +175,9 @@ export function Cart() {
             onClick={() => cart.length > 0 && setPaymentOpen(true)}
             disabled={cart.length === 0}
             className={cn(
-              'w-full min-w-0 rounded-lg py-3.5 h-auto text-[14px] font-bold font-heading touch-target text-truncate-safe',
-              'bg-[#16a34a] text-white hover:bg-[#15803d] disabled:bg-[#e8e4de] disabled:text-[#9a9288]',
-              'shadow-[0_2px_8px_rgba(22,163,74,0.25)] hover:shadow-[0_4px_12px_rgba(22,163,74,0.3)]'
+              'w-full rounded-lg py-3 h-auto text-sm font-bold font-heading',
+              'bg-green-600 text-white hover:bg-green-700',
+              'disabled:bg-[#e4e0d8] disabled:text-[#9a9288]'
             )}
           >
             ยืนยันออเดอร์ — {currency}{total.toLocaleString()}
@@ -197,32 +207,32 @@ function CartLineItem({
   const updateQty = useCartStore((s) => s.updateQty);
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-[#f8f6f2] border border-[#e8e4de] min-w-0 overflow-hidden">
-      <div className="flex-1 min-w-0 overflow-hidden">
-        <div className="text-[13px] font-semibold leading-tight text-[#1a1816] text-truncate-safe">
+    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-[#f8f6f2] border border-[#e4e0d8]">
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium text-[#1a1816] truncate">
           {item.name}
         </div>
-        <div className="text-[11px] text-[#6b6358] mt-0.5 text-truncate-safe">
+        <div className="text-xs text-[#9a9288]">
           {currency}{item.price} × {item.qty} = {currency}{(item.price * item.qty).toLocaleString()}
         </div>
       </div>
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-1 shrink-0">
         <Button
           variant="outline"
           size="icon"
           onClick={() => updateQty(item.id, -1)}
-          className="w-8 h-8 rounded-lg border-[#e8e4de] bg-white text-[#1a1816] hover:bg-[#f0eeea] hover:border-[#d4cfc5] text-sm font-semibold"
+          className="w-7 h-7 rounded-md border-[#e4e0d8] bg-white text-[#1a1816] p-0 hover:border-[#d4800a] hover:text-[#d4800a]"
         >
           −
         </Button>
-        <span className="text-[13px] font-bold w-5 text-center font-heading tabular-nums">
+        <span className="text-sm font-bold w-5 text-center font-heading">
           {item.qty}
         </span>
         <Button
           variant="outline"
           size="icon"
           onClick={() => updateQty(item.id, 1)}
-          className="w-8 h-8 rounded-lg border-[#e8e4de] bg-white text-[#1a1816] hover:bg-[#f0eeea] hover:border-[#d4cfc5] text-sm font-semibold"
+          className="w-7 h-7 rounded-md border-[#e4e0d8] bg-white text-[#1a1816] p-0 hover:border-[#d4800a] hover:text-[#d4800a]"
         >
           +
         </Button>

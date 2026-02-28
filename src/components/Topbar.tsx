@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/providers';
 import { useCartStore } from '@/store/cart-store';
 import { useCurrencySymbol } from '@/store/store-settings-store';
-import { LogOut, Settings } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { LogOut, Settings, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -24,7 +25,10 @@ export function Topbar() {
   const { todayRevenue, todayOrders } = useCartStore();
   const currency = useCurrencySymbol();
   const [time, setTime] = useState('');
+  const [isOnline, setIsOnline] = useState(true);
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing'>('synced');
 
+  // Clock
   useEffect(() => {
     const tick = () => {
       const d = new Date();
@@ -35,6 +39,41 @@ export function Topbar() {
     tick();
     const id = setInterval(tick, 30000);
     return () => clearInterval(id);
+  }, []);
+
+  // Online/offline detection
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    setIsOnline(navigator.onLine);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Real-time subscription status indicator
+  useEffect(() => {
+    if (!supabase) {
+      setSyncStatus('syncing');
+      return;
+    }
+
+    // Subscribe to a heartbeat channel to show sync status
+    const channel = supabase.channel('sync-status')
+      .subscribe((status) => {
+        setSyncStatus(status === 'SUBSCRIBED' ? 'synced' : 'syncing');
+      });
+
+    return () => {
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   return (
@@ -48,6 +87,23 @@ export function Topbar() {
       <div className="hidden sm:block text-xs text-[#9a9288] shrink-0 text-truncate-safe min-w-0">{time}</div>
 
       <div className="flex-1 min-w-0" />
+
+      {/* Sync Status Indicator */}
+      <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-[#9a9288] mr-2">
+        {isOnline ? (
+          <>
+            <span className={`w-2 h-2 rounded-full ${syncStatus === 'synced' ? 'bg-[#16a34a]' : 'bg-[#f5a623] animate-pulse'}`} />
+            <span className="hidden lg:inline">
+              {syncStatus === 'synced' ? 'เชื่อมต่อ' : 'กำลังซิงค์...'}
+            </span>
+          </>
+        ) : (
+          <>
+            <WifiOff className="w-3 h-3 text-[#dc2626]" />
+            <span className="hidden lg:inline text-[#dc2626]">ออฟไลน์</span>
+          </>
+        )}
+      </div>
 
       {/* Stats - shown on larger screens */}
       <div className="hidden md:flex flex-col items-end min-w-0 overflow-hidden">
