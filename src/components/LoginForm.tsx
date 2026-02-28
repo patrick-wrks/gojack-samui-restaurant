@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { useAuth } from '@/app/providers';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

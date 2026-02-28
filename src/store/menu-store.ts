@@ -11,7 +11,7 @@ interface MenuState {
   loadMenu: () => Promise<void>;
 }
 
-export const useMenuStore = create<MenuState>((set, get) => ({
+export const useMenuStore = create<MenuState>((set) => ({
   categories: [],
   products: [],
   loading: false,

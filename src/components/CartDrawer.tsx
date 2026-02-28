@@ -250,6 +250,7 @@ function CartLineItem({
   item: { id: number; name: string; price: number; qty: number };
 }) {
   const updateQty = useCartStore((s) => s.updateQty);
+  const currency = useCurrencySymbol();
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-[#f7f5f0] border border-[#e4e0d8] min-w-0 overflow-hidden">
