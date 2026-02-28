@@ -8,7 +8,6 @@ import { useCurrencySymbol } from '@/store/store-settings-store';
 import { insertOrder } from '@/lib/orders';
 import { PaymentModal } from './PaymentModal';
 import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
 interface CartDrawerProps {
@@ -20,7 +19,6 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
   const {
     cart,
     payType,
-    setPayType,
     orderNum,
     discount,
     setDiscount,
@@ -123,38 +121,6 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           >
             <ChevronDown className="w-5 h-5" />
           </Button>
-        </div>
-
-        {/* Payment Type */}
-        <div className="px-4 py-3 border-b border-[#e4e0d8]">
-          <ToggleGroup
-            type="single"
-            value={payType}
-            onValueChange={(v) => v && setPayType(v as 'cash' | 'bank')}
-            className="flex bg-[#f2f0eb] rounded-lg p-1 gap-1"
-            spacing={0}
-          >
-            <ToggleGroupItem
-              value="cash"
-              className={cn(
-                'flex-1 py-2.5 px-3 rounded-md text-sm font-semibold',
-                'data-[state=off]:bg-transparent data-[state=off]:text-[#6b6358]',
-                'data-[state=on]:bg-[#d4800a] data-[state=on]:text-white'
-              )}
-            >
-              💵 เงินสด
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="bank"
-              className={cn(
-                'flex-1 py-2.5 px-3 rounded-md text-sm font-semibold',
-                'data-[state=off]:bg-transparent data-[state=off]:text-[#6b6358]',
-                'data-[state=on]:bg-[#d4800a] data-[state=on]:text-white'
-              )}
-            >
-              🏦 โอนเงิน
-            </ToggleGroupItem>
-          </ToggleGroup>
         </div>
 
         {/* Cart Items */}
