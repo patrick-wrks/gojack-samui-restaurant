@@ -91,3 +91,10 @@ export async function updateProduct(
   if (!data) return { product: null, error: 'No data returned from server.' };
   return { product: toProduct(data as DbProduct), error: null };
 }
+
+export async function deleteProduct(id: number): Promise<{ success: boolean; error: string | null }> {
+  if (!supabase) return { success: false, error: 'Supabase is not configured.' };
+  const { error } = await supabase.from('products').delete().eq('id', id);
+  if (error) return { success: false, error: error.message };
+  return { success: true, error: null };
+}

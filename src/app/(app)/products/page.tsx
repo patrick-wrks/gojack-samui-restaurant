@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Tag, ChevronRight } from 'lucide-react';
+import { Search, Plus, Tag, ChevronRight, Trash2 } from 'lucide-react';
 import { getCategoriesForUI } from '@/store/menu-store';
 import { useCurrencySymbol } from '@/store/store-settings-store';
-import { fetchProducts, createProduct, updateProduct } from '@/lib/menu';
+import { fetchProducts, createProduct, updateProduct, deleteProduct } from '@/lib/menu';
 import { useMenuStore } from '@/store/menu-store';
 import type { Product } from '@/types/pos';
 import {
@@ -33,6 +33,9 @@ export default function ProductsPage() {
   const [addSubmitting, setAddSubmitting] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const currency = useCurrencySymbol();
 
   const categories = getCategoriesForUI().filter((c) => c.id !== 'all');
@@ -119,6 +122,24 @@ export default function ProductsPage() {
       useMenuStore.getState().loadMenu();
     } else if (error) {
       setEditError(error);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingProduct) return;
+    setDeleteError(null);
+    setDeleteSubmitting(true);
+    const { success, error } = await deleteProduct(deletingProduct.id);
+    setDeleteSubmitting(false);
+    if (success) {
+      setDeletingProduct(null);
+      await loadProducts();
+      useMenuStore.getState().loadMenu();
+    } else {
+      const friendlyMessage = error?.includes('foreign key') || error?.includes('violates')
+        ? 'ลบไม่ได้ — เมนูนี้มีในคำสั่งซื้อเก่า ให้ปิดการขายแทนได้'
+        : error ?? 'ไม่สามารถลบเมนูได้';
+      setDeleteError(friendlyMessage);
     }
   };
 
@@ -271,13 +292,24 @@ export default function ProductsPage() {
                           </button>
                         </td>
                         <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white">
-                          <button
-                            type="button"
-                            onClick={() => { setEditingProduct(p); setEditError(null); }}
-                            className="py-1.5 px-3 rounded-md border border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold cursor-pointer hover:border-[#d4800a] hover:text-[#d4800a] transition-colors"
-                          >
-                            แก้ไข
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => { setEditingProduct(p); setEditError(null); }}
+                              className="py-1.5 px-3 rounded-md border border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold cursor-pointer hover:border-[#d4800a] hover:text-[#d4800a] transition-colors"
+                            >
+                              แก้ไข
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setDeletingProduct(p); setDeleteError(null); }}
+                              className="p-1.5 rounded-md border border-transparent text-[#9a9288] hover:text-[#dc2626] hover:bg-[#fef2f2] transition-colors"
+                              aria-label="ลบเมนู"
+                              title="ลบเมนู"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -329,13 +361,24 @@ export default function ProductsPage() {
                         </span>
                         <span className="text-xs text-[#9a9288]">ขาย {sold} จาน</span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => { setEditingProduct(p); setEditError(null); }}
-                        className="py-2 px-4 rounded-lg border border-[#e4e0d8] bg-transparent text-[#9a9288] text-xs font-bold touch-target active:border-[#d4800a] active:text-[#d4800a]"
-                      >
-                        แก้ไข
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => { setEditingProduct(p); setEditError(null); }}
+                          className="py-2 px-4 rounded-lg border border-[#e4e0d8] bg-transparent text-[#9a9288] text-xs font-bold touch-target active:border-[#d4800a] active:text-[#d4800a]"
+                        >
+                          แก้ไข
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setDeletingProduct(p); setDeleteError(null); }}
+                          className="p-2 rounded-lg border border-transparent text-[#9a9288] active:text-[#dc2626] active:bg-[#fef2f2] touch-target"
+                          aria-label="ลบเมนู"
+                          title="ลบเมนู"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -460,6 +503,35 @@ export default function ProductsPage() {
               </DialogFooter>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Product Confirmation */}
+      <Dialog open={!!deletingProduct} onOpenChange={(open) => { if (!open) { setDeletingProduct(null); setDeleteError(null); } }}>
+        <DialogContent className="sm:max-w-[400px] border-[#e4e0d8]">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-[#1a1816]">ลบเมนู</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {deletingProduct && (
+              <p className="text-sm text-[#6b6358]">
+                ลบ &quot;{deletingProduct.name}&quot; ออกจากรายการเมนู? เมนูจะหายจากระบบ (คำสั่งซื้อเก่ายังมีบันทึก)
+              </p>
+            )}
+            {deleteError && (
+              <div className="rounded-lg bg-[#fef2f2] border border-[#fecaca] px-3 py-2 text-sm text-[#dc2626]">
+                {deleteError}
+              </div>
+            )}
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => { setDeletingProduct(null); setDeleteError(null); }} className="border-[#e4e0d8]" disabled={deleteSubmitting}>
+                ยกเลิก
+              </Button>
+              <Button type="button" onClick={handleDeleteConfirm} className="bg-[#dc2626] hover:bg-[#dc2626]/90 text-white" disabled={deleteSubmitting}>
+                {deleteSubmitting ? 'กำลังลบ...' : 'ลบเมนู'}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

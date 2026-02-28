@@ -103,6 +103,9 @@ ON CONFLICT (id) DO UPDATE SET
   price = EXCLUDED.price,
   sort_order = EXCLUDED.sort_order;
 
+-- Ensure next INSERT gets a new id (sequence can be out of sync after OVERRIDING SYSTEM VALUE)
+SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1));
+
 -- Optional: link order_items to products (if order_items table already exists)
 DO $$
 BEGIN
