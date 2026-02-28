@@ -18,6 +18,17 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "ร้านอาหาร POS",
   description: "ระบบจัดการร้านอาหาร",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "POS",
+  },
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
+  themeColor: "#FA3E3E",
 };
 
 export default function RootLayout({

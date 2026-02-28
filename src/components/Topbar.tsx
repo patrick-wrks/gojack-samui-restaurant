@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/providers';
 import { useCartStore } from '@/store/cart-store';
-import { useCurrencySymbol } from '@/store/store-settings-store';
+import { useCurrencySymbol, useStoreSettingsStore } from '@/store/store-settings-store';
 import { supabase } from '@/lib/supabase';
 import { LogOut, Settings, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,9 +24,12 @@ export function Topbar() {
   const { logout } = useAuth();
   const { todayRevenue, todayOrders } = useCartStore();
   const currency = useCurrencySymbol();
+  const store = useStoreSettingsStore((s) => s.store);
   const [time, setTime] = useState('');
   const [isOnline, setIsOnline] = useState(true);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing'>('synced');
+
+  const storeName = store?.store_name ?? 'โกจักรสมุย';
 
   // Clock
   useEffect(() => {
@@ -79,8 +82,8 @@ export function Topbar() {
   return (
     <header className="h-[52px] bg-white border-b border-[#e4e0d8] flex items-center px-3 md:px-4 gap-2 md:gap-3.5 shrink-0 shadow-[0_1px_0_#e4e0d8] safe-top min-w-0 overflow-hidden">
       {/* Logo */}
-      <div className="font-heading font-black text-base md:text-lg text-[#1a1816] shrink-0 min-w-0 overflow-hidden text-truncate-safe">
-        ร้าน<span className="text-[#d4800a]">อาหาร</span>
+      <div className="font-heading font-black text-base md:text-lg text-[#1a1816] shrink-0 min-w-0 overflow-hidden text-truncate-safe max-w-[150px]">
+        {storeName}
       </div>
 
       <Separator orientation="vertical" className="hidden sm:block h-[18px] bg-[#e4e0d8] shrink-0" />
@@ -127,7 +130,7 @@ export function Topbar() {
         onClick={() => router.push('/settings')}
         className="hidden md:flex items-center gap-1.5 bg-[#f7f5f0] hover:bg-[#e4e0d8] py-1.5 pl-1.5 pr-2.5 rounded-[20px] border border-[#e4e0d8] h-auto text-foreground"
       >
-        <div className="w-[26px] h-[26px] bg-[#d4800a] rounded-full flex items-center justify-center text-[11px] font-bold text-white font-heading">
+        <div className="w-[26px] h-[26px] bg-[#FA3E3E] rounded-full flex items-center justify-center text-[11px] font-bold text-white font-heading">
           A
         </div>
         <span className="text-xs font-semibold">Admin</span>
@@ -153,7 +156,7 @@ export function Topbar() {
               variant="ghost"
               className="flex items-center gap-1.5 bg-[#f7f5f0] hover:bg-[#e4e0d8] py-1.5 pl-1.5 pr-2 rounded-[20px] border border-[#e4e0d8] h-auto touch-target"
             >
-              <div className="w-7 h-7 bg-[#d4800a] rounded-full flex items-center justify-center text-[10px] font-bold text-white font-heading">
+              <div className="w-7 h-7 bg-[#FA3E3E] rounded-full flex items-center justify-center text-[10px] font-bold text-white font-heading">
                 A
               </div>
               <Settings className="w-4 h-4 text-[#9a9288]" />

@@ -153,7 +153,7 @@ export default function ProductsPage() {
           <button
             type="button"
             onClick={() => { setAddOpen(true); setAddError(null); }}
-            className="md:hidden flex items-center justify-center w-10 h-10 bg-[#d4800a] rounded-full text-white touch-target shadow-md active:opacity-90"
+            className="md:hidden flex items-center justify-center w-10 h-10 bg-[#FA3E3E] rounded-full text-white touch-target shadow-md active:opacity-90"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -169,7 +169,7 @@ export default function ProductsPage() {
             placeholder="ค้นหาเมนู..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-[#e4e0d8] rounded-xl md:rounded-lg py-3 md:py-2 px-3 pl-10 text-[#1a1816] text-sm md:text-[13px] focus:outline-none focus:border-[#d4800a] touch-target"
+            className="w-full bg-white border border-[#e4e0d8] rounded-xl md:rounded-lg py-3 md:py-2 px-3 pl-10 text-[#1a1816] text-sm md:text-[13px] focus:outline-none focus:border-[#FA3E3E] touch-target"
           />
         </div>
         <button
@@ -185,7 +185,7 @@ export default function ProductsPage() {
             setAddOpen(true);
             setAddError(null);
           }}
-          className="hidden md:flex items-center gap-1.5 py-2 px-3.5 rounded-lg bg-[#d4800a] border-none text-white text-xs font-extrabold cursor-pointer whitespace-nowrap hover:opacity-90"
+          className="hidden md:flex items-center gap-1.5 py-2 px-3.5 rounded-lg bg-[#FA3E3E] border-none text-white text-xs font-extrabold cursor-pointer whitespace-nowrap hover:opacity-90"
         >
           + เพิ่มเมนู
         </button>
@@ -260,7 +260,7 @@ export default function ProductsPage() {
                             {cat?.name ?? p.cat}
                           </span>
                         </td>
-                        <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white font-extrabold text-[#d4800a] font-heading">
+                        <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white font-extrabold text-green-600 font-heading">
                           {currency}{p.price}
                         </td>
                         <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white align-middle">
@@ -285,7 +285,7 @@ export default function ProductsPage() {
                             <button
                               type="button"
                               onClick={() => { setEditingProduct(p); setEditError(null); }}
-                              className="py-1.5 px-3 rounded-md border border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold cursor-pointer hover:border-[#d4800a] hover:text-[#d4800a] transition-colors"
+                              className="py-1.5 px-3 rounded-md border border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold cursor-pointer hover:border-[#FA3E3E] hover:text-[#FA3E3E] transition-colors"
                             >
                               แก้ไข
                             </button>
@@ -343,14 +343,14 @@ export default function ProductsPage() {
                     </div>
                   </div>
                     <div className="flex items-center justify-between">
-                      <span className="font-heading text-lg font-extrabold text-[#d4800a]">
+                      <span className="font-heading text-lg font-extrabold text-green-600">
                         {currency}{p.price}
                       </span>
                       <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => { setEditingProduct(p); setEditError(null); }}
-                          className="py-2 px-4 rounded-lg border border-[#e4e0d8] bg-transparent text-[#9a9288] text-xs font-bold touch-target active:border-[#d4800a] active:text-[#d4800a]"
+                          className="py-2 px-4 rounded-lg border border-[#e4e0d8] bg-transparent text-[#9a9288] text-xs font-bold touch-target active:border-[#FA3E3E] active:text-[#FA3E3E]"
                         >
                           แก้ไข
                         </button>
@@ -391,7 +391,7 @@ export default function ProductsPage() {
                 name="name"
                 required
                 placeholder="เช่น กระเพราหมู"
-                className="border-[#e4e0d8] focus:border-[#d4800a]"
+                className="border-[#e4e0d8] focus:border-[#FA3E3E]"
               />
             </div>
             <div className="space-y-2">
@@ -399,7 +399,7 @@ export default function ProductsPage() {
               <select
                 name="category_id"
                 required
-                className="w-full min-h-11 rounded-md border border-[#e4e0d8] bg-white px-3 py-2 text-sm focus:outline-none focus:border-[#d4800a]"
+                className="w-full min-h-11 rounded-md border border-[#e4e0d8] bg-white px-3 py-2 text-sm focus:outline-none focus:border-[#FA3E3E]"
               >
                 <option value="">-- เลือกหมวดหมู่ --</option>
                 {categories.map((c) => (
@@ -416,14 +416,14 @@ export default function ProductsPage() {
                 step={1}
                 required
                 placeholder="0"
-                className="border-[#e4e0d8] focus:border-[#d4800a]"
+                className="border-[#e4e0d8] focus:border-[#FA3E3E]"
               />
             </div>
             <DialogFooter className="gap-2 sm:gap-0">
               <Button type="button" variant="outline" onClick={() => setAddOpen(false)} className="border-[#e4e0d8]" disabled={addSubmitting}>
                 ยกเลิก
               </Button>
-              <Button type="submit" className="bg-[#d4800a] hover:bg-[#d4800a]/90" disabled={addSubmitting}>
+              <Button type="submit" className="bg-[#FA3E3E] hover:bg-[#FA3E3E]/90" disabled={addSubmitting}>
                 {addSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
               </Button>
             </DialogFooter>
@@ -450,7 +450,7 @@ export default function ProductsPage() {
                   name="edit-name"
                   defaultValue={editingProduct.name}
                   required
-                  className="border-[#e4e0d8] focus:border-[#d4800a]"
+                  className="border-[#e4e0d8] focus:border-[#FA3E3E]"
                 />
               </div>
               <div className="space-y-2">
@@ -459,7 +459,7 @@ export default function ProductsPage() {
                   name="edit-category_id"
                   defaultValue={editingProduct.cat}
                   required
-                  className="w-full min-h-11 rounded-md border border-[#e4e0d8] bg-white px-3 py-2 text-sm focus:outline-none focus:border-[#d4800a]"
+                  className="w-full min-h-11 rounded-md border border-[#e4e0d8] bg-white px-3 py-2 text-sm focus:outline-none focus:border-[#FA3E3E]"
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
@@ -475,14 +475,14 @@ export default function ProductsPage() {
                   step={1}
                   defaultValue={editingProduct.price}
                   required
-                  className="border-[#e4e0d8] focus:border-[#d4800a]"
+                  className="border-[#e4e0d8] focus:border-[#FA3E3E]"
                 />
               </div>
               <DialogFooter className="gap-2 sm:gap-0">
                 <Button type="button" variant="outline" onClick={() => setEditingProduct(null)} className="border-[#e4e0d8]" disabled={editSubmitting}>
                   ยกเลิก
                 </Button>
-                <Button type="submit" className="bg-[#d4800a] hover:bg-[#d4800a]/90" disabled={editSubmitting}>
+                <Button type="submit" className="bg-[#FA3E3E] hover:bg-[#FA3E3E]/90" disabled={editSubmitting}>
                   {editSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
                 </Button>
               </DialogFooter>

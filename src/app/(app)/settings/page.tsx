@@ -69,7 +69,7 @@ export default function SettingsPage() {
                 onClick={() => setActive(s.id)}
                 className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold cursor-pointer border-none text-left transition-all touch-target ${
                   active === s.id
-                    ? 'bg-[rgba(212,128,10,0.1)] text-[#d4800a]'
+                    ? 'bg-[rgba(250,62,62,0.1)] text-[#FA3E3E]'
                     : 'bg-transparent text-[#9a9288] hover:bg-white hover:text-[#1a1816]'
                 }`}
               >
@@ -98,7 +98,7 @@ export default function SettingsPage() {
                   }}
                   className={`w-full flex items-center justify-between py-4 px-4 rounded-xl text-left transition-all touch-target ${
                     active === s.id
-                      ? 'bg-[rgba(212,128,10,0.1)] text-[#d4800a]'
+                      ? 'bg-[rgba(250,62,62,0.1)] text-[#FA3E3E]'
                       : 'bg-white border border-[#e4e0d8] text-[#1a1816]'
                   }`}
                 >
@@ -154,8 +154,8 @@ function SettingsContent({ active, isMobile = false }: { active: SectionId; isMo
   const cardClass = `bg-white border border-[#e4e0d8] rounded-[16px] md:rounded-[14px] ${isMobile ? 'p-4 mb-4' : 'p-4 mb-3'}`;
   const sectionTitleClass = `font-extrabold ${isMobile ? 'text-sm mb-4 pb-3' : 'text-[13px] mb-3.5 pb-2.5'} border-b border-[#e4e0d8]`;
   const labelClass = `block font-bold text-[#9a9288] uppercase tracking-wider mb-1.5 ${isMobile ? 'text-xs' : 'text-[10px]'}`;
-  const inputClass = `w-full bg-[#f7f5f0] border border-[#e4e0d8] rounded-lg ${isMobile ? 'py-3 px-3 text-sm' : 'py-2 px-3 text-[13px]'} text-[#1a1816] focus:outline-none focus:border-[#d4800a] touch-target`;
-  const btnClass = `bg-[#d4800a] border-none rounded-lg py-3 md:py-2 px-5 text-white font-extrabold cursor-pointer hover:opacity-90 touch-target disabled:opacity-60 ${isMobile ? 'text-sm w-full' : 'text-xs'}`;
+  const inputClass = `w-full bg-[#f7f5f0] border border-[#e4e0d8] rounded-lg ${isMobile ? 'py-3 px-3 text-sm' : 'py-2 px-3 text-[13px]'} text-[#1a1816] focus:outline-none focus:border-[#FA3E3E] touch-target`;
+  const btnClass = `bg-[#FA3E3E] border-none rounded-lg py-3 md:py-2 px-5 text-white font-extrabold cursor-pointer hover:opacity-90 touch-target disabled:opacity-60 ${isMobile ? 'text-sm w-full' : 'text-xs'}`;
   const toggleBtnClass = `inline-flex shrink-0 h-6 w-11 min-w-[2.75rem] rounded-full border-none cursor-pointer relative transition-colors`;
   const toggleKnobClass = `absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow-sm transition-transform duration-200 ease-out`;
 

@@ -30,7 +30,7 @@ function ProductCard({ product, onAdd, currency }: { product: Product; onAdd: ()
         'p-3 sm:p-3.5',
         'shadow-[0_1px_3px_rgba(0,0,0,0.04)]',
         'transition-all duration-200 ease-out',
-        'hover:border-[#d4800a] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5',
+        'hover:border-[#FA3E3E] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5',
         'active:scale-[0.98]',
         'text-left cursor-pointer touch-target'
       )}
@@ -56,7 +56,7 @@ function ProductCard({ product, onAdd, currency }: { product: Product; onAdd: ()
       </div>
       
       {/* Price - always at bottom */}
-      <span className="text-base font-bold text-[#d4800a] font-heading tabular-nums">
+      <span className="text-base font-bold text-green-600 font-heading tabular-nums">
         {currency}{product.price.toLocaleString()}
       </span>
     </button>
@@ -98,8 +98,8 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
                   'px-3 sm:px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap',
                   'border transition-all duration-200 touch-target h-auto',
                   'data-[state=off]:border-[#e4e0d8] data-[state=off]:bg-white data-[state=off]:text-[#6b6358]',
-                  'data-[state=off]:hover:border-[#d4800a] data-[state=off]:hover:text-[#1a1816]',
-                  'data-[state=on]:bg-[#d4800a] data-[state=on]:border-[#d4800a] data-[state=on]:text-white'
+                  'data-[state=off]:hover:border-[#FA3E3E] data-[state=off]:hover:text-[#1a1816]',
+                  'data-[state=on]:bg-[#FA3E3E] data-[state=on]:border-[#FA3E3E] data-[state=on]:text-white'
                 )}
               >
                 {c.name}
@@ -116,7 +116,7 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
             placeholder="ค้นหาเมนู..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-10 pl-10 pr-4 bg-[#f8f6f2] border-[#e4e0d8] rounded-lg text-sm text-[#1a1816] placeholder:text-[#9a9288] focus:border-[#d4800a] focus:ring-2 focus:ring-[#d4800a]/10"
+            className="w-full h-10 pl-10 pr-4 bg-[#f8f6f2] border-[#e4e0d8] rounded-lg text-sm text-[#1a1816] placeholder:text-[#9a9288] focus:border-[#FA3E3E] focus:ring-2 focus:ring-[#FA3E3E]/10"
           />
         </div>
       </div>
@@ -142,7 +142,7 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
       >
         {loading ? (
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-[#9a9288]">
-            <div className="w-10 h-10 rounded-full border-3 border-[#e4e0d8] border-t-[#d4800a] animate-spin mb-4" />
+            <div className="w-10 h-10 rounded-full border-3 border-[#e4e0d8] border-t-[#FA3E3E] animate-spin mb-4" />
             <p className="text-sm">กำลังโหลดเมนู...</p>
           </div>
         ) : filtered.length > 0 ? (

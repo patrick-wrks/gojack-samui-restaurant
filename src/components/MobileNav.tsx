@@ -29,7 +29,7 @@ export function MobileNav() {
               className={cn(
                 "flex flex-col items-center justify-center py-2 px-3 rounded-xl h-auto min-w-0 flex-1 max-w-[25%] gap-1 overflow-hidden",
                 isActive
-                  ? 'bg-[rgba(212,128,10,0.1)] text-[#d4800a] hover:bg-[rgba(212,128,10,0.15)] hover:text-[#d4800a]'
+                  ? 'bg-[rgba(250,62,62,0.1)] text-[#FA3E3E] hover:bg-[rgba(250,62,62,0.15)] hover:text-[#FA3E3E]'
                   : 'bg-transparent text-[#9a9288] hover:bg-[#f7f5f0] hover:text-[#9a9288]'
               )}
             >

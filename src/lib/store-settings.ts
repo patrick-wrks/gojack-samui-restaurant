@@ -15,7 +15,7 @@ export interface StoreSettings {
 
 const DEFAULT_STORE: StoreSettings = {
   id: 1,
-  store_name: 'ร้านอาหารครัวไทย',
+  store_name: 'โกจักรสมุย',
   store_address: '',
   store_phone: '',
   currency_symbol: '฿',

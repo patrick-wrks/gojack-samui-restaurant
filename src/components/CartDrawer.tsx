@@ -102,7 +102,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         {/* Header */}
         <div className="px-4 py-3 border-b border-[#e4e0d8] flex items-center justify-between bg-[#faf9f7]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#d4800a] flex items-center justify-center text-white text-lg">
+            <div className="w-10 h-10 rounded-full bg-[#FA3E3E] flex items-center justify-center text-white text-lg">
               🛒
             </div>
             <div>
@@ -134,7 +134,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
               <p className="text-sm text-[#9a9288]">แตะเมนูเพื่อเพิ่มออเดอร์</p>
               <Button
                 onClick={onClose}
-                className="bg-[#d4800a] hover:bg-[#c47000] text-white rounded-lg text-sm font-semibold px-5 py-2.5"
+                className="bg-[#FA3E3E] hover:bg-[#e03535] text-white rounded-lg text-sm font-semibold px-5 py-2.5"
               >
                 ไปเลือกเมนู
               </Button>
@@ -186,7 +186,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
             )}
             <div className="flex justify-between items-center pt-2 border-t border-[#e4e0d8]">
               <span className="text-base font-bold text-[#1a1816]">รวมทั้งสิ้น</span>
-              <span className="text-xl font-bold text-[#d4800a] font-heading tabular-nums">
+              <span className="text-xl font-bold text-green-600 font-heading tabular-nums">
                 {currency}{total.toLocaleString()}
               </span>
             </div>
@@ -244,7 +244,7 @@ function CartLineItem({
           variant="outline"
           size="icon"
           onClick={() => updateQty(item.id, -1)}
-          className="w-9 h-9 rounded-lg border-[#e4e0d8] bg-white text-[#1a1816] hover:border-[#d4800a] hover:text-[#d4800a]"
+          className="w-9 h-9 rounded-lg border-[#e4e0d8] bg-white text-[#1a1816] hover:border-[#FA3E3E] hover:text-[#FA3E3E]"
         >
           −
         </Button>
@@ -255,7 +255,7 @@ function CartLineItem({
           variant="outline"
           size="icon"
           onClick={() => updateQty(item.id, 1)}
-          className="w-9 h-9 rounded-lg border-[#e4e0d8] bg-white text-[#1a1816] hover:border-[#d4800a] hover:text-[#d4800a]"
+          className="w-9 h-9 rounded-lg border-[#e4e0d8] bg-white text-[#1a1816] hover:border-[#FA3E3E] hover:text-[#FA3E3E]"
         >
           +
         </Button>

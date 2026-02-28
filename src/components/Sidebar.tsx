@@ -29,7 +29,7 @@ export function Sidebar() {
             className={cn(
               "w-11 h-11 rounded-[11px] flex flex-col items-center justify-center gap-0.5 h-auto min-w-0 overflow-hidden",
               isActive
-                ? 'bg-[rgba(212,128,10,0.1)] text-[#d4800a] hover:bg-[rgba(212,128,10,0.15)] hover:text-[#d4800a]'
+                ? 'bg-[rgba(250,62,62,0.1)] text-[#FA3E3E] hover:bg-[rgba(250,62,62,0.15)] hover:text-[#FA3E3E]'
                 : 'bg-transparent text-[#9a9288] hover:bg-white hover:text-[#1a1816]'
             )}
           >

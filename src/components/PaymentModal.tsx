@@ -118,8 +118,8 @@ export function PaymentModal({
                   value="cash"
                   className={cn(
                     "flex flex-col items-center py-5 md:py-3 px-3 rounded-2xl md:rounded-xl border-2 text-center transition-all font-sans cursor-pointer touch-target h-auto",
-                    "data-[state=off]:border-[#e4e0d8] data-[state=off]:bg-[#f7f5f0] data-[state=off]:active:border-[#d4800a]",
-                    "data-[state=on]:border-[#d4800a] data-[state=on]:bg-[rgba(212,128,10,0.1)] data-[state=on]:shadow-sm"
+                    "data-[state=off]:border-[#e4e0d8] data-[state=off]:bg-[#f7f5f0] data-[state=off]:active:border-[#FA3E3E]",
+                    "data-[state=on]:border-[#FA3E3E] data-[state=on]:bg-[rgba(250,62,62,0.1)] data-[state=on]:shadow-sm"
                   )}
                 >
                   <div className="text-[32px] md:text-[26px] mb-2 md:mb-1">💵</div>
@@ -129,8 +129,8 @@ export function PaymentModal({
                   value="bank"
                   className={cn(
                     "flex flex-col items-center py-5 md:py-3 px-3 rounded-2xl md:rounded-xl border-2 text-center transition-all font-sans cursor-pointer touch-target h-auto",
-                    "data-[state=off]:border-[#e4e0d8] data-[state=off]:bg-[#f7f5f0] data-[state=off]:active:border-[#d4800a]",
-                    "data-[state=on]:border-[#d4800a] data-[state=on]:bg-[rgba(212,128,10,0.1)] data-[state=on]:shadow-sm"
+                    "data-[state=off]:border-[#e4e0d8] data-[state=off]:bg-[#f7f5f0] data-[state=off]:active:border-[#FA3E3E]",
+                    "data-[state=on]:border-[#FA3E3E] data-[state=on]:bg-[rgba(250,62,62,0.1)] data-[state=on]:shadow-sm"
                   )}
                 >
                   <div className="text-[32px] md:text-[26px] mb-2 md:mb-1">🏦</div>
@@ -233,7 +233,7 @@ export function PaymentModal({
               </Button>
               <Button
                 onClick={handleNewOrder}
-                className="py-4 md:py-3 h-auto rounded-xl md:rounded-[10px] bg-[#d4800a] hover:bg-[#d4800a]/90 border border-[#d4800a] text-black font-sans text-sm md:text-[13px] font-bold active:opacity-85 touch-target flex items-center justify-center gap-2"
+                className="py-4 md:py-3 h-auto rounded-xl md:rounded-[10px] bg-[#FA3E3E] hover:bg-[#FA3E3E]/90 border border-[#FA3E3E] text-white font-sans text-sm md:text-[13px] font-bold active:opacity-85 touch-target flex items-center justify-center gap-2"
               >
                 ออเดอร์ใหม่
                 <ArrowRight className="w-4 h-4" />

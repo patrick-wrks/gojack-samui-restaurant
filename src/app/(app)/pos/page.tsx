@@ -50,7 +50,7 @@ export default function PosPage() {
             className="w-full flex items-center justify-between gap-4 px-4 py-3 bg-white border-t border-[#e4e0d8] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] active:bg-[#f7f5f0]"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-[#d4800a] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#FA3E3E] flex items-center justify-center shrink-0">
                 <ShoppingCart className="w-5 h-5 text-white" />
               </div>
               <div className="min-w-0 text-left">
@@ -63,7 +63,7 @@ export default function PosPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-lg font-bold text-[#d4800a] font-heading tabular-nums">
+              <span className="text-lg font-bold text-green-600 font-heading tabular-nums">
                 {currency}{total.toLocaleString()}
               </span>
               <ChevronUp className="w-5 h-5 text-[#9a9288]" />

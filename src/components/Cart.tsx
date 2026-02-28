@@ -99,21 +99,21 @@ export function Cart() {
             <Button
               variant="outline"
               onClick={clearCart}
-              className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#d4800a]"
+              className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#FA3E3E]"
             >
               🗑 ล้าง
             </Button>
             <Button
               variant="outline"
               onClick={handleAddDiscount}
-              className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#d4800a]"
+              className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#FA3E3E]"
             >
               🏷 ส่วนลด
             </Button>
             <Button
               variant="outline"
               onClick={handleAddNote}
-              className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#d4800a]"
+              className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#FA3E3E]"
             >
               📝 หมายเหตุ
             </Button>
@@ -135,7 +135,7 @@ export function Cart() {
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-[#e4e0d8]">
               <span className="text-sm font-bold text-[#1a1816]">รวมทั้งสิ้น</span>
-              <span className="text-lg font-bold text-[#d4800a] font-heading tabular-nums">
+              <span className="text-lg font-bold text-green-600 font-heading tabular-nums">
                 {currency}{total.toLocaleString()}
               </span>
             </div>
@@ -191,7 +191,7 @@ function CartLineItem({
           variant="outline"
           size="icon"
           onClick={() => updateQty(item.id, -1)}
-          className="w-7 h-7 rounded-md border-[#e4e0d8] bg-white text-[#1a1816] p-0 hover:border-[#d4800a] hover:text-[#d4800a]"
+          className="w-7 h-7 rounded-md border-[#e4e0d8] bg-white text-[#1a1816] p-0 hover:border-[#FA3E3E] hover:text-[#FA3E3E]"
         >
           −
         </Button>
@@ -202,7 +202,7 @@ function CartLineItem({
           variant="outline"
           size="icon"
           onClick={() => updateQty(item.id, 1)}
-          className="w-7 h-7 rounded-md border-[#e4e0d8] bg-white text-[#1a1816] p-0 hover:border-[#d4800a] hover:text-[#d4800a]"
+          className="w-7 h-7 rounded-md border-[#e4e0d8] bg-white text-[#1a1816] p-0 hover:border-[#FA3E3E] hover:text-[#FA3E3E]"
         >
           +
         </Button>

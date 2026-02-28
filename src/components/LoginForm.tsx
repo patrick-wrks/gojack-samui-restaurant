@@ -44,17 +44,17 @@ export function LoginForm() {
   const isConfigured = supabase !== null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[#f2f0eb] z-[999] bg-[radial-gradient(ellipse_50%_60%_at_80%_20%,rgba(212,128,10,0.08)_0%,transparent_70%)] px-4 safe-top safe-bottom">
+    <div className="fixed inset-0 flex items-center justify-center bg-[#f2f0eb] z-[999] bg-[radial-gradient(ellipse_50%_60%_at_80%_20%,rgba(250,62,62,0.08)_0%,transparent_70%)] px-4 safe-top safe-bottom">
       <Card className="w-full max-w-[400px] md:max-w-[380px] border-[#e4e0d8] shadow-[0_20px_60px_rgba(0,0,0,0.1)] animate-[rise_.5s_cubic-bezier(.22,1,.36,1)] rounded-[24px] md:rounded-[20px] overflow-hidden min-w-0">
         <CardHeader className="pb-4">
           {/* Logo Header */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 md:w-11 md:h-11 bg-[#d4800a] rounded-xl flex items-center justify-center text-[26px] md:text-[22px] shrink-0">
+            <div className="w-12 h-12 md:w-11 md:h-11 bg-[#FA3E3E] rounded-xl flex items-center justify-center text-[26px] md:text-[22px] shrink-0">
               🍽
             </div>
             <div>
               <CardTitle className="font-heading font-black text-xl md:text-xl text-[#1a1816] leading-tight">
-                ร้าน<span className="text-[#d4800a]">อาหาร</span> POS
+                ร้าน<span className="text-[#FA3E3E]">อาหาร</span> POS
               </CardTitle>
               <p className="text-sm md:text-xs text-[#9a9288] mt-0.5">ระบบจัดการร้านอาหาร</p>
             </div>
@@ -84,7 +84,7 @@ export function LoginForm() {
                   "bg-[#f7f5f0] border-[#e4e0d8] rounded-xl md:rounded-[10px]",
                   "py-4 md:py-2.5 px-4 md:px-3.5 text-[#1a1816] font-sans text-base md:text-sm",
                   "placeholder:text-[#9a9288] touch-target",
-                  "focus:border-[#d4800a] focus:ring-[#d4800a]/20"
+                  "focus:border-[#FA3E3E] focus:ring-[#FA3E3E]/20"
                 )}
               />
             </div>
@@ -104,7 +104,7 @@ export function LoginForm() {
                   "bg-[#f7f5f0] border-[#e4e0d8] rounded-xl md:rounded-[10px]",
                   "py-4 md:py-2.5 px-4 md:px-3.5 text-[#1a1816] font-sans text-base md:text-sm",
                   "placeholder:text-[#9a9288] touch-target",
-                  "focus:border-[#d4800a] focus:ring-[#d4800a]/20"
+                  "focus:border-[#FA3E3E] focus:ring-[#FA3E3E]/20"
                 )}
               />
             </div>
@@ -114,11 +114,11 @@ export function LoginForm() {
               type="submit"
               disabled={!isConfigured || submitting}
               className={cn(
-                "w-full bg-[#d4800a] hover:bg-[#d4800a]/90 text-white",
+                "w-full bg-[#FA3E3E] hover:bg-[#FA3E3E]/90 text-white",
                 "rounded-xl md:rounded-[10px] py-4 md:py-3",
                 "font-heading font-extrabold text-base md:text-[15px]",
                 "touch-target flex items-center justify-center gap-2",
-                "shadow-lg shadow-[#d4800a]/20 disabled:opacity-50"
+                "shadow-lg shadow-[#FA3E3E]/20 disabled:opacity-50"
               )}
             >
               {submitting ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}

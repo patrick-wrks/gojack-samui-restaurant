@@ -273,7 +273,7 @@ export default function ReportsPage() {
                         className="w-full rounded-t-[4px] min-h-[4px] transition-all"
                         style={{
                           height: `${(revenueByHour[i] / maxRev) * 70}px`,
-                          background: revenueByHour[i] === maxRev ? '#d4800a' : '#d4cfc5',
+                          background: revenueByHour[i] === maxRev ? '#FA3E3E' : '#d4cfc5',
                         }}
                       />
                       <span className="text-[10px] text-[#9a9288]">{h}</span>
@@ -323,11 +323,11 @@ export default function ReportsPage() {
                       </div>
                       <div className="flex-1 h-2 md:h-1.5 bg-[#f7f5f0] rounded-[4px] md:rounded-[3px] max-w-[80px]">
                         <div
-                          className="h-full bg-[#d4800a] rounded-[4px] md:rounded-[3px]"
+                          className="h-full bg-[#FA3E3E] rounded-[4px] md:rounded-[3px]"
                           style={{ width: `${(d.cnt / maxDish) * 100}%` }}
                         />
                       </div>
-                      <span className="text-sm md:text-xs font-extrabold text-[#d4800a] font-heading shrink-0">
+                      <span className="text-sm md:text-xs font-extrabold text-green-600 font-heading shrink-0">
                         {currency}{d.rev.toLocaleString()}
                       </span>
                     </div>
@@ -492,7 +492,7 @@ export default function ReportsPage() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full bg-[#f7f5f0] border border-[#e4e0d8] rounded-lg py-2 px-3 text-[#1a1816] text-sm focus:outline-none focus:border-[#d4800a]"
+                className="w-full bg-[#f7f5f0] border border-[#e4e0d8] rounded-lg py-2 px-3 text-[#1a1816] text-sm focus:outline-none focus:border-[#FA3E3E]"
               />
             </div>
             <div className="space-y-2">
@@ -501,7 +501,7 @@ export default function ReportsPage() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-[#f7f5f0] border border-[#e4e0d8] rounded-lg py-2 px-3 text-[#1a1816] text-sm focus:outline-none focus:border-[#d4800a]"
+                className="w-full bg-[#f7f5f0] border border-[#e4e0d8] rounded-lg py-2 px-3 text-[#1a1816] text-sm focus:outline-none focus:border-[#FA3E3E]"
               />
             </div>
             <div className="flex gap-2 pt-2">
@@ -515,7 +515,7 @@ export default function ReportsPage() {
               <Button
                 onClick={applyCustomDate}
                 disabled={!startDate || !endDate}
-                className="flex-1 bg-[#d4800a] hover:bg-[#d4800a]/90 text-white disabled:opacity-50"
+                className="flex-1 bg-[#FA3E3E] hover:bg-[#FA3E3E]/90 text-white disabled:opacity-50"
               >
                 ใช้งาน
               </Button>
