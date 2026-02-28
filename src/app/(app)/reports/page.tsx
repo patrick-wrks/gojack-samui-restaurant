@@ -483,6 +483,17 @@ export default function ReportsPage() {
 }
 
 // Helper functions
+function toISOTimezone(date: Date): string {
+  // Format as YYYY-MM-DD HH:mm:ss in local timezone for Supabase
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 function getDateRange(
   period: PeriodKey,
   customStart?: string,
@@ -494,8 +505,8 @@ function getDateRange(
     const end = new Date(customEnd);
     end.setHours(23, 59, 59, 999);
     return {
-      startDate: start.toISOString(),
-      endDate: end.toISOString(),
+      startDate: toISOTimezone(start),
+      endDate: toISOTimezone(end),
     };
   }
 
@@ -518,8 +529,8 @@ function getDateRange(
   }
 
   return {
-    startDate: startDate.toISOString(),
-    endDate: endDate.toISOString(),
+    startDate: toISOTimezone(startDate),
+    endDate: toISOTimezone(endDate),
   };
 }
 

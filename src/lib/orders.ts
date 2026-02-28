@@ -42,6 +42,13 @@ export async function insertOrder(params: InsertOrderParams): Promise<string> {
     throw new OrderInsertError('Supabase client not configured');
   }
 
+  console.log('[insertOrder] Saving order:', {
+    orderNumber: params.orderNumber,
+    total: params.total,
+    paymentMethod: params.paymentMethod,
+    items: params.items.length,
+  });
+
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
@@ -50,16 +57,18 @@ export async function insertOrder(params: InsertOrderParams): Promise<string> {
       payment_method: params.paymentMethod,
       status: 'completed',
     })
-    .select('id')
+    .select('id, created_at')
     .single();
 
   if (orderError || !order) {
-    console.error('Failed to insert order:', orderError);
+    console.error('[insertOrder] Failed to insert order:', orderError);
     throw new OrderInsertError(
       orderError?.message || 'Failed to create order',
       orderError
     );
   }
+
+  console.log('[insertOrder] Order saved:', { id: order.id, created_at: order.created_at });
 
   const rows = params.items.map((i) => ({
     order_id: order.id,
@@ -72,12 +81,14 @@ export async function insertOrder(params: InsertOrderParams): Promise<string> {
   const { error: itemsError } = await supabase.from('order_items').insert(rows);
 
   if (itemsError) {
-    console.error('Failed to insert order items:', itemsError);
+    console.error('[insertOrder] Failed to insert order items:', itemsError);
     throw new OrderInsertError(
       `Order created but failed to save items: ${itemsError.message}`,
       itemsError
     );
   }
+
+  console.log('[insertOrder] Order items saved:', rows.length, 'items');
 
   return order.id;
 }
@@ -108,6 +119,8 @@ export async function fetchOrdersWithItems(
 ): Promise<OrderWithItems[]> {
   if (!supabase) return [];
 
+  console.log('[fetchOrders] Date range:', { startDate, endDate });
+
   const { data, error } = await supabase
     .from('orders')
     .select(`
@@ -128,8 +141,26 @@ export async function fetchOrdersWithItems(
     .eq('status', 'completed')
     .order('created_at', { ascending: false });
 
-  if (error || !data) return [];
+  if (error) {
+    console.error('[fetchOrders] Error:', error);
+    return [];
+  }
+
+  console.log('[fetchOrders] Found', data?.length || 0, 'orders');
   return data as OrderWithItems[];
+}
+
+/**
+ * Format date to local timezone string for Supabase
+ */
+function toISOTimezone(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -140,7 +171,7 @@ export async function fetchTodayStats(): Promise<{ revenue: number; orders: numb
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const startOfDay = today.toISOString();
+  const startOfDay = toISOTimezone(today);
 
   const { data, error } = await supabase
     .from('orders')
