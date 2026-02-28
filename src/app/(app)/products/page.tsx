@@ -29,6 +29,7 @@ export default function ProductsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
   const [addSubmitting, setAddSubmitting] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
@@ -54,7 +55,7 @@ export default function ProductsPage() {
       setProducts((prev) =>
         prev.map((item) => (item.id === p.id ? { ...item, is_active: next } : item))
       );
-      const updated = await updateProduct(p.id, { is_active: next });
+      const { product: updated, error } = await updateProduct(p.id, { is_active: next });
       setTogglingId(null);
       if (updated) {
         useMenuStore.getState().loadMenu();
@@ -62,6 +63,7 @@ export default function ProductsPage() {
         setProducts((prev) =>
           prev.map((item) => (item.id === p.id ? { ...item, is_active: !next } : item))
         );
+        if (error) setEditError(error);
       }
     },
     []
@@ -88,7 +90,7 @@ export default function ProductsPage() {
       return;
     }
     setAddSubmitting(true);
-    const created = await createProduct({ category_id, name, price });
+    const { product: created, error } = await createProduct({ category_id, name, price });
     setAddSubmitting(false);
     if (created) {
       setAddOpen(false);
@@ -96,7 +98,7 @@ export default function ProductsPage() {
       await loadProducts();
       useMenuStore.getState().loadMenu();
     } else {
-      setAddError('ไม่สามารถเพิ่มเมนูได้ — ตรวจสอบการเชื่อมต่อหรือสิทธิ์');
+      setAddError(error ?? 'ไม่สามารถเพิ่มเมนูได้ — ตรวจสอบการเชื่อมต่อหรือสิทธิ์');
     }
   };
 
@@ -109,12 +111,14 @@ export default function ProductsPage() {
     const price = Number((form.elements.namedItem('edit-price') as HTMLInputElement).value);
     if (!name || !category_id || Number.isNaN(price) || price < 0) return;
     setEditSubmitting(true);
-    const updated = await updateProduct(editingProduct.id, { category_id, name, price });
+    const { product: updated, error } = await updateProduct(editingProduct.id, { category_id, name, price });
     setEditSubmitting(false);
     if (updated) {
       setEditingProduct(null);
       await loadProducts();
       useMenuStore.getState().loadMenu();
+    } else if (error) {
+      setEditError(error);
     }
   };
 
@@ -269,7 +273,7 @@ export default function ProductsPage() {
                         <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white">
                           <button
                             type="button"
-                            onClick={() => setEditingProduct(p)}
+                            onClick={() => { setEditingProduct(p); setEditError(null); }}
                             className="py-1.5 px-3 rounded-md border border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold cursor-pointer hover:border-[#d4800a] hover:text-[#d4800a] transition-colors"
                           >
                             แก้ไข
@@ -327,7 +331,7 @@ export default function ProductsPage() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => setEditingProduct(p)}
+                        onClick={() => { setEditingProduct(p); setEditError(null); }}
                         className="py-2 px-4 rounded-lg border border-[#e4e0d8] bg-transparent text-[#9a9288] text-xs font-bold touch-target active:border-[#d4800a] active:text-[#d4800a]"
                       >
                         แก้ไข
@@ -400,13 +404,18 @@ export default function ProductsPage() {
       </Dialog>
 
       {/* Edit Product Dialog */}
-      <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
+      <Dialog open={!!editingProduct} onOpenChange={(open) => { if (!open) { setEditingProduct(null); setEditError(null); } }}>
         <DialogContent className="sm:max-w-[400px] border-[#e4e0d8]">
           <DialogHeader>
             <DialogTitle className="font-heading text-[#1a1816]">แก้ไขเมนู</DialogTitle>
           </DialogHeader>
           {editingProduct && (
             <form onSubmit={handleEditSubmit} className="space-y-4">
+              {editError && (
+                <div className="rounded-lg bg-[#fef2f2] border border-[#fecaca] px-3 py-2 text-sm text-[#dc2626]">
+                  {editError}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-[#9a9288]">ชื่อเมนู</Label>
                 <Input

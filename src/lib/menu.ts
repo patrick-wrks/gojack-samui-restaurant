@@ -58,8 +58,8 @@ export async function createProduct(params: {
   category_id: string;
   name: string;
   price: number;
-}): Promise<Product | null> {
-  if (!supabase) return null;
+}): Promise<{ product: Product | null; error: string | null }> {
+  if (!supabase) return { product: null, error: 'Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.' };
   const { data, error } = await supabase
     .from('products')
     .insert({
@@ -71,21 +71,23 @@ export async function createProduct(params: {
     })
     .select('id, category_id, name, price, is_active, sort_order')
     .single();
-  if (error || !data) return null;
-  return toProduct(data as DbProduct);
+  if (error) return { product: null, error: error.message };
+  if (!data) return { product: null, error: 'No data returned from server.' };
+  return { product: toProduct(data as DbProduct), error: null };
 }
 
 export async function updateProduct(
   id: number,
   params: { category_id?: string; name?: string; price?: number; is_active?: boolean }
-): Promise<Product | null> {
-  if (!supabase) return null;
+): Promise<{ product: Product | null; error: string | null }> {
+  if (!supabase) return { product: null, error: 'Supabase is not configured.' };
   const { data, error } = await supabase
     .from('products')
     .update(params)
     .eq('id', id)
     .select('id, category_id, name, price, is_active, sort_order')
     .single();
-  if (error || !data) return null;
-  return toProduct(data as DbProduct);
+  if (error) return { product: null, error: error.message };
+  if (!data) return { product: null, error: 'No data returned from server.' };
+  return { product: toProduct(data as DbProduct), error: null };
 }
