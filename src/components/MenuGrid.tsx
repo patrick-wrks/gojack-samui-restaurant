@@ -65,9 +65,11 @@ function ProductCard({ product, onAdd, currency }: { product: Product; onAdd: ()
 
 interface MenuGridProps {
   cartPeekMode?: boolean;
+  /** When set, product cards call this instead of adding to cart (e.g. table order flow). */
+  onAddProduct?: (product: Product) => void;
 }
 
-export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
+export function MenuGrid({ cartPeekMode = false, onAddProduct }: MenuGridProps) {
   const [activeCat, setActiveCat] = useState('all');
   const [search, setSearch] = useState('');
   const categories = getCategoriesForUI();
@@ -148,11 +150,11 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
         ) : filtered.length > 0 ? (
           // Cards directly in grid - no wrapper divs
           filtered.map((p) => (
-            <ProductCard 
-              key={p.id} 
-              product={p} 
-              onAdd={() => addItem(p.id)} 
-              currency={currency} 
+            <ProductCard
+              key={p.id}
+              product={p}
+              onAdd={() => (onAddProduct ? onAddProduct(p) : addItem(p.id))}
+              currency={currency}
             />
           ))
         ) : (

@@ -1,4 +1,4 @@
-import type { CartItem, PaymentMethod } from '@/types/pos';
+import type { CartItem, OrderStatus, PaymentMethod } from '@/types/pos';
 import { supabase } from './supabase';
 
 export interface InsertOrderParams {
@@ -8,12 +8,20 @@ export interface InsertOrderParams {
   items: CartItem[];
 }
 
+export interface OrderItemRow {
+  product_id?: number;
+  product_name: string;
+  qty: number;
+  price_at_sale: number;
+}
+
 export interface OrderWithItems {
   id: string;
   order_number: number;
   total: number;
-  payment_method: PaymentMethod;
-  status: string;
+  payment_method: PaymentMethod | null;
+  status: OrderStatus;
+  table_number: string | null;
   created_at: string;
   order_items: {
     product_name: string;
@@ -139,6 +147,7 @@ export async function fetchOrdersWithItems(
       total,
       payment_method,
       status,
+      table_number,
       created_at,
       order_items (
         product_name,
@@ -219,4 +228,200 @@ export async function deleteOrder(orderId: string): Promise<void> {
   }
 
   console.log('[deleteOrder] Order deleted:', orderId);
+}
+
+/**
+ * Create an open order for a table (table-based ordering).
+ * Returns the new order ID.
+ */
+export async function createOpenOrder(
+  tableNumber: string,
+  items: CartItem[] = []
+): Promise<string> {
+  if (!supabase) {
+    throw new OrderInsertError('Supabase client not configured');
+  }
+
+  const orderNumber = await getNextOrderNumber();
+  const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .insert({
+      order_number: orderNumber,
+      total,
+      table_number: tableNumber,
+      payment_method: null,
+      status: 'open',
+    })
+    .select('id, created_at')
+    .single();
+
+  if (orderError || !order) {
+    console.error('[createOpenOrder] Failed to insert order:', orderError);
+    throw new OrderInsertError(
+      orderError?.message || 'Failed to create open order',
+      orderError
+    );
+  }
+
+  if (items.length > 0) {
+    const rows = items.map((i) => ({
+      order_id: order.id,
+      product_id: i.id,
+      product_name: i.name,
+      qty: i.qty,
+      price_at_sale: i.price,
+    }));
+    const { error: itemsError } = await supabase.from('order_items').insert(rows);
+    if (itemsError) {
+      console.error('[createOpenOrder] Failed to insert order items:', itemsError);
+      throw new OrderInsertError(
+        `Order created but failed to save items: ${itemsError.message}`,
+        itemsError
+      );
+    }
+  }
+
+  return order.id;
+}
+
+/**
+ * Fetch all open orders with their items (for Tables page list).
+ */
+export async function fetchOpenOrders(): Promise<OrderWithItems[]> {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      id,
+      order_number,
+      total,
+      payment_method,
+      status,
+      table_number,
+      created_at,
+      order_items (
+        product_name,
+        qty,
+        price_at_sale
+      )
+    `)
+    .eq('status', 'open')
+    .order('table_number', { ascending: true });
+
+  if (error) {
+    console.error('[fetchOpenOrders] Error:', error);
+    return [];
+  }
+  return (data ?? []) as OrderWithItems[];
+}
+
+/**
+ * Fetch the open order for a given table number, or null if none.
+ */
+export async function fetchOpenOrderByTable(
+  tableNumber: string
+): Promise<OrderWithItems | null> {
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      id,
+      order_number,
+      total,
+      payment_method,
+      status,
+      table_number,
+      created_at,
+      order_items (
+        product_name,
+        qty,
+        price_at_sale
+      )
+    `)
+    .eq('status', 'open')
+    .eq('table_number', tableNumber)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as OrderWithItems;
+}
+
+/**
+ * Add items to an existing open order and update its total.
+ */
+export async function addItemsToOpenOrder(
+  orderId: string,
+  items: OrderItemRow[]
+): Promise<void> {
+  if (!supabase) {
+    throw new OrderInsertError('Supabase client not configured');
+  }
+  if (items.length === 0) return;
+
+  const rows = items.map((i) => ({
+    order_id: orderId,
+    product_id: i.product_id,
+    product_name: i.product_name,
+    qty: i.qty,
+    price_at_sale: i.price_at_sale,
+  }));
+  const { error: insertError } = await supabase.from('order_items').insert(rows);
+  if (insertError) {
+    throw new OrderInsertError(
+      `Failed to add items: ${insertError.message}`,
+      insertError
+    );
+  }
+
+  const { data: existingItems } = await supabase
+    .from('order_items')
+    .select('qty, price_at_sale')
+    .eq('order_id', orderId);
+  const total =
+    (existingItems ?? []).reduce(
+      (sum, r) => sum + Number(r.qty) * Number(r.price_at_sale),
+      0
+    );
+  const { error: updateError } = await supabase
+    .from('orders')
+    .update({ total })
+    .eq('id', orderId);
+  if (updateError) {
+    console.error('[addItemsToOpenOrder] Failed to update total:', updateError);
+  }
+}
+
+/**
+ * Complete an open order (checkout): set status, payment_method, and total.
+ * Order then appears in reports (status = 'completed').
+ */
+export async function completeOrder(
+  orderId: string,
+  paymentMethod: PaymentMethod,
+  total: number
+): Promise<void> {
+  if (!supabase) {
+    throw new OrderInsertError('Supabase client not configured');
+  }
+
+  const { error } = await supabase
+    .from('orders')
+    .update({
+      status: 'completed',
+      payment_method: paymentMethod,
+      total,
+    })
+    .eq('id', orderId);
+
+  if (error) {
+    console.error('[completeOrder] Error:', error);
+    throw new OrderInsertError(
+      error.message || 'Failed to complete order',
+      error
+    );
+  }
 }

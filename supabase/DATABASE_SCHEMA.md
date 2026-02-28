@@ -75,17 +75,18 @@ SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id)
 
 ---
 
-## Orders ⭐ NEEDS TO BE CREATED
+## Orders
 
-Stores completed orders. **This table does not exist yet** - run the SQL below in Supabase SQL Editor.
+Stores orders (POS and table-based). Created by `005_orders.sql`; extended for table orders by `007_table_orders.sql`.
 
 | Column | Type | Constraints | Notes |
 |--------|------|-------------|-------|
 | id | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Auto-generated |
 | order_number | INT | NOT NULL | Sequential order number (1, 2, 3...) |
 | total | NUMERIC(10,2) | NOT NULL | Total order amount |
-| payment_method | TEXT | NOT NULL, CHECK (payment_method IN ('cash', 'bank')) | 'cash' or 'bank' |
-| status | TEXT | NOT NULL, DEFAULT 'completed', CHECK (status IN ('completed', 'cancelled')) | Order status |
+| payment_method | TEXT | NULL allowed, CHECK (NULL or 'cash' or 'bank') | NULL for open table orders; set on checkout |
+| status | TEXT | NOT NULL, DEFAULT 'completed', CHECK (status IN ('open', 'completed', 'cancelled')) | 'open' = table order not yet paid; 'completed'/'cancelled' for POS/finalized |
+| table_number | TEXT | NULL | Table label for table service (e.g. '1'–'10'); NULL for POS orders |
 | created_at | TIMESTAMPTZ | DEFAULT NOW() | Auto timestamp |
 
 **RLS Policy:** `orders_authenticated_all` - All authenticated users can read/write
@@ -93,33 +94,15 @@ Stores completed orders. **This table does not exist yet** - run the SQL below i
 **Indexes:**
 - `idx_orders_created_at` on created_at DESC
 - `idx_orders_created_at_status` on (created_at, status)
+- `idx_orders_status_table` on (status, table_number) WHERE status = 'open' (table orders)
 
-**SQL to create:**
-```sql
-CREATE TABLE IF NOT EXISTS orders (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_number INT NOT NULL,
-  total NUMERIC(10, 2) NOT NULL,
-  payment_method TEXT NOT NULL CHECK (payment_method IN ('cash', 'bank')),
-  status TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('completed', 'cancelled')),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "orders_authenticated_all" ON orders;
-CREATE POLICY "orders_authenticated_all" ON orders
-  FOR ALL TO authenticated USING (true) WITH CHECK (true);
-
-CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_orders_created_at_status ON orders(created_at, status);
-```
+**Table orders flow:** Create row with `status = 'open'`, `table_number` set, `payment_method` NULL; add items to `order_items`; on "Request bill" → set `status = 'completed'`, `payment_method`, and `total`.
 
 ---
 
-## Order Items ⭐ NEEDS TO BE CREATED
+## Order Items
 
-Line items for each order. **This table does not exist yet** - run with orders SQL.
+Line items for each order. Created with orders in `005_orders.sql`.
 
 | Column | Type | Constraints | Notes |
 |--------|------|-------------|-------|
@@ -190,7 +173,7 @@ Tables enabled for realtime subscriptions:
 |-------|--------|-------|
 | categories | ✅ Enabled | Menu changes propagate |
 | products | ✅ Enabled | Menu changes propagate |
-| orders | ⚠️ Needs enabling | For live order updates |
+| orders | ✅ Enabled | Live order updates (Tables page, Reports) |
 
 **SQL to enable realtime:**
 ```sql
@@ -209,10 +192,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE orders;
 ### ✅ Tables That Exist (Verify in Supabase)
 1. categories - Menu categories
 2. products - Menu items
-
-### ⭐ Tables That Need to be Created
-1. **orders** - Order headers (critical for analytics)
-2. **order_items** - Order line items (critical for analytics)
+3. orders - Order headers (POS + table orders; run 005 then 007 for table support)
+4. order_items - Order line items
 
 ### 📝 Optional Tables
 1. store_settings - Bank info for receipts
@@ -223,8 +204,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE orders;
 
 1. ✅ Create categories table
 2. ✅ Create products table
-3. ⭐ **Create orders table** (run SQL above)
-4. ⭐ **Create order_items table** (run SQL above)
+3. ✅ Create orders + order_items (run `005_orders.sql`)
+4. ✅ **Extend orders for table service** (run `007_table_orders.sql` - adds table_number, status 'open', nullable payment_method)
 5. ✅ Enable RLS policies
 6. ✅ Enable realtime
 7. ✅ Seed categories data
@@ -308,5 +289,6 @@ Local migration files in `/supabase/migrations/`:
 - `001_menu.sql` - Categories and products
 - `005_orders.sql` - Orders and order_items
 - `006_store_bank_info.sql` - Store settings
+- `007_table_orders.sql` - Table orders: add `table_number`, extend `status` to 'open', nullable `payment_method`
 
-**Note:** These files are for reference. SQL must be run manually in Supabase Dashboard.
+**Note:** These files are for reference. SQL must be run manually in Supabase Dashboard (or via Supabase CLI).

@@ -1,5 +1,7 @@
 export type PaymentMethod = 'cash' | 'bank';
 
+export type OrderStatus = 'open' | 'completed' | 'cancelled';
+
 export interface Category {
   id: string;
   name: string;
@@ -25,6 +27,12 @@ export interface Order {
   pay: PaymentMethod;
   total: number;
   cust: number;
+}
+
+/** Order with table_number and status for table-based ordering and reports */
+export interface OrderWithTable {
+  table_number: string | null;
+  status: OrderStatus;
 }
 
 export interface ReportKpi {

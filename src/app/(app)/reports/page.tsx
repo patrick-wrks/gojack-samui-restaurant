@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Download, ChevronRight, Calendar, Trash2 } from 'lucide-react';
+import { Download, Calendar, Trash2 } from 'lucide-react';
 import { useOrdersRealtime } from '@/hooks/useOrdersRealtime';
 import { useCurrencySymbol } from '@/store/store-settings-store';
 import { fetchOrdersWithItems, deleteOrder } from '@/lib/orders';
 import type { OrderWithItems } from '@/lib/orders';
+import type { PaymentMethod } from '@/types/pos';
 import {
   Dialog,
   DialogContent,
@@ -735,7 +736,7 @@ function calculateMetrics(
         date: dateStr,
         time,
         items,
-        pay: o.payment_method,
+        pay: (o.payment_method ?? 'cash') as PaymentMethod,
         total: Number(o.total),
       };
     });
