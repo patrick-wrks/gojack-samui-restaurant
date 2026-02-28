@@ -45,15 +45,22 @@ export function Cart() {
 
   const handleConfirmOrder = async () => {
     const nextOrderNum = orderNum + 1;
-    await insertOrder({
-      orderNumber: nextOrderNum,
-      total,
-      paymentMethod: payType,
-      items: cart,
-    });
-    addTodayOrder(total);
-    incrementOrderNum();
-    clearCart();
+    try {
+      await insertOrder({
+        orderNumber: nextOrderNum,
+        total,
+        paymentMethod: payType,
+        items: cart,
+      });
+      addTodayOrder(total);
+      incrementOrderNum();
+      clearCart();
+    } catch (error) {
+      console.error('Failed to save order:', error);
+      window.alert(
+        'ไม่สามารถบันทึกออเดอร์ได้ กรุณาลองใหม่อีกครั้ง\n(Could not save order, please try again)'
+      );
+    }
   };
 
   return (

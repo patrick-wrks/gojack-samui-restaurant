@@ -22,12 +22,25 @@ export interface OrderWithItems {
   }[];
 }
 
+export class OrderInsertError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown
+  ) {
+    super(message);
+    this.name = 'OrderInsertError';
+  }
+}
+
 /**
  * Insert order and order_items into Supabase when client is configured.
+ * Returns the order ID on success, throws OrderInsertError on failure.
  * No-op when supabase is not configured (e.g. missing env vars).
  */
-export async function insertOrder(params: InsertOrderParams): Promise<void> {
-  if (!supabase) return;
+export async function insertOrder(params: InsertOrderParams): Promise<string> {
+  if (!supabase) {
+    throw new OrderInsertError('Supabase client not configured');
+  }
 
   const { data: order, error: orderError } = await supabase
     .from('orders')
@@ -40,7 +53,13 @@ export async function insertOrder(params: InsertOrderParams): Promise<void> {
     .select('id')
     .single();
 
-  if (orderError || !order) return;
+  if (orderError || !order) {
+    console.error('Failed to insert order:', orderError);
+    throw new OrderInsertError(
+      orderError?.message || 'Failed to create order',
+      orderError
+    );
+  }
 
   const rows = params.items.map((i) => ({
     order_id: order.id,
@@ -50,7 +69,17 @@ export async function insertOrder(params: InsertOrderParams): Promise<void> {
     price_at_sale: i.price,
   }));
 
-  await supabase.from('order_items').insert(rows);
+  const { error: itemsError } = await supabase.from('order_items').insert(rows);
+
+  if (itemsError) {
+    console.error('Failed to insert order items:', itemsError);
+    throw new OrderInsertError(
+      `Order created but failed to save items: ${itemsError.message}`,
+      itemsError
+    );
+  }
+
+  return order.id;
 }
 
 /**
