@@ -2,29 +2,18 @@
 
 import { useState } from 'react';
 import { Search } from 'lucide-react';
-import { MENU } from '@/lib/constants';
 import { useFilteredMenu, getCatColor } from '@/hooks/useFilteredMenu';
 import { useCartStore } from '@/store/cart-store';
+import { useMenuStore, getCategoriesForUI } from '@/store/menu-store';
+import { useCurrencySymbol } from '@/store/store-settings-store';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { Product } from '@/types/pos';
 import { cn } from '@/lib/utils';
 
-const CATS = [
-  { id: 'all', name: 'ทั้งหมด' },
-  { id: 'krapow', name: 'กระเพรา' },
-  { id: 'curry', name: 'เครื่องแกง' },
-  { id: 'stir', name: 'ผัดต่างๆ' },
-  { id: 'rice', name: 'ข้าวผัด/ราดหน้า' },
-  { id: 'somtam', name: 'ส้มตำ/ยำ' },
-  { id: 'soup', name: 'แกงส้ม/ต้ม' },
-  { id: 'seafood', name: 'ทะเล/ปลา' },
-  { id: 'special', name: 'พิเศษ' },
-  { id: 'side', name: 'ของเพิ่ม' },
-];
-
-function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }) {
-  const color = getCatColor(product.cat);
+function ProductCard({ product, onAdd, currency }: { product: Product; onAdd: () => void; currency: string }) {
+  const categories = getCategoriesForUI();
+  const color = getCatColor(product.cat, categories);
   return (
     <button
       type="button"
@@ -43,7 +32,7 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }
         </div>
         {/* Price: anchored at bottom of content, inside padding */}
         <div className="mt-auto shrink-0 pt-1.5 font-heading text-base font-extrabold text-[#d4800a] md:text-[15px]">
-          ฿{product.price.toLocaleString()}
+          {currency}{product.price.toLocaleString()}
         </div>
       </div>
     </button>
@@ -57,7 +46,11 @@ interface MenuGridProps {
 export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
   const [activeCat, setActiveCat] = useState('all');
   const [search, setSearch] = useState('');
-  const filtered = useFilteredMenu(MENU, activeCat, search);
+  const categories = getCategoriesForUI();
+  const products = useMenuStore((s) => s.products);
+  const loading = useMenuStore((s) => s.loading);
+  const currency = useCurrencySymbol();
+  const filtered = useFilteredMenu(products, activeCat, search);
   const addItem = useCartStore((s) => s.addItem);
 
   return (
@@ -71,7 +64,7 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
           className="flex w-fit gap-2.5"
           spacing={0}
         >
-          {CATS.map((c) => (
+          {categories.map((c) => (
             <ToggleGroupItem
               key={c.id}
               value={c.id}
@@ -109,9 +102,13 @@ export function MenuGrid({ cartPeekMode = false }: MenuGridProps) {
         "flex-1 overflow-y-auto overflow-x-hidden px-3 md:px-3.5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2.5 md:gap-2 align-content-start momentum-scroll min-w-0",
         cartPeekMode ? 'pb-36' : 'pb-24 md:pb-3.5'
       )}>
-        {filtered.length > 0 ? (
+        {loading ? (
+          <div className="col-span-full text-center py-10 text-[#9a9288] text-base md:text-sm">
+            กำลังโหลดเมนู...
+          </div>
+        ) : filtered.length > 0 ? (
           filtered.map((p) => (
-            <ProductCard key={p.id} product={p} onAdd={() => addItem(p.id)} />
+            <ProductCard key={p.id} product={p} onAdd={() => addItem(p.id)} currency={currency} />
           ))
         ) : (
           <div className="col-span-full text-center py-10 text-[#9a9288] text-base md:text-sm">

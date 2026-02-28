@@ -30,7 +30,7 @@ export async function insertOrder(params: InsertOrderParams): Promise<void> {
 
   const rows = params.items.map((i) => ({
     order_id: order.id,
-    product_id: null,
+    product_id: i.id,
     product_name: i.name,
     qty: i.qty,
     price_at_sale: i.price,

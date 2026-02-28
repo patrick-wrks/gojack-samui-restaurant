@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
 import { STAFF } from '@/lib/constants';
+import { useStoreSettingsStore } from '@/store/store-settings-store';
+import { updateStore } from '@/lib/store-settings';
 
 const SECTIONS = [
   { id: 'general', label: 'ข้อมูลร้าน', icon: '🏪' },
@@ -131,13 +133,48 @@ export default function SettingsPage() {
 }
 
 function SettingsContent({ active, isMobile = false }: { active: SectionId; isMobile?: boolean }) {
+  const { store, loadStore } = useStoreSettingsStore();
+  const [storeName, setStoreName] = useState('');
+  const [storeAddress, setStoreAddress] = useState('');
+  const [storePhone, setStorePhone] = useState('');
+  const [currencySymbol, setCurrencySymbol] = useState('฿');
+  const [taxRate, setTaxRate] = useState(7);
+  const [pricesIncludeTax, setPricesIncludeTax] = useState(true);
+  const [generalSaving, setGeneralSaving] = useState(false);
+  const [taxSaving, setTaxSaving] = useState(false);
+
+  useEffect(() => {
+    if (store) {
+      setStoreName(store.store_name);
+      setStoreAddress(store.store_address);
+      setStorePhone(store.store_phone);
+      setCurrencySymbol(store.currency_symbol);
+      setTaxRate(store.tax_rate);
+      setPricesIncludeTax(store.prices_include_tax);
+    }
+  }, [store]);
+
   const cardClass = `bg-white border border-[#e4e0d8] rounded-[16px] md:rounded-[14px] ${isMobile ? 'p-4 mb-4' : 'p-4 mb-3'}`;
   const sectionTitleClass = `font-extrabold ${isMobile ? 'text-sm mb-4 pb-3' : 'text-[13px] mb-3.5 pb-2.5'} border-b border-[#e4e0d8]`;
   const labelClass = `block font-bold text-[#9a9288] uppercase tracking-wider mb-1.5 ${isMobile ? 'text-xs' : 'text-[10px]'}`;
   const inputClass = `w-full bg-[#f7f5f0] border border-[#e4e0d8] rounded-lg ${isMobile ? 'py-3 px-3 text-sm' : 'py-2 px-3 text-[13px]'} text-[#1a1816] focus:outline-none focus:border-[#d4800a] touch-target`;
-  const btnClass = `bg-[#d4800a] border-none rounded-lg py-3 md:py-2 px-5 text-white font-extrabold cursor-pointer hover:opacity-90 touch-target ${isMobile ? 'text-sm w-full' : 'text-xs'}`;
-  const toggleBtnClass = `w-11 h-6 rounded-full bg-[#16a34a] border-none cursor-pointer relative transition-colors`;
-  const toggleKnobClass = `absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform translate-x-5`;
+  const btnClass = `bg-[#d4800a] border-none rounded-lg py-3 md:py-2 px-5 text-white font-extrabold cursor-pointer hover:opacity-90 touch-target disabled:opacity-60 ${isMobile ? 'text-sm w-full' : 'text-xs'}`;
+  const toggleBtnClass = `inline-flex shrink-0 h-6 w-11 min-w-[2.75rem] rounded-full border-none cursor-pointer relative transition-colors`;
+  const toggleKnobClass = `absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow-sm transition-transform duration-200 ease-out`;
+
+  const handleSaveGeneral = async () => {
+    setGeneralSaving(true);
+    const updated = await updateStore({ store_name: storeName, store_address: storeAddress, store_phone: storePhone });
+    setGeneralSaving(false);
+    if (updated) await loadStore();
+  };
+
+  const handleSaveTax = async () => {
+    setTaxSaving(true);
+    const updated = await updateStore({ currency_symbol: currencySymbol.trim() || '฿', tax_rate: taxRate, prices_include_tax: pricesIncludeTax });
+    setTaxSaving(false);
+    if (updated) await loadStore();
+  };
 
   return (
     <>
@@ -147,17 +184,19 @@ function SettingsContent({ active, isMobile = false }: { active: SectionId; isMo
             <div className={sectionTitleClass}>ข้อมูลร้านอาหาร</div>
             <div className="mb-4">
               <label className={labelClass}>ชื่อร้าน</label>
-              <input type="text" defaultValue="ร้านอาหารครัวไทย" className={inputClass} />
+              <input type="text" value={storeName} onChange={(e) => setStoreName(e.target.value)} className={inputClass} />
             </div>
             <div className="mb-4">
               <label className={labelClass}>ที่อยู่</label>
-              <input type="text" defaultValue="ภูเก็ต ประเทศไทย" className={inputClass} />
+              <input type="text" value={storeAddress} onChange={(e) => setStoreAddress(e.target.value)} className={inputClass} />
             </div>
             <div className="mb-4">
               <label className={labelClass}>เบอร์โทรศัพท์</label>
-              <input type="text" defaultValue="+66 76 123 456" className={`${inputClass} max-w-[220px]`} />
+              <input type="text" value={storePhone} onChange={(e) => setStorePhone(e.target.value)} className={`${inputClass} max-w-[220px]`} />
             </div>
-            <button type="button" className={btnClass}>บันทึก</button>
+            <button type="button" onClick={handleSaveGeneral} disabled={generalSaving} className={btnClass}>
+              {generalSaving ? 'กำลังบันทึก...' : 'บันทึก'}
+            </button>
           </div>
           <div className={cardClass}>
             <div className={sectionTitleClass}>ค่าระบบ</div>
@@ -167,7 +206,7 @@ function SettingsContent({ active, isMobile = false }: { active: SectionId; isMo
                 <div className={`${isMobile ? 'text-xs' : 'text-[11px]'} text-[#9a9288] mt-0.5`}>แจ้งเตือนเสียงเมื่อออเดอร์ใหม่มาถึง</div>
               </div>
               <button type="button" className={toggleBtnClass} aria-label="Toggle">
-                <span className={toggleKnobClass} />
+                <span className={`${toggleKnobClass} translate-x-5`} />
               </button>
             </div>
             <div className={`flex items-center justify-between ${isMobile ? 'py-4' : 'py-2.5'}`}>
@@ -176,7 +215,7 @@ function SettingsContent({ active, isMobile = false }: { active: SectionId; isMo
                 <div className={`${isMobile ? 'text-xs' : 'text-[11px]'} text-[#9a9288] mt-0.5`}>แสดงจำนวนที่ขายในวันนี้</div>
               </div>
               <button type="button" className={toggleBtnClass} aria-label="Toggle">
-                <span className={toggleKnobClass} />
+                <span className={`${toggleKnobClass} translate-x-5`} />
               </button>
             </div>
           </div>
@@ -233,19 +272,26 @@ function SettingsContent({ active, isMobile = false }: { active: SectionId; isMo
           <div className={sectionTitleClass}>ภาษีและสกุลเงิน</div>
           <div className="mb-4">
             <label className={labelClass}>สัญลักษณ์สกุลเงิน</label>
-            <input type="text" defaultValue="฿" className={`${inputClass} w-[130px]`} />
+            <input type="text" value={currencySymbol} onChange={(e) => setCurrencySymbol(e.target.value)} className={`${inputClass} w-[130px]`} />
           </div>
           <div className="mb-4">
             <label className={labelClass}>อัตราภาษี VAT (%)</label>
-            <input type="number" defaultValue={7} className={`${inputClass} w-[130px]`} />
+            <input type="number" min={0} max={100} step={0.01} value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value) || 0)} className={`${inputClass} w-[130px]`} />
           </div>
           <div className={`flex items-center justify-between ${isMobile ? 'py-4' : 'py-2.5'} border-b border-[#e4e0d8]`}>
             <div className={`${isMobile ? 'text-sm' : 'text-[13px]'} font-semibold`}>ราคารวม VAT แล้ว</div>
-            <button type="button" className={toggleBtnClass} aria-label="Toggle">
-              <span className={toggleKnobClass} />
+            <button
+              type="button"
+              onClick={() => setPricesIncludeTax(!pricesIncludeTax)}
+              className={`${toggleBtnClass} ${pricesIncludeTax ? 'bg-[#16a34a]' : 'bg-[#e4e0d8]'}`}
+              aria-label={pricesIncludeTax ? 'ปิด' : 'เปิด'}
+            >
+              <span className={`${toggleKnobClass} ${pricesIncludeTax ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
           </div>
-          <button type="button" className={`${btnClass} mt-4`}>บันทึก</button>
+          <button type="button" onClick={handleSaveTax} disabled={taxSaving} className={`${btnClass} mt-4`}>
+            {taxSaving ? 'กำลังบันทึก...' : 'บันทึก'}
+          </button>
         </div>
       )}
 

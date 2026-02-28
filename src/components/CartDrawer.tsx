@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { ChevronDown, Trash2, Tag } from 'lucide-react';
 import { useCartStore } from '@/store/cart-store';
 import { useCartTotals } from '@/hooks/useCartTotals';
+import { useCurrencySymbol } from '@/store/store-settings-store';
 import { insertOrder } from '@/lib/orders';
 import { PaymentModal } from './PaymentModal';
 import { Button } from '@/components/ui/button';
@@ -28,13 +29,14 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
     addTodayOrder,
   } = useCartStore();
   const { subtotal, discountAmount, total } = useCartTotals(cart, discount);
+  const currency = useCurrencySymbol();
   const [paymentOpen, setPaymentOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number>(0);
   const [translateY, setTranslateY] = useState(0);
 
   const handleAddDiscount = () => {
-    const v = window.prompt('ส่วนลด (฿):');
+    const v = window.prompt(`ส่วนลด (${currency}):`);
     if (v != null && !Number.isNaN(Number(v)) && Number(v) >= 0) {
       setDiscount(Number(v));
     }
@@ -205,17 +207,17 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           <div className="mb-3 space-y-1.5 py-2 border-y border-[#e4e0d8] min-w-0">
             <div className="flex justify-between items-center gap-2 text-sm text-[#9a9288] min-w-0">
               <span className="shrink-0">ยอดรวม</span>
-              <span className="text-truncate-safe min-w-0 text-right">฿{subtotal.toLocaleString()}</span>
+              <span className="text-truncate-safe min-w-0 text-right">{currency}{subtotal.toLocaleString()}</span>
             </div>
             {discountAmount > 0 && (
               <div className="flex justify-between items-center gap-2 text-sm min-w-0">
                 <span className="text-[#9a9288] shrink-0">ส่วนลด</span>
-                <span className="text-[#16a34a] text-truncate-safe min-w-0 text-right">–฿{discountAmount.toLocaleString()}</span>
+                <span className="text-[#16a34a] text-truncate-safe min-w-0 text-right">–{currency}{discountAmount.toLocaleString()}</span>
               </div>
             )}
             <div className="flex justify-between items-center gap-2 text-xl font-extrabold pt-2 text-[#1a1816] font-heading min-w-0">
               <span className="shrink-0">รวมทั้งสิ้น</span>
-              <span className="text-[#d4800a] text-truncate-safe min-w-0 text-right">฿{total.toLocaleString()}</span>
+              <span className="text-[#d4800a] text-truncate-safe min-w-0 text-right">{currency}{total.toLocaleString()}</span>
             </div>
           </div>
 
@@ -225,7 +227,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
             disabled={cart.length === 0}
             className="w-full min-w-0 bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-xl py-4 h-auto text-white font-heading font-black text-base touch-target disabled:bg-[#e4e0d8] disabled:text-[#9a9288] active:opacity-90 shadow-[0_4px_15px_rgba(22,163,74,0.3)] text-truncate-safe"
           >
-            ยืนยันออเดอร์ — ฿{total.toLocaleString()}
+            ยืนยันออเดอร์ — {currency}{total.toLocaleString()}
           </Button>
         </div>
       </div>
@@ -254,7 +256,7 @@ function CartLineItem({
       <div className="flex-1 min-w-0 overflow-hidden">
         <div className="text-sm font-bold text-[#1a1816] leading-tight text-truncate-safe">{item.name}</div>
         <div className="text-xs text-[#9a9288] mt-0.5 text-truncate-safe">
-          ฿{item.price} × {item.qty} = <span className="font-bold text-[#d4800a]">฿{(item.price * item.qty).toLocaleString()}</span>
+          {currency}{item.price} × {item.qty} = <span className="font-bold text-[#d4800a]">{currency}{(item.price * item.qty).toLocaleString()}</span>
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">

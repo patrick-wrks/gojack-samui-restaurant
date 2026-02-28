@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { CartItem, PaymentMethod } from '@/types/pos';
-import { MENU } from '@/lib/constants';
+import { useMenuStore } from '@/store/menu-store';
 
 export interface CartStore {
   cart: CartItem[];
@@ -30,7 +30,7 @@ export const useCartStore = create<CartStore>((set) => ({
   todayOrders: 8,
 
   addItem: (productId) => {
-    const product = MENU.find((p) => p.id === productId);
+    const product = useMenuStore.getState().products.find((p) => p.id === productId);
     if (!product) return;
     set((state) => {
       const existing = state.cart.find((c) => c.id === productId);

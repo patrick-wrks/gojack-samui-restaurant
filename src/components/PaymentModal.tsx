@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Printer, ArrowRight, Check } from 'lucide-react';
 import type { PaymentMethod } from '@/types/pos';
+import { useCurrencySymbol } from '@/store/store-settings-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -28,6 +29,7 @@ export function PaymentModal({
   const [step, setStep] = useState<'form' | 'success'>('form');
   const [modalMethod, setModalMethod] = useState<PaymentMethod>(payType);
   const [tendered, setTendered] = useState('');
+  const currency = useCurrencySymbol();
 
   useEffect(() => {
     if (open) {
@@ -37,7 +39,7 @@ export function PaymentModal({
     }
   }, [open, payType]);
 
-  const totalFormatted = `฿${total.toLocaleString()}`;
+  const totalFormatted = `${currency}${total.toLocaleString()}`;
   const tenderedNum = parseFloat(tendered) || 0;
   const change = tenderedNum >= total ? tenderedNum - total : 0;
 
@@ -120,7 +122,7 @@ export function PaymentModal({
                 <>
                   <div className="mb-4 md:mb-3.5 space-y-2 md:space-y-1.5">
                     <label className="block text-xs md:text-[10px] font-bold text-[#9a9288] uppercase tracking-wider">
-                      รับมา (฿)
+                      รับมา ({currency})
                     </label>
                     <Input
                       type="number"
@@ -139,7 +141,7 @@ export function PaymentModal({
                     <div className="bg-[rgba(22,163,74,0.1)] border border-[rgba(34,197,94,0.25)] rounded-xl md:rounded-[9px] py-4 md:py-2.5 px-4 md:px-3 flex justify-between items-center gap-2 mb-4 md:mb-3.5 min-w-0">
                       <span className="text-base md:text-[13px] text-[#16a34a] font-bold shrink-0">เงินทอน</span>
                       <strong className="text-2xl md:text-xl font-black text-[#16a34a] font-heading text-truncate-safe min-w-0 text-right">
-                        ฿{change.toLocaleString()}
+                        {currency}{change.toLocaleString()}
                       </strong>
                     </div>
                   )}

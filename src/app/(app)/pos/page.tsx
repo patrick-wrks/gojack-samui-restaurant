@@ -7,11 +7,13 @@ import { Cart } from '@/components/Cart';
 import { CartDrawer } from '@/components/CartDrawer';
 import { useCartStore } from '@/store/cart-store';
 import { useCartTotals } from '@/hooks/useCartTotals';
+import { useCurrencySymbol } from '@/store/store-settings-store';
 
 export default function PosPage() {
   const [cartMode, setCartMode] = useState<'closed' | 'peek' | 'open'>('peek');
   const { cart } = useCartStore();
   const { total } = useCartTotals(cart, 0);
+  const currency = useCurrencySymbol();
   const itemCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
   return (
@@ -61,7 +63,7 @@ export default function PosPage() {
             <div className="flex items-center gap-3 shrink-0 min-w-0 overflow-hidden">
               <div className="text-right min-w-0 overflow-hidden">
                 <div className="text-lg font-extrabold text-[#d4800a] font-heading text-truncate-safe">
-                  ฿{total.toLocaleString()}
+                  {currency}{total.toLocaleString()}
                 </div>
               </div>
               <ChevronUp className="w-5 h-5 text-[#9a9288] shrink-0" />

@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { Download, ChevronRight } from 'lucide-react';
 import { KPIS, HOURS, R_H, O_H, TOP_DISHES, SAMPLE_ORDERS } from '@/lib/constants';
 import { useOrdersRealtime } from '@/hooks/useOrdersRealtime';
+import { useCurrencySymbol } from '@/store/store-settings-store';
 import type { ReportKpi } from '@/types/pos';
 
 type PeriodKey = 'today' | 'week' | 'month';
@@ -11,6 +12,7 @@ type PeriodKey = 'today' | 'week' | 'month';
 export default function ReportsPage() {
   const [period, setPeriod] = useState<PeriodKey>('today');
   const [, setRefresh] = useState(0);
+  const currency = useCurrencySymbol();
   useOrdersRealtime(
     useCallback(() => {
       setRefresh((n) => n + 1);
@@ -102,7 +104,7 @@ export default function ReportsPage() {
             <div className="flex items-end gap-1 h-[100px] md:h-[86px] overflow-x-auto scrollbar-hide">
               {HOURS.map((h, i) => (
                 <div key={h} className="flex-1 flex flex-col items-center gap-1 min-w-[24px]">
-                  <span className="text-[9px] text-[#9a9288] whitespace-nowrap">฿{R_H[i]}</span>
+                  <span className="text-[9px] text-[#9a9288] whitespace-nowrap">{currency}{R_H[i]}</span>
                   <div
                     className="w-full rounded-t-[4px] min-h-[4px] transition-all"
                     style={{
@@ -162,7 +164,7 @@ export default function ReportsPage() {
                     />
                   </div>
                   <span className="text-sm md:text-xs font-extrabold text-[#d4800a] font-heading shrink-0">
-                    ฿{d.rev.toLocaleString()}
+                    {currency}{d.rev.toLocaleString()}
                   </span>
                 </div>
               ))}
@@ -253,7 +255,7 @@ export default function ReportsPage() {
                       </span>
                     </td>
                     <td className="py-2.5 px-2 border-b border-[#e4e0d8] text-right font-extrabold font-heading">
-                      ฿{o.total.toLocaleString()}
+                      {currency}{o.total.toLocaleString()}
                     </td>
                   </tr>
                 ))}
@@ -286,7 +288,7 @@ export default function ReportsPage() {
                 </div>
                 <div className="flex items-center gap-2 ml-3">
                   <span className="font-heading text-base font-extrabold text-[#1a1816]">
-                    ฿{o.total.toLocaleString()}
+                    {currency}{o.total.toLocaleString()}
                   </span>
                   <ChevronRight className="w-4 h-4 text-[#9a9288]" />
                 </div>

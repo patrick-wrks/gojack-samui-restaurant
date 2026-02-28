@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/providers';
 import { useCartStore } from '@/store/cart-store';
+import { useCurrencySymbol } from '@/store/store-settings-store';
 import { LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -21,6 +22,7 @@ export function Topbar() {
   const router = useRouter();
   const { logout } = useAuth();
   const { todayRevenue, todayOrders } = useCartStore();
+  const currency = useCurrencySymbol();
   const [time, setTime] = useState('');
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export function Topbar() {
       {/* Stats - shown on larger screens */}
       <div className="hidden md:flex flex-col items-end min-w-0 overflow-hidden">
         <span className="font-heading text-[15px] font-extrabold text-[#1a1816] leading-none text-truncate-safe max-w-full">
-          ฿{todayRevenue.toLocaleString()}
+          {currency}{todayRevenue.toLocaleString()}
         </span>
         <span className="text-[9px] text-[#9a9288] uppercase tracking-wider">วันนี้</span>
       </div>

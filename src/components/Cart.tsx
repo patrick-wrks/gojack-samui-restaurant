@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCartStore } from '@/store/cart-store';
 import { useCartTotals } from '@/hooks/useCartTotals';
+import { useCurrencySymbol } from '@/store/store-settings-store';
 import { insertOrder } from '@/lib/orders';
 import { PaymentModal } from './PaymentModal';
 import { Button } from '@/components/ui/button';
@@ -24,10 +25,11 @@ export function Cart() {
     addTodayOrder,
   } = useCartStore();
   const { subtotal, discountAmount, total } = useCartTotals(cart, discount);
+  const currency = useCurrencySymbol();
   const [paymentOpen, setPaymentOpen] = useState(false);
 
   const handleAddDiscount = () => {
-    const v = window.prompt('ส่วนลด (฿):');
+    const v = window.prompt(`ส่วนลด (${currency}):`);
     if (v != null && !Number.isNaN(Number(v)) && Number(v) >= 0) {
       setDiscount(Number(v));
     }
@@ -103,7 +105,7 @@ export function Cart() {
             </div>
           ) : (
             cart.map((i) => (
-              <CartLineItem key={i.id} item={i} />
+              <CartLineItem key={i.id} item={i} currency={currency} />
             ))
           )}
         </div>
@@ -139,16 +141,16 @@ export function Cart() {
           <div className="mb-2.5 space-y-0.5 min-w-0">
             <div className="flex justify-between items-center gap-2 text-xs text-[#9a9288] py-0.5 min-w-0">
               <span className="shrink-0">ยอดรวม</span>
-              <span className="text-truncate-safe min-w-0 text-right">฿{subtotal.toLocaleString()}</span>
+              <span className="text-truncate-safe min-w-0 text-right">{currency}{subtotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center gap-2 text-xs py-0.5 min-w-0">
               <span className="text-[#9a9288] shrink-0">ส่วนลด</span>
-              <span className="text-[#16a34a] text-truncate-safe min-w-0 text-right">–฿{discountAmount.toLocaleString()}</span>
+              <span className="text-[#16a34a] text-truncate-safe min-w-0 text-right">–{currency}{discountAmount.toLocaleString()}</span>
             </div>
             <Separator className="my-1.5 bg-[#e4e0d8]" />
             <div className="flex justify-between items-center gap-2 text-[19px] font-extrabold pt-2 text-[#1a1816] font-heading min-w-0">
               <span className="shrink-0">รวมทั้งสิ้น</span>
-              <span className="text-truncate-safe min-w-0 text-right">฿{total.toLocaleString()}</span>
+              <span className="text-truncate-safe min-w-0 text-right">{currency}{total.toLocaleString()}</span>
             </div>
           </div>
 
@@ -157,7 +159,7 @@ export function Cart() {
             disabled={cart.length === 0}
             className="w-full min-w-0 bg-[#16a34a] hover:bg-[#16a34a]/90 border-none rounded-[11px] py-3.5 h-auto text-white font-heading font-black text-[15px] disabled:bg-[#e4e0d8] disabled:text-[#9a9288] hover:opacity-90 hover:shadow-[0_6px_20px_rgba(34,197,94,0.35)] text-truncate-safe"
           >
-            ยืนยันออเดอร์ — ฿{total.toLocaleString()}
+            ยืนยันออเดอร์ — {currency}{total.toLocaleString()}
           </Button>
         </div>
       </div>
@@ -176,8 +178,10 @@ export function Cart() {
 
 function CartLineItem({
   item,
+  currency,
 }: {
   item: { id: number; name: string; price: number; qty: number };
+  currency: string;
 }) {
   const updateQty = useCartStore((s) => s.updateQty);
 
@@ -186,7 +190,7 @@ function CartLineItem({
       <div className="flex-1 min-w-0 overflow-hidden">
         <div className="text-xs font-bold leading-tight text-[#1a1816] text-truncate-safe">{item.name}</div>
         <div className="text-[11px] text-[#9a9288] mt-0.5 text-truncate-safe">
-          ฿{item.price} × {item.qty} = ฿{(item.price * item.qty).toLocaleString()}
+          {currency}{item.price} × {item.qty} = {currency}{(item.price * item.qty).toLocaleString()}
         </div>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">

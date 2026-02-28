@@ -2,6 +2,8 @@ import { Topbar } from '@/components/Topbar';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileNav } from '@/components/MobileNav';
 import { AuthGuard } from '@/components/AuthGuard';
+import { MenuLoader } from '@/components/MenuLoader';
+import { StoreLoader } from '@/components/StoreLoader';
 
 export default function AppLayout({
   children,
@@ -10,6 +12,8 @@ export default function AppLayout({
 }) {
   return (
     <AuthGuard>
+      <MenuLoader />
+      <StoreLoader />
       <div className="h-screen flex flex-col bg-[#f2f0eb] min-w-0 overflow-hidden">
         <Topbar />
         <div className="flex flex-1 overflow-hidden min-w-0 min-h-0">

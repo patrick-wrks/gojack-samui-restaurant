@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { Product } from '@/types/pos';
+import type { Category, Product } from '@/types/pos';
 import { CATS } from '@/lib/constants';
 
 export function useFilteredMenu(
@@ -18,6 +18,7 @@ export function useFilteredMenu(
   }, [menu, activeCat, search]);
 }
 
-export function getCatColor(catId: string): string {
-  return CATS.find((c) => c.id === catId)?.color ?? CATS[0].color;
+export function getCatColor(catId: string, categories?: Category[]): string {
+  const list = categories ?? CATS;
+  return list.find((c) => c.id === catId)?.color ?? list[0]?.color ?? '#6b7280';
 }

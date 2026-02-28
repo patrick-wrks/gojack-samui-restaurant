@@ -11,6 +11,7 @@ export interface Product {
   name: string;
   cat: string;
   price: number;
+  is_active?: boolean;
 }
 
 export interface CartItem extends Product {
