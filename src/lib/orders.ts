@@ -32,6 +32,16 @@ export class OrderInsertError extends Error {
   }
 }
 
+export class OrderDeleteError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown
+  ) {
+    super(message);
+    this.name = 'OrderDeleteError';
+  }
+}
+
 /**
  * Insert order and order_items into Supabase when client is configured.
  * Returns the order ID on success, throws OrderInsertError on failure.
@@ -183,4 +193,30 @@ export async function fetchTodayStats(): Promise<{ revenue: number; orders: numb
 
   const revenue = data.reduce((sum, o) => sum + Number(o.total), 0);
   return { revenue, orders: data.length };
+}
+
+/**
+ * Delete an order and its items (cascade delete handled by foreign key)
+ */
+export async function deleteOrder(orderId: string): Promise<void> {
+  if (!supabase) {
+    throw new OrderDeleteError('Supabase client not configured');
+  }
+
+  console.log('[deleteOrder] Deleting order:', orderId);
+
+  const { error } = await supabase
+    .from('orders')
+    .delete()
+    .eq('id', orderId);
+
+  if (error) {
+    console.error('[deleteOrder] Failed to delete order:', error);
+    throw new OrderDeleteError(
+      error.message || 'Failed to delete order',
+      error
+    );
+  }
+
+  console.log('[deleteOrder] Order deleted:', orderId);
 }

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Download, ChevronRight, Calendar } from 'lucide-react';
+import { Download, ChevronRight, Calendar, Trash2 } from 'lucide-react';
 import { useOrdersRealtime } from '@/hooks/useOrdersRealtime';
 import { useCurrencySymbol } from '@/store/store-settings-store';
-import { fetchOrdersWithItems } from '@/lib/orders';
+import { fetchOrdersWithItems, deleteOrder } from '@/lib/orders';
 import type { OrderWithItems } from '@/lib/orders';
 import {
   Dialog,
@@ -38,6 +38,9 @@ export default function ReportsPage() {
   const [customDateOpen, setCustomDateOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<{ id: string; orderNumber: number } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const currency = useCurrencySymbol();
 
   // Real-time subscription
@@ -129,6 +132,30 @@ export default function ReportsPage() {
     if (startDate && endDate) {
       setPeriod('custom');
       setCustomDateOpen(false);
+    }
+  };
+
+  // Handle delete order
+  const handleDeleteClick = (orderId: string, orderNumber: number) => {
+    setOrderToDelete({ id: orderId, orderNumber });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!orderToDelete) return;
+
+    setDeleting(true);
+    try {
+      await deleteOrder(orderToDelete.id);
+      // Refresh orders after delete
+      setRefreshKey((n) => n + 1);
+      setDeleteDialogOpen(false);
+      setOrderToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete order:', error);
+      alert('ไม่สามารถลบออเดอร์ได้ กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -362,6 +389,9 @@ export default function ReportsPage() {
                       <th className="text-right py-2 px-2 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8]">
                         ยอด
                       </th>
+                      <th className="text-center py-2 px-2 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8]">
+                        ลบ
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -379,6 +409,15 @@ export default function ReportsPage() {
                         </td>
                         <td className="py-2.5 px-2 border-b border-[#e4e0d8] text-right font-extrabold font-heading">
                           {currency}{o.total.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 px-2 border-b border-[#e4e0d8] text-center">
+                          <button
+                            onClick={() => handleDeleteClick(o.id, o.order_number)}
+                            className="p-1.5 rounded-md text-[#9a9288] hover:text-red-600 hover:bg-red-50 transition-colors"
+                            title="ลบออเดอร์"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -413,7 +452,13 @@ export default function ReportsPage() {
                       <span className="font-heading text-base font-extrabold text-[#1a1816]">
                         {currency}{o.total.toLocaleString()}
                       </span>
-                      <ChevronRight className="w-4 h-4 text-[#9a9288]" />
+                      <button
+                        onClick={() => handleDeleteClick(o.id, o.order_number)}
+                        className="p-2 rounded-full text-[#9a9288] hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title="ลบออเดอร์"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -473,6 +518,43 @@ export default function ReportsPage() {
                 className="flex-1 bg-[#d4800a] hover:bg-[#d4800a]/90 text-white disabled:opacity-50"
               >
                 ใช้งาน
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[360px] border-[#e4e0d8]">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-[#1a1816] flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" />
+              ยืนยันการลบออเดอร์
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-[#6b6358]">
+              คุณต้องการลบ <strong>ออเดอร์ #{orderToDelete?.orderNumber}</strong> ใช่หรือไม่?
+            </p>
+            <p className="text-xs text-[#9a9288]">
+              ⚠️ การลบจะลบออเดอร์และรายการอาหารทั้งหมดออกจากระบบ ไม่สามารถกู้คืนได้
+            </p>
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                disabled={deleting}
+                className="flex-1 border-[#e4e0d8]"
+              >
+                ยกเลิก
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+              >
+                {deleting ? 'กำลังลบ...' : 'ลบออเดอร์'}
               </Button>
             </div>
           </div>

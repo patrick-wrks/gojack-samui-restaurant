@@ -16,6 +16,18 @@ This document tracks all database tables, their structure, and RLS policies for 
 4. [Order Items](#order_items)
 5. [Store Settings](#store_settings)
 6. [Realtime Configuration](#realtime-configuration)
+7. [Common Queries](#common-queries)
+8. [Frontend Functions](#frontend-functions)
+
+---
+
+## Features
+
+- ✅ Categories & Products - Menu management
+- ✅ Orders & Order Items - Order tracking with CASCADE delete
+- ✅ RLS Policies - Row Level Security for authenticated users
+- ✅ Realtime - Live updates for menu and orders
+- ✅ **Delete Orders** - Remove orders from Reports page (with confirmation dialog)
 
 ---
 
@@ -248,6 +260,44 @@ FROM orders
 WHERE status = 'completed'
 GROUP BY DATE(created_at)
 ORDER BY date DESC;
+```
+
+### Delete an order (cascade deletes items)
+```sql
+-- Delete order (order_items will be automatically deleted due to ON DELETE CASCADE)
+DELETE FROM orders WHERE id = 'uuid-here';
+```
+
+## Frontend Functions
+
+### Insert Order
+```typescript
+import { insertOrder } from '@/lib/orders';
+
+await insertOrder({
+  orderNumber: 42,
+  total: 350.00,
+  paymentMethod: 'cash', // or 'bank'
+  items: [
+    { id: 1, name: 'กระเพราหมู', price: 70, qty: 1 },
+    // ...
+  ],
+});
+```
+
+### Fetch Orders for Reports
+```typescript
+import { fetchOrdersWithItems } from '@/lib/orders';
+
+const orders = await fetchOrdersWithItems('2025-02-28 00:00:00', '2025-02-28 23:59:59');
+```
+
+### Delete Order
+```typescript
+import { deleteOrder } from '@/lib/orders';
+
+await deleteOrder('order-uuid-here');
+// Automatically deletes associated order_items due to CASCADE
 ```
 
 ---
