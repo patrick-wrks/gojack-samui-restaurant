@@ -15,6 +15,8 @@ export interface CartTableMode {
   items: Array<{ id: string; name: string; price: number; qty: number }>;
   tableNumber: string;
   orderNumber: number;
+  discount?: number;
+  onDiscount?: (amount: number) => void;
   onUpdateQty: (orderItemId: string, delta: number) => void;
   onClear?: () => void;
   onRequestBill: () => void;
@@ -40,9 +42,10 @@ export function Cart({ tableMode }: CartProps) {
   } = useCartStore();
   const posItems = cart;
   const items = tableMode ? tableMode.items : posItems;
+  const tableDiscount = tableMode?.discount ?? 0;
   const { subtotal, discountAmount, total } = useCartTotals(
     tableMode ? tableMode.items.map((i) => ({ ...i, id: 0, cat: '' })) : cart,
-    tableMode ? 0 : discount
+    tableMode ? tableDiscount : discount
   );
   const currency = useCurrencySymbol();
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -56,7 +59,13 @@ export function Cart({ tableMode }: CartProps) {
   }, [tableMode, initOrderNum, refreshTodayStats]);
 
   const handleAddDiscount = () => {
-    if (tableMode) return;
+    if (tableMode?.onDiscount) {
+      const v = window.prompt(`ส่วนลด (${currency}):`);
+      if (v != null && !Number.isNaN(Number(v)) && Number(v) >= 0) {
+        tableMode.onDiscount(Number(v));
+      }
+      return;
+    }
     const v = window.prompt(`ส่วนลด (${currency}):`);
     if (v != null && !Number.isNaN(Number(v)) && Number(v) >= 0) {
       setDiscount(Number(v));
@@ -64,7 +73,10 @@ export function Cart({ tableMode }: CartProps) {
   };
 
   const handleAddNote = () => {
-    if (tableMode) return;
+    if (tableMode) {
+      window.alert('ฟีเจอร์หมายเหตุจะเปิดใช้งานเมื่อเชื่อมต่อฐานข้อมูลแล้ว');
+      return;
+    }
     window.alert('ฟีเจอร์หมายเหตุจะเปิดใช้งานเมื่อเชื่อมต่อฐานข้อมูลแล้ว');
   };
 
@@ -192,7 +204,45 @@ export function Cart({ tableMode }: CartProps) {
           )}
           {tableMode && (
             <>
+              {/* Action Buttons - identical to POS (ล้าง, ส่วนลด, หมายเหตุ) */}
+              <div className="flex gap-2 mb-3">
+                <Button
+                  variant="outline"
+                  onClick={() => tableMode.onClear?.()}
+                  className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#FA3E3E]"
+                >
+                  🗑 ล้าง
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleAddDiscount}
+                  className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#FA3E3E]"
+                >
+                  🏷 ส่วนลด
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleAddNote}
+                  className="flex-1 py-2 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-xs font-semibold hover:bg-[#f2f0eb] hover:border-[#FA3E3E]"
+                >
+                  📝 หมายเหตุ
+                </Button>
+              </div>
+
+              {/* Summary - identical to POS (ยอดรวม, ส่วนลด, รวมทั้งสิ้น) */}
               <div className="mb-3 space-y-1.5 py-2 border-y border-[#e4e0d8]">
+                <div className="flex justify-between items-center text-xs text-[#6b6358]">
+                  <span>ยอดรวม</span>
+                  <span className="text-[#1a1816] font-medium tabular-nums">
+                    {currency}{subtotal.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[#6b6358]">ส่วนลด</span>
+                  <span className="text-[#1a1816] font-medium tabular-nums">
+                    –{currency}{discountAmount.toLocaleString()}
+                  </span>
+                </div>
                 <div className="flex justify-between items-center pt-2 border-t border-[#e4e0d8]">
                   <span className="text-sm font-bold text-[#1a1816]">รวมทั้งสิ้น</span>
                   <span className="text-lg font-bold text-[#1a1816] font-heading tabular-nums">

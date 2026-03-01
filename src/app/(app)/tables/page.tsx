@@ -64,6 +64,12 @@ function getOpenOrdersByTable(orders: OrderWithItems[]): Record<string, OrderWit
   return map;
 }
 
+function orderTotalFromItems(
+  items: { price_at_sale: number; qty: number }[]
+): number {
+  return items.reduce((sum, i) => sum + Number(i.price_at_sale) * i.qty, 0);
+}
+
 // Haptic feedback helper
 function haptic(type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light') {
   if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -176,7 +182,7 @@ function AddFeedbackOverlay({ recentAdds }: { recentAdds: RecentAdd[] }) {
           key={`${add.productId}-${add.timestamp}`}
           className="fixed inset-0 z-[300] pointer-events-none flex items-center justify-center"
         >
-          <div className="bg-green-500 text-white px-6 py-3 rounded-full shadow-lg animate-[addFeedback_.6s_ease-out_forwards] flex items-center gap-2">
+          <div className="bg-green-500 text-white px-6 py-3 rounded-full shadow-lg animate-[addFeedback_.35s_ease-out_forwards] flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5" />
             <span className="font-medium">เพิ่มรายการแล้ว</span>
           </div>
@@ -210,8 +216,10 @@ export default function TablesPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [cartMode, setCartMode] = useState<'peek' | 'open'>('peek');
+  const [tableDiscount, setTableDiscount] = useState(0);
   const [recentAdds, setRecentAdds] = useState<RecentAdd[]>([]);
   const currency = useCurrencySymbol();
+  const detailOrderBeforeMutate = useRef<OrderWithItems | null>(null);
 
   // Toast helper
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
@@ -270,12 +278,12 @@ export default function TablesPage() {
     if (order) setDetailOrder(order);
   }, [selectedTable, openOrders]);
 
-  // Clear old recent adds
+  // Clear old recent adds (match shortened animation)
   useEffect(() => {
     if (recentAdds.length === 0) return;
     const timer = setTimeout(() => {
-      setRecentAdds((prev) => prev.filter((add) => Date.now() - add.timestamp < 600));
-    }, 600);
+      setRecentAdds((prev) => prev.filter((add) => Date.now() - add.timestamp < 400));
+    }, 400);
     return () => clearTimeout(timer);
   }, [recentAdds]);
 
@@ -324,6 +332,7 @@ export default function TablesPage() {
       setPaymentOpen(false);
       setCartMode('peek');
       setShowClearAllConfirm(false);
+      setTableDiscount(0);
       setError(null);
       setViewTransition('entered');
       loadOpenOrders();
@@ -347,81 +356,122 @@ export default function TablesPage() {
     async (product: Product) => {
       if (!detailOrder) return;
       setError(null);
-      setAdding(true);
       haptic('light');
+      detailOrderBeforeMutate.current = detailOrder;
 
       // Show feedback immediately
       setRecentAdds((prev) => [...prev, { productId: product.id, timestamp: Date.now() }]);
 
-      try {
-        // If the same product is already in the order, increment its quantity instead of adding a new line
-        const existingItem = detailOrder.order_items.find(
-          (item) => item.product_id != null && item.product_id === product.id
-        );
-        if (existingItem) {
-          await updateOrderItemQuantity(existingItem.id, existingItem.qty + 1);
-          showToast(`เพิ่ม ${product.name} (${existingItem.qty + 1})`, 'success');
-        } else {
-          await addItemsToOpenOrder(detailOrder.id, [
-            {
-              product_id: product.id,
-              product_name: product.name,
-              qty: 1,
-              price_at_sale: product.price,
-            },
-          ]);
-          showToast(`เพิ่ม ${product.name}`, 'success');
+      const existingItem = detailOrder.order_items.find(
+        (item) => item.product_id != null && item.product_id === product.id
+      );
+
+      if (existingItem) {
+        const newQty = existingItem.qty + 1;
+        const optimistic: OrderWithItems = {
+          ...detailOrder,
+          order_items: detailOrder.order_items.map((i) =>
+            i.id === existingItem.id ? { ...i, qty: newQty } : i
+          ),
+        };
+        optimistic.total = orderTotalFromItems(optimistic.order_items);
+        setDetailOrder(optimistic);
+        setAdding(false);
+        try {
+          await updateOrderItemQuantity(existingItem.id, newQty);
+          const updated = await fetchOpenOrderByTable(detailOrder.table_number ?? '');
+          if (updated) setDetailOrder(updated);
+          showToast(`เพิ่ม ${product.name} (${newQty})`, 'success');
+        } catch (e) {
+          setDetailOrder(detailOrderBeforeMutate.current);
+          const msg = e instanceof Error ? e.message : 'ไม่สามารถเพิ่มรายการได้';
+          setError(msg);
+          showToast(msg, 'error');
+          haptic('error');
         }
+        loadOpenOrders();
+        return;
+      }
+
+      const tempId = `temp-${product.id}-${Date.now()}`;
+      const newItem = {
+        id: tempId,
+        product_id: product.id,
+        product_name: product.name,
+        qty: 1,
+        price_at_sale: product.price,
+      };
+      const optimistic: OrderWithItems = {
+        ...detailOrder,
+        order_items: [...detailOrder.order_items, newItem],
+        total: orderTotalFromItems([...detailOrder.order_items, newItem]),
+      };
+      setDetailOrder(optimistic);
+      setAdding(false);
+      try {
+        await addItemsToOpenOrder(detailOrder.id, [
+          { product_id: product.id, product_name: product.name, qty: 1, price_at_sale: product.price },
+        ]);
         const updated = await fetchOpenOrderByTable(detailOrder.table_number ?? '');
         if (updated) setDetailOrder(updated);
-        loadOpenOrders();
+        showToast(`เพิ่ม ${product.name}`, 'success');
       } catch (e) {
+        setDetailOrder(detailOrderBeforeMutate.current);
         const msg = e instanceof Error ? e.message : 'ไม่สามารถเพิ่มรายการได้';
         setError(msg);
         showToast(msg, 'error');
         haptic('error');
-      } finally {
-        setAdding(false);
       }
+      loadOpenOrders();
     },
     [detailOrder, loadOpenOrders, showToast]
   );
 
   const handleUpdateQuantity = useCallback(async (itemId: string, qty: number) => {
     if (!detailOrder) return;
-    setAdding(true);
+    if (itemId.startsWith('temp-')) return;
+    detailOrderBeforeMutate.current = detailOrder;
+    const optimistic: OrderWithItems = {
+      ...detailOrder,
+      order_items: detailOrder.order_items.map((i) =>
+        i.id === itemId ? { ...i, qty } : i
+      ),
+    };
+    optimistic.total = orderTotalFromItems(optimistic.order_items);
+    setDetailOrder(optimistic);
+    setAdding(false);
     try {
       await updateOrderItemQuantity(itemId, qty);
       const updated = await fetchOpenOrderByTable(detailOrder.table_number ?? '');
-      if (updated) {
-        setDetailOrder(updated);
-        loadOpenOrders();
-      }
+      if (updated) setDetailOrder(updated);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'ไม่สามารถอัพเดทจำนวนได้';
-      showToast(msg, 'error');
-    } finally {
-      setAdding(false);
+      setDetailOrder(detailOrderBeforeMutate.current);
+      showToast(e instanceof Error ? e.message : 'ไม่สามารถอัพเดทจำนวนได้', 'error');
     }
+    loadOpenOrders();
   }, [detailOrder, loadOpenOrders, showToast]);
 
   const handleDeleteItem = useCallback(async (itemId: string) => {
     if (!detailOrder) return;
-    setAdding(true);
+    if (itemId.startsWith('temp-')) return;
+    detailOrderBeforeMutate.current = detailOrder;
+    const optimistic: OrderWithItems = {
+      ...detailOrder,
+      order_items: detailOrder.order_items.filter((i) => i.id !== itemId),
+    };
+    optimistic.total = orderTotalFromItems(optimistic.order_items);
+    setDetailOrder(optimistic);
+    setAdding(false);
     try {
       await deleteOrderItem(itemId);
       const updated = await fetchOpenOrderByTable(detailOrder.table_number ?? '');
-      if (updated) {
-        setDetailOrder(updated);
-        loadOpenOrders();
-        showToast('ลบรายการแล้ว', 'success');
-      }
+      if (updated) setDetailOrder(updated);
+      showToast('ลบรายการแล้ว', 'success');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'ไม่สามารถลบรายการได้';
-      showToast(msg, 'error');
-    } finally {
-      setAdding(false);
+      setDetailOrder(detailOrderBeforeMutate.current);
+      showToast(e instanceof Error ? e.message : 'ไม่สามารถลบรายการได้', 'error');
     }
+    loadOpenOrders();
   }, [detailOrder, loadOpenOrders, showToast]);
 
   const handleClearAllItems = useCallback(async () => {
@@ -455,10 +505,12 @@ export default function TablesPage() {
   const handlePaymentConfirm = useCallback(
     async (method: PaymentMethod) => {
       if (!detailOrder) return;
-      const total = Number(detailOrder.total);
+      const subtotal = Number(detailOrder.total);
+      const totalToCharge = Math.max(0, subtotal - tableDiscount);
       haptic('success');
-      await completeOrder(detailOrder.id, method, total);
+      await completeOrder(detailOrder.id, method, totalToCharge);
       setPaymentOpen(false);
+      setTableDiscount(0);
       showToast('ชำระเงินสำเร็จ!', 'success');
       setTimeout(() => {
         setSelectedTable(null);
@@ -466,7 +518,7 @@ export default function TablesPage() {
         loadOpenOrders();
       }, 500);
     },
-    [detailOrder, loadOpenOrders, showToast]
+    [detailOrder, tableDiscount, loadOpenOrders, showToast]
   );
 
   const handleDeleteOrder = useCallback(async (tableNumber: string) => {
@@ -496,7 +548,8 @@ export default function TablesPage() {
 
   // Detail view - same cart layout as POS: sidebar on desktop, peek bar + drawer on mobile
   if (selectedTable && detailOrder) {
-    const total = Number(detailOrder.total);
+    const subtotal = Number(detailOrder.total);
+    const totalToCharge = Math.max(0, subtotal - tableDiscount);
     const itemCount = detailOrder.order_items.reduce((s, i) => s + i.qty, 0);
     const productQtyMap = getProductQuantityMap(detailOrder.order_items);
     const tableCartItems = detailOrder.order_items.map((item) => ({
@@ -509,12 +562,18 @@ export default function TablesPage() {
       items: tableCartItems,
       tableNumber: detailOrder.table_number ?? '',
       orderNumber: detailOrder.order_number,
+      discount: tableDiscount,
+      onDiscount: setTableDiscount,
       onUpdateQty: (orderItemId: string, delta: number) => {
         const item = detailOrder.order_items.find((i) => i.id === orderItemId);
         if (!item) return;
         const newQty = item.qty + delta;
         if (newQty <= 0) handleDeleteItem(orderItemId);
         else handleUpdateQuantity(orderItemId, newQty);
+      },
+      onClear: () => {
+        setCartMode('peek');
+        setShowClearAllConfirm(true);
       },
       onRequestBill: () => {
         setCartMode('peek');
@@ -634,7 +693,7 @@ export default function TablesPage() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-lg font-bold text-[#1a1816] font-heading tabular-nums">
-                    {currency}{total.toLocaleString()}
+                    {currency}{totalToCharge.toLocaleString()}
                   </span>
                   <ChevronUp className="w-5 h-5 text-[#9a9288]" />
                 </div>
@@ -646,7 +705,7 @@ export default function TablesPage() {
         <PaymentModal
           open={paymentOpen}
           onClose={() => setPaymentOpen(false)}
-          total={total}
+          total={totalToCharge}
           payType="cash"
           orderNum={detailOrder.order_number}
           onConfirm={handlePaymentConfirm}

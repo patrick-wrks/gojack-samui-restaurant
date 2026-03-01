@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Trash2, Tag } from 'lucide-react';
 import { useCartStore } from '@/store/cart-store';
 import { useCartTotals } from '@/hooks/useCartTotals';
@@ -32,9 +33,10 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
   } = useCartStore();
   const posItems = cart;
   const items = tableMode ? tableMode.items : posItems;
+  const tableDiscount = tableMode?.discount ?? 0;
   const { subtotal, discountAmount, total } = useCartTotals(
     tableMode ? tableMode.items.map((i) => ({ ...i, id: 0, cat: '' })) : cart,
-    tableMode ? 0 : discount
+    tableMode ? tableDiscount : discount
   );
   const currency = useCurrencySymbol();
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -43,7 +45,13 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
   const [translateY, setTranslateY] = useState(0);
 
   const handleAddDiscount = () => {
-    if (tableMode) return;
+    if (tableMode?.onDiscount) {
+      const v = window.prompt(`ส่วนลด (${currency}):`);
+      if (v != null && !Number.isNaN(Number(v)) && Number(v) >= 0) {
+        tableMode.onDiscount(Number(v));
+      }
+      return;
+    }
     const v = window.prompt(`ส่วนลด (${currency}):`);
     if (v != null && !Number.isNaN(Number(v)) && Number(v) >= 0) {
       setDiscount(Number(v));
@@ -86,7 +94,7 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
 
   if (!open) return null;
 
-  return (
+  const drawerContent = (
     <>
       {/* Backdrop */}
       <div
@@ -94,7 +102,7 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
         onClick={onClose}
       />
 
-      {/* Drawer - footer has safe-bottom so CTA stays above home indicator on mobile */}
+      {/* Drawer - footer has safe-bottom so CTA stays above home indicator on mobile. Portaled so fixed works on Tables (parent has transform). */}
       <div
         ref={drawerRef}
         className="md:hidden fixed inset-x-0 bottom-0 z-[60] bg-white rounded-t-2xl flex flex-col h-drawer-mobile"
@@ -226,7 +234,45 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
           )}
           {tableMode && (
             <>
+              {/* Action buttons - identical to POS drawer (ล้าง, ส่วนลด) */}
+              <div className="flex gap-2 mb-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    tableMode.onClear?.();
+                    onClose();
+                  }}
+                  className="flex-1 py-2.5 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-sm font-semibold hover:bg-[#f2f0eb] flex items-center justify-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  ล้าง
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleAddDiscount}
+                  className="flex-1 py-2.5 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-sm font-semibold hover:bg-[#f2f0eb] flex items-center justify-center gap-2"
+                >
+                  <Tag className="w-4 h-4" />
+                  ส่วนลด
+                </Button>
+              </div>
+
+              {/* Summary - identical to POS (ยอดรวม, ส่วนลด, รวมทั้งสิ้น) */}
               <div className="mb-3 space-y-1.5 py-2 border-y border-[#e4e0d8]">
+                <div className="flex justify-between items-center text-sm text-[#6b6358]">
+                  <span>ยอดรวม</span>
+                  <span className="text-[#1a1816] font-medium tabular-nums">
+                    {currency}{subtotal.toLocaleString()}
+                  </span>
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-[#6b6358]">ส่วนลด</span>
+                    <span className="text-[#1a1816] font-medium tabular-nums">
+                      –{currency}{discountAmount.toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center pt-2 border-t border-[#e4e0d8]">
                   <span className="text-base font-bold text-[#1a1816]">รวมทั้งสิ้น</span>
                   <span className="text-xl font-bold text-[#1a1816] font-heading tabular-nums">
@@ -266,6 +312,11 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
       )}
     </>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(drawerContent, document.body);
+  }
+  return drawerContent;
 }
 
 function CartLineItem({
