@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Tag, ChevronRight, Trash2 } from 'lucide-react';
 import { getCategoriesForUI } from '@/store/menu-store';
 import { useCurrencySymbol } from '@/store/store-settings-store';
-import { fetchProducts, createProduct, updateProduct, deleteProduct } from '@/lib/menu';
+import { fetchProducts, createProduct, updateProduct, deleteProduct, createCategory } from '@/lib/menu';
 import { useMenuStore } from '@/store/menu-store';
 import type { Product } from '@/types/pos';
 import {
@@ -32,9 +32,26 @@ export default function ProductsPage() {
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [categoryAddOpen, setCategoryAddOpen] = useState(false);
+  const [categoryAddName, setCategoryAddName] = useState('');
+  const [categoryAddColor, setCategoryAddColor] = useState('#6b7280');
+  const [categoryAddError, setCategoryAddError] = useState<string | null>(null);
+  const [categoryAddSubmitting, setCategoryAddSubmitting] = useState(false);
   const currency = useCurrencySymbol();
 
   const categories = getCategoriesForUI().filter((c) => c.id !== 'all');
+
+  const CATEGORY_COLORS = [
+    { value: '#ef4444', label: 'แดง' },
+    { value: '#f97316', label: 'ส้ม' },
+    { value: '#eab308', label: 'เหลือง' },
+    { value: '#22c55e', label: 'เขียว' },
+    { value: '#06b6d4', label: 'ฟ้า' },
+    { value: '#8b5cf6', label: 'ม่วง' },
+    { value: '#3b82f6', label: 'น้ำเงิน' },
+    { value: '#ec4899', label: 'ชมพู' },
+    { value: '#6b7280', label: 'เทา' },
+  ];
 
   const loadProducts = useCallback(async () => {
     setProductsLoading(true);
@@ -42,6 +59,31 @@ export default function ProductsPage() {
     setProducts(list);
     setProductsLoading(false);
   }, []);
+
+  const handleAddCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = categoryAddName.trim();
+    if (!name) {
+      setCategoryAddError('กรุณากรอกชื่อหมวดหมู่');
+      return;
+    }
+    setCategoryAddError(null);
+    setCategoryAddSubmitting(true);
+    const { category, error } = await createCategory({
+      name,
+      color: categoryAddColor,
+      sort_order: categories.length,
+    });
+    setCategoryAddSubmitting(false);
+    if (category) {
+      setCategoryAddOpen(false);
+      setCategoryAddName('');
+      setCategoryAddColor('#6b7280');
+      useMenuStore.getState().loadMenu();
+    } else {
+      setCategoryAddError(error ?? 'ไม่สามารถเพิ่มหมวดหมู่ได้');
+    }
+  };
 
   useEffect(() => {
     loadProducts();
@@ -197,6 +239,18 @@ export default function ProductsPage() {
           <span className="text-[10px] font-extrabold text-[#9a9288] uppercase tracking-wider">
             หมวดหมู่
           </span>
+          <button
+            type="button"
+            onClick={() => {
+              setCategoryAddOpen(true);
+              setCategoryAddError(null);
+              setCategoryAddName('');
+              setCategoryAddColor('#6b7280');
+            }}
+            className="text-[10px] font-bold text-[#FA3E3E] hover:underline"
+          >
+            + เพิ่มหมวดหมู่
+          </button>
         </div>
         <div className="flex flex-wrap gap-2 mb-4 md:mb-4">
           {categoriesWithCount.map((c) => (
@@ -488,6 +542,60 @@ export default function ProductsPage() {
               </DialogFooter>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Category Dialog */}
+      <Dialog open={categoryAddOpen} onOpenChange={(open) => { setCategoryAddOpen(open); if (!open) setCategoryAddError(null); }}>
+        <DialogContent className="sm:max-w-[400px] border-[#e4e0d8]">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-[#1a1816]">เพิ่มหมวดหมู่</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddCategorySubmit} className="space-y-4">
+            {categoryAddError && (
+              <div className="rounded-lg bg-[#fef2f2] border border-[#fecaca] px-3 py-2 text-sm text-[#dc2626]">
+                {categoryAddError}
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-[#9a9288]">ชื่อหมวดหมู่</Label>
+              <Input
+                value={categoryAddName}
+                onChange={(e) => setCategoryAddName(e.target.value)}
+                placeholder="เช่น ของหวาน"
+                className="border-[#e4e0d8] focus:border-[#FA3E3E]"
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-[#9a9288]">สี</Label>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORY_COLORS.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setCategoryAddColor(value)}
+                    className={`flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border text-xs font-medium transition-colors ${
+                      categoryAddColor === value
+                        ? 'border-[#FA3E3E] bg-[#FA3E3E]/10 text-[#1a1816]'
+                        : 'border-[#e4e0d8] bg-white text-[#6b6358] hover:bg-[#f7f5f0]'
+                    }`}
+                  >
+                    <span className="w-3 h-3 rounded-full shrink-0" style={{ background: value }} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => setCategoryAddOpen(false)} className="border-[#e4e0d8]" disabled={categoryAddSubmitting}>
+                ยกเลิก
+              </Button>
+              <Button type="submit" className="bg-[#FA3E3E] hover:bg-[#FA3E3E]/90" disabled={categoryAddSubmitting}>
+                {categoryAddSubmitting ? 'กำลังบันทึก...' : 'เพิ่มหมวดหมู่'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

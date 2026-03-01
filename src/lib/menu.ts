@@ -41,6 +41,31 @@ export async function fetchCategories(): Promise<Category[]> {
   return (data as DbCategory[]).map(toCategory);
 }
 
+export async function createCategory(params: {
+  name: string;
+  color?: string;
+  sort_order?: number;
+}): Promise<{ category: Category | null; error: string | null }> {
+  if (!supabase) {
+    return { category: null, error: 'Supabase is not configured.' };
+  }
+  const id = `cat_${Date.now()}`;
+  const color = params.color ?? '#6b7280';
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({
+      id,
+      name: params.name.trim(),
+      color,
+      sort_order: params.sort_order ?? 0,
+    })
+    .select('id, name, color, sort_order')
+    .single();
+  if (error) return { category: null, error: error.message };
+  if (!data) return { category: null, error: 'No data returned.' };
+  return { category: toCategory(data as DbCategory), error: null };
+}
+
 export async function fetchProducts(activeOnly = true): Promise<Product[]> {
   if (!supabase) return [];
   let q = supabase
