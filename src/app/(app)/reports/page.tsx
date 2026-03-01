@@ -722,9 +722,8 @@ function calculateMetrics(
     }
   });
 
-  // Format recent orders
+  // Format recent orders (all orders in period, newest first)
   const recentOrders = orders
-    .slice(0, 10)
     .map((o) => {
       const date = new Date(o.created_at);
       const dateStr = date.toLocaleDateString('th-TH');

@@ -39,7 +39,7 @@ import type { Product } from '@/types/pos';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const TABLE_COUNT = 10;
+const TABLE_COUNT = 12;
 const TABLE_NUMBERS = Array.from({ length: TABLE_COUNT }, (_, i) => String(i + 1));
 
 // Toast notification types
