@@ -50,11 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const client = supabase;
     setRoleLoading(true);
     const fetchRole = () =>
       Promise.all([
-        supabase.rpc('get_my_role'),
-        supabase.auth.getUser(),
+        client.rpc('get_my_role'),
+        client.auth.getUser(),
       ]).then(async ([{ data: roleData, error }, { data: { user } }]) => {
         console.log('[AuthProvider] Role debug:', {
           userId: session.id,
@@ -76,9 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const em = user.email.toLowerCase();
           if (em.includes('admin') && em.includes('gojack')) {
             try {
-              const { data: rpcData } = await supabase.rpc('promote_admin_if_eligible');
+              const { data: rpcData } = await client.rpc('promote_admin_if_eligible');
               if (rpcData?.success) {
-                const { data: refetch } = await supabase.rpc('get_my_role');
+                const { data: refetch } = await client.rpc('get_my_role');
                 if (refetch != null && refetch !== '') {
                   const raw = String(refetch).toLowerCase();
                   resolvedRole = (['admin', 'kitchen', 'cashier'] as const).includes(raw as UserRole)
@@ -86,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     : resolvedRole;
                 }
               }
-            } catch (_) {
+            } catch {
               // RPC may not exist or fail; keep cashier
             }
           }
