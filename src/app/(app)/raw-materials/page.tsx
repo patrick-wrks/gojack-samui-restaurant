@@ -149,7 +149,7 @@ export default function RawMaterialsPage() {
 
   const handleStockAdjust = async (m: RawMaterial, delta: number) => {
     setAdjustingId(m.id);
-    const { rawMaterial, error } = await adjustRawMaterialStock(
+    const { rawMaterial } = await adjustRawMaterialStock(
       m.id,
       delta,
       delta > 0 ? 'restock' : 'adjustment'

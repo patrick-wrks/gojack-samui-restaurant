@@ -237,7 +237,7 @@ export default function TablesPage() {
   const [detailOrder, setDetailOrder] = useState<OrderWithItems | null>(null);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [_error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [viewTransition, setViewTransition] = useState<'entering' | 'entered' | 'exiting'>('entered');
   const [toasts, setToasts] = useState<Toast[]>([]);

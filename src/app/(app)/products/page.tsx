@@ -10,7 +10,6 @@ import {
   fetchProductIngredientsWithNames,
   addProductIngredient,
   removeProductIngredient,
-  RAW_MATERIAL_UNITS,
 } from '@/lib/raw-materials';
 import type { ProductIngredientWithName } from '@/lib/raw-materials';
 import { useMenuStore } from '@/store/menu-store';

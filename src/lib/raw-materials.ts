@@ -153,13 +153,16 @@ export async function fetchProductIngredientsWithNames(
     console.error('[fetchProductIngredientsWithNames]', error);
     return [];
   }
-  return (data ?? []).map((r: { product_id: number; raw_material_id: number; quantity_per_serving: number; raw_materials: { name: string; unit: string } | null }) => ({
-    product_id: r.product_id,
-    raw_material_id: r.raw_material_id,
-    quantity_per_serving: Number(r.quantity_per_serving),
-    raw_material_name: r.raw_materials?.name ?? '',
-    raw_material_unit: r.raw_materials?.unit ?? 'g',
-  }));
+  return (data ?? []).map((r) => {
+    const rm = Array.isArray(r.raw_materials) ? r.raw_materials[0] : r.raw_materials;
+    return {
+      product_id: r.product_id,
+      raw_material_id: r.raw_material_id,
+      quantity_per_serving: Number(r.quantity_per_serving),
+      raw_material_name: rm?.name ?? '',
+      raw_material_unit: rm?.unit ?? 'g',
+    };
+  });
 }
 
 export async function addProductIngredient(
