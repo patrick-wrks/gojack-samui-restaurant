@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingCart, LayoutGrid, BarChart3, UtensilsCrossed, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/app/providers';
+import { ROLE_ROUTES } from '@/lib/roles';
 import { cn } from '@/lib/utils';
 
-const navItems = [
+const allNavItems = [
   { href: '/pos', label: 'POS', icon: ShoppingCart },
   { href: '/tables', label: 'โต๊ะ', icon: LayoutGrid },
   { href: '/reports', label: 'รายงาน', icon: BarChart3 },
@@ -16,6 +18,9 @@ const navItems = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { role } = useAuth();
+  const allowedRoutes = ROLE_ROUTES[role] ?? [];
+  const navItems = allNavItems.filter((item) => allowedRoutes.includes(item.href));
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e0d8] z-50 safe-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)] overflow-hidden">

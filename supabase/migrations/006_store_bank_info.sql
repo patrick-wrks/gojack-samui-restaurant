@@ -10,5 +10,5 @@ ALTER TABLE store ADD COLUMN IF NOT EXISTS bank_account_name TEXT DEFAULT '';
 UPDATE store 
 SET bank_name = COALESCE(NULLIF(bank_name, ''), ''),
     bank_account_number = COALESCE(NULLIF(bank_account_number, ''), ''),
-    bank_account_name = COALESCE(NULLIF(bank_account_name), '')
+    bank_account_name = COALESCE(NULLIF(bank_account_name, ''), '')
 WHERE id = 1;

@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingCart, LayoutGrid, BarChart3, UtensilsCrossed, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/app/providers';
+import { ROLE_ROUTES } from '@/lib/roles';
 import { cn } from '@/lib/utils';
 
-const navItems = [
+const allNavItems = [
   { href: '/pos', label: 'POS', icon: ShoppingCart },
   { href: '/tables', label: 'โต๊ะ', icon: LayoutGrid },
   { href: '/reports', label: 'รายงาน', icon: BarChart3 },
@@ -16,6 +18,9 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { role } = useAuth();
+  const allowedRoutes = ROLE_ROUTES[role] ?? [];
+  const navItems = allNavItems.filter((item) => allowedRoutes.includes(item.href));
 
   return (
     <aside className="w-14 bg-white border-r border-[#e4e0d8] flex flex-col items-center py-2 gap-0.5 shrink-0">

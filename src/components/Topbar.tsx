@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/providers';
+import { supabase } from '@/lib/supabase';
 import { useCartStore } from '@/store/cart-store';
 import { useCurrencySymbol, useStoreSettingsStore } from '@/store/store-settings-store';
-import { supabase } from '@/lib/supabase';
 import { LogOut, Settings, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -21,13 +21,14 @@ const DAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 
 export function Topbar() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, role } = useAuth();
   const { todayRevenue, todayOrders } = useCartStore();
   const currency = useCurrencySymbol();
   const store = useStoreSettingsStore((s) => s.store);
   const [time, setTime] = useState('');
   const [isOnline, setIsOnline] = useState(true);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing'>('synced');
+  const [debugInfo, setDebugInfo] = useState<{ email?: string; userId?: string }>({});
 
   const storeName = store?.store_name ?? 'โกจักรสมุย';
 
@@ -42,6 +43,14 @@ export function Topbar() {
     tick();
     const id = setInterval(tick, 30000);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (supabase) {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) setDebugInfo({ email: user.email ?? undefined, userId: user.id });
+      });
+    }
   }, []);
 
   // Online/offline detection
@@ -124,6 +133,21 @@ export function Topbar() {
       </div>
       <Separator orientation="vertical" className="hidden md:block h-[18px] bg-[#e4e0d8]" />
 
+      {/* Role debug - click to copy userId for migration. Remove after fixing. */}
+      <button
+        type="button"
+        onClick={() => {
+          if (debugInfo.userId) {
+            const sql = `UPDATE public.user_roles SET role = 'admin'::user_role WHERE id = '${debugInfo.userId}';`;
+            navigator.clipboard.writeText(sql);
+            alert(`Copied SQL to clipboard.\n\nRun it in Supabase Dashboard → SQL Editor to fix admin role.\n\nEmail: ${debugInfo.email ?? '?'}`);
+          }
+        }}
+        className="hidden md:inline text-[10px] text-amber-600 font-mono px-2 py-0.5 rounded bg-amber-50 border border-amber-200 cursor-pointer hover:bg-amber-100"
+        title={`Role: ${role} | Email: ${debugInfo.email ?? '...'} | Click to copy userId`}
+      >
+        {role}
+      </button>
       {/* Desktop Admin Button */}
       <Button
         variant="ghost"
@@ -148,6 +172,10 @@ export function Topbar() {
         ออกจากระบบ
       </Button>
 
+      {/* Role debug on mobile */}
+      <span className="md:hidden text-[10px] text-amber-600 font-mono px-2 py-0.5 rounded bg-amber-50 border border-amber-200" title="Current role">
+        {role}
+      </span>
       {/* Mobile Menu Dropdown */}
       <div className="md:hidden">
         <DropdownMenu>

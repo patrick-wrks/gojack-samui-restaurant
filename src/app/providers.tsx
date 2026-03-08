@@ -2,10 +2,14 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
+import type { UserRole } from '@/lib/roles';
+import { DEFAULT_ROLE } from '@/lib/roles';
 
 type AuthContextType = {
   isLoggedIn: boolean;
   authLoading: boolean;
+  role: UserRole;
+  roleLoading: boolean;
   login: () => void;
   logout: () => void;
 };
@@ -15,10 +19,13 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<{ id: string } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [role, setRole] = useState<UserRole>(DEFAULT_ROLE);
+  const [roleLoading, setRoleLoading] = useState(true);
 
   useEffect(() => {
     if (!supabase) {
       setAuthLoading(false);
+      setRoleLoading(false);
       return;
     }
 
@@ -36,6 +43,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!supabase || !session) {
+      setRole(DEFAULT_ROLE);
+      setRoleLoading(false);
+      return;
+    }
+
+    setRoleLoading(true);
+    const fetchRole = () =>
+      Promise.all([
+        supabase.rpc('get_my_role'),
+        supabase.auth.getUser(),
+      ]).then(async ([{ data: roleData, error }, { data: { user } }]) => {
+        console.log('[AuthProvider] Role debug:', {
+          userId: session.id,
+          email: user?.email ?? 'unknown',
+          rawRole: roleData,
+          error: error?.message,
+        });
+        let resolvedRole: UserRole = DEFAULT_ROLE;
+        if (error) {
+          console.warn('[AuthProvider] Failed to fetch role:', error.message);
+        } else if (roleData != null && roleData !== '') {
+          const raw = String(roleData).toLowerCase();
+          const valid: UserRole[] = ['admin', 'kitchen', 'cashier'];
+          resolvedRole = valid.includes(raw as UserRole) ? (raw as UserRole) : DEFAULT_ROLE;
+        }
+
+        // If still cashier and email looks like admin, try one-click fix RPC
+        if (resolvedRole === 'cashier' && user?.email) {
+          const em = user.email.toLowerCase();
+          if (em.includes('admin') && em.includes('gojack')) {
+            try {
+              const { data: rpcData } = await supabase.rpc('promote_admin_if_eligible');
+              if (rpcData?.success) {
+                const { data: refetch } = await supabase.rpc('get_my_role');
+                if (refetch != null && refetch !== '') {
+                  const raw = String(refetch).toLowerCase();
+                  resolvedRole = (['admin', 'kitchen', 'cashier'] as const).includes(raw as UserRole)
+                    ? (raw as UserRole)
+                    : resolvedRole;
+                }
+              }
+            } catch (_) {
+              // RPC may not exist or fail; keep cashier
+            }
+          }
+        }
+
+        setRole(resolvedRole);
+        setRoleLoading(false);
+      });
+
+    fetchRole();
+  }, [session]);
+
   const login = useCallback(() => {
     // No-op: LoginForm uses signInWithPassword; onAuthStateChange updates session.
   }, []);
@@ -43,12 +106,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     if (supabase) await supabase.auth.signOut();
     setSession(null);
+    setRole(DEFAULT_ROLE);
   }, []);
 
   const isLoggedIn = session !== null;
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, authLoading, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, authLoading, role, roleLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

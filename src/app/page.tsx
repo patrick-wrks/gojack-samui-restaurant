@@ -4,17 +4,18 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/providers';
 import { LoginForm } from '@/components/LoginForm';
+import { getDefaultRoute } from '@/lib/roles';
 
 export default function HomePage() {
-  const { isLoggedIn, authLoading } = useAuth();
+  const { isLoggedIn, authLoading, role, roleLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || roleLoading) return;
     if (isLoggedIn) {
-      router.replace('/pos');
+      router.replace(getDefaultRoute(role));
     }
-  }, [isLoggedIn, authLoading, router]);
+  }, [isLoggedIn, authLoading, roleLoading, role, router]);
 
   if (authLoading || isLoggedIn) {
     return null;
