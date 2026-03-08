@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Trash2, Minus, Pencil } from 'lucide-react';
 import {
   fetchRawMaterials,
+  fetchRawMaterialsWithStatus,
   createRawMaterial,
   updateRawMaterial,
   deleteRawMaterial,
@@ -45,13 +46,24 @@ export default function RawMaterialsPage() {
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [usageCounts, setUsageCounts] = useState<Record<number, number>>({});
   const [adjustingId, setAdjustingId] = useState<number | null>(null);
+  const [schemaReady, setSchemaReady] = useState<boolean | null>(null);
+  const [schemaError, setSchemaError] = useState<string | null>(null);
 
   const loadMaterials = useCallback(async () => {
     setLoading(true);
-    const list = await fetchRawMaterials();
-    setMaterials(list);
+    setSchemaError(null);
+    const result = await fetchRawMaterialsWithStatus();
+    setSchemaReady(result.schemaReady);
+    if (!result.schemaReady) {
+      setSchemaError(result.error ?? null);
+      setMaterials([]);
+      setUsageCounts({});
+      setLoading(false);
+      return;
+    }
+    setMaterials(result.materials);
     const counts: Record<number, number> = {};
-    await Promise.all(list.map(async (m) => { counts[m.id] = await getRawMaterialUsageCount(m.id); }));
+    await Promise.all(result.materials.map(async (m) => { counts[m.id] = await getRawMaterialUsageCount(m.id); }));
     setUsageCounts(counts);
     setLoading(false);
   }, []);
@@ -69,13 +81,16 @@ export default function RawMaterialsPage() {
     const form = e.currentTarget;
     const name = (form.elements.namedItem('name') as HTMLInputElement)?.value?.trim();
     const unit = (form.elements.namedItem('unit') as HTMLSelectElement)?.value as RawMaterialUnit;
-    const stockQtyRaw = (form.elements.namedItem('stock_qty') as HTMLInputElement)?.value;
+    const amountRaw = (form.elements.namedItem('amount_units') as HTMLInputElement)?.value;
+    const gramsRaw = (form.elements.namedItem('grams') as HTMLInputElement)?.value;
     const thresholdRaw = (form.elements.namedItem('low_stock_threshold') as HTMLInputElement)?.value;
     if (!name) {
       setAddError('กรุณากรอกชื่อวัตถุดิบ');
       return;
     }
-    const stock_qty = stockQtyRaw !== '' ? Number(stockQtyRaw) : 0;
+    const amountUnits = amountRaw !== '' ? Math.max(1, Number(amountRaw) || 1) : 1;
+    const grams = gramsRaw !== '' ? Number(gramsRaw) : 0;
+    const stock_qty = amountUnits * grams;
     const low_stock_threshold = thresholdRaw !== '' ? Number(thresholdRaw) : null;
     if (stock_qty < 0) {
       setAddError('สต็อกต้องไม่เป็นค่าติดลบ');
@@ -104,13 +119,16 @@ export default function RawMaterialsPage() {
     const form = e.currentTarget;
     const name = (form.elements.namedItem('edit-name') as HTMLInputElement)?.value?.trim();
     const unit = (form.elements.namedItem('edit-unit') as HTMLSelectElement)?.value as RawMaterialUnit;
-    const stockQtyRaw = (form.elements.namedItem('edit-stock_qty') as HTMLInputElement)?.value;
+    const amountRaw = (form.elements.namedItem('edit-amount_units') as HTMLInputElement)?.value;
+    const gramsRaw = (form.elements.namedItem('edit-grams') as HTMLInputElement)?.value;
     const thresholdRaw = (form.elements.namedItem('edit-low_stock_threshold') as HTMLInputElement)?.value;
     if (!name) {
       setEditError('กรุณากรอกชื่อวัตถุดิบ');
       return;
     }
-    const stock_qty = stockQtyRaw !== '' ? Number(stockQtyRaw) : 0;
+    const amountUnits = amountRaw !== '' ? Math.max(1, Number(amountRaw) || 1) : 1;
+    const grams = gramsRaw !== '' ? Number(gramsRaw) : 0;
+    const stock_qty = amountUnits * grams;
     const low_stock_threshold = thresholdRaw !== '' ? Number(thresholdRaw) : null;
     if (stock_qty < 0) {
       setEditError('สต็อกต้องไม่เป็นค่าติดลบ');
@@ -193,6 +211,21 @@ export default function RawMaterialsPage() {
 
         {loading ? (
           <p className="text-sm text-[#9a9288] py-8">กำลังโหลด...</p>
+        ) : schemaReady === false ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+            <h3 className="font-bold mb-2">ตารางวัตถุดิบยังไม่ได้สร้าง</h3>
+            {schemaError && <p className="mb-3">{schemaError}</p>}
+            <p className="mb-3">ทำตามขั้นตอนด้านล่างใน Supabase Dashboard:</p>
+            <ol className="list-decimal list-inside space-y-2 mb-4">
+              <li>เปิด <strong>SQL Editor</strong></li>
+              <li>เปิดไฟล์ <code className="bg-amber-100 px-1 rounded">supabase/migrations/017_raw_materials.sql</code> ในโปรเจกต์ แล้วคัดลอกเนื้อหาทั้งหมดไปวางใน SQL Editor</li>
+              <li>กด <strong>Run</strong></li>
+              <li>จากนั้นรันคำสั่งนี้เพื่อรีเฟรช schema cache: <code className="block mt-1 bg-amber-100 p-2 rounded text-xs">NOTIFY pgrst, &apos;reload schema&apos;;</code></li>
+            </ol>
+            <Button type="button" onClick={() => loadMaterials()} className="bg-amber-600 hover:bg-amber-700 text-white">
+              ลองโหลดอีกครั้ง
+            </Button>
+          </div>
         ) : filtered.length === 0 ? (
           <p className="text-sm text-[#9a9288] py-8">
             {search.trim() ? 'ไม่พบวัตถุดิบที่ตรงกับคำค้น' : 'ยังไม่มีวัตถุดิบ — กดปุ่มเพิ่มวัตถุดิบ'}
@@ -389,18 +422,35 @@ export default function RawMaterialsPage() {
                 ))}
               </select>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-[#9a9288]">จำนวนสต็อกเริ่มต้น</Label>
-              <Input
-                name="stock_qty"
-                type="number"
-                min={0}
-                step="any"
-                defaultValue={0}
-                placeholder="0"
-                className="border-[#e4e0d8] focus:border-[#FA3E3E]"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-[#9a9288]">จำนวนหน่วย (Amount)</Label>
+                <Input
+                  name="amount_units"
+                  type="number"
+                  min={1}
+                  step={1}
+                  defaultValue={1}
+                  placeholder="1"
+                  className="border-[#e4e0d8] focus:border-[#FA3E3E]"
+                />
+                <p className="text-[10px] text-[#9a9288]">เช่น 2 ถุง, 3 กล่อง</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-[#9a9288]">กรัม (Grams)</Label>
+                <Input
+                  name="grams"
+                  type="number"
+                  min={0}
+                  step="any"
+                  defaultValue={0}
+                  placeholder="0"
+                  className="border-[#e4e0d8] focus:border-[#FA3E3E]"
+                />
+                <p className="text-[10px] text-[#9a9288]">กรัมต่อหน่วย หรือกรัมรวม</p>
+              </div>
             </div>
+            <p className="text-[11px] text-[#6b6358]">สต็อกรวม = จำนวนหน่วย × กรัม (บันทึกเป็นหน่วยด้านบน เช่น g/kg)</p>
             <div className="space-y-2">
               <Label className="text-xs font-bold text-[#9a9288]">แจ้งเตือนเมื่อสต็อกต่ำกว่า (ไม่บังคับ)</Label>
               <Input
@@ -463,17 +513,33 @@ export default function RawMaterialsPage() {
                   ))}
                 </select>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold text-[#9a9288]">จำนวนสต็อก</Label>
-                <Input
-                  name="edit-stock_qty"
-                  type="number"
-                  min={0}
-                  step="any"
-                  defaultValue={editing.stock_qty}
-                  className="border-[#e4e0d8] focus:border-[#FA3E3E]"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-[#9a9288]">จำนวนหน่วย (Amount)</Label>
+                  <Input
+                    name="edit-amount_units"
+                    type="number"
+                    min={1}
+                    step={1}
+                    defaultValue={1}
+                    placeholder="1"
+                    className="border-[#e4e0d8] focus:border-[#FA3E3E]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-[#9a9288]">กรัม (Grams)</Label>
+                  <Input
+                    name="edit-grams"
+                    type="number"
+                    min={0}
+                    step="any"
+                    defaultValue={editing.stock_qty}
+                    placeholder="0"
+                    className="border-[#e4e0d8] focus:border-[#FA3E3E]"
+                  />
+                </div>
               </div>
+              <p className="text-[11px] text-[#6b6358]">สต็อกรวม = จำนวนหน่วย × กรัม</p>
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-[#9a9288]">แจ้งเตือนเมื่อสต็อกต่ำกว่า (ไม่บังคับ)</Label>
                 <Input

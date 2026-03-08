@@ -25,18 +25,48 @@ function toRawMaterial(row: {
 
 export { RAW_MATERIAL_UNITS };
 
+export type FetchRawMaterialsResult =
+  | { materials: RawMaterial[]; schemaReady: true }
+  | { materials: []; schemaReady: false; error: string };
+
+/**
+ * Fetch all raw materials. If the table doesn't exist yet (migration not run),
+ * returns schemaReady: false so the UI can show setup instructions.
+ */
 export async function fetchRawMaterials(): Promise<RawMaterial[]> {
-  if (!supabase) return [];
+  const result = await fetchRawMaterialsWithStatus();
+  return result.materials;
+}
+
+export async function fetchRawMaterialsWithStatus(): Promise<FetchRawMaterialsResult> {
+  if (!supabase) return { materials: [], schemaReady: false, error: 'Supabase is not configured.' };
   const { data, error } = await supabase
     .from('raw_materials')
     .select('id, name, unit, stock_qty, low_stock_threshold, created_at, updated_at')
     .order('name', { ascending: true });
   if (error) {
-    if (error.code === '42P01') return [];
+    const code = (error as { code?: string }).code;
+    const msg = error.message ?? '';
+    const missingTable =
+      code === '42P01' ||
+      code === 'PGRST204' ||
+      code === 'PGRST200' ||
+      /relation ["']?[\w.]*raw_materials["']?.*(does not exist|in the schema cache)/i.test(msg) ||
+      /(schema cache|does not exist).*raw_materials/i.test(msg);
+    if (missingTable) {
+      return {
+        materials: [],
+        schemaReady: false,
+        error: 'Raw materials tables are not set up. Run the migration in Supabase (see instructions below).',
+      };
+    }
     console.error('[fetchRawMaterials]', error);
-    return [];
+    return { materials: [], schemaReady: false, error: msg };
   }
-  return (data ?? []).map(toRawMaterial);
+  return {
+    materials: (data ?? []).map(toRawMaterial),
+    schemaReady: true,
+  };
 }
 
 export async function createRawMaterial(params: {
@@ -59,7 +89,14 @@ export async function createRawMaterial(params: {
     })
     .select('id, name, unit, stock_qty, low_stock_threshold, created_at, updated_at')
     .single();
-  if (error) return { rawMaterial: null, error: error.message };
+  if (error) {
+    const code = (error as { code?: string }).code;
+    const msg = error.message ?? '';
+    if (code === '42P01' || /schema cache|relation.*raw_materials.*does not exist/i.test(msg)) {
+      return { rawMaterial: null, error: 'Raw materials table not set up. Run migration 017_raw_materials.sql in Supabase.' };
+    }
+    return { rawMaterial: null, error: error.message };
+  }
   if (!data) return { rawMaterial: null, error: 'No data returned.' };
   return { rawMaterial: toRawMaterial(data), error: null };
 }
