@@ -66,3 +66,23 @@ export interface StaffUser {
   c: string;
   bg: string;
 }
+
+/** Raw material (ingredient) for inventory */
+export type RawMaterialUnit = 'g' | 'kg' | 'pcs' | 'ml';
+
+export interface RawMaterial {
+  id: number;
+  name: string;
+  unit: RawMaterialUnit;
+  stock_qty: number;
+  low_stock_threshold: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** Link between dish (product) and raw material with quantity per serving */
+export interface ProductIngredient {
+  product_id: number;
+  raw_material_id: number;
+  quantity_per_serving: number;
+}

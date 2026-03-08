@@ -6,8 +6,8 @@ export type UserRole = 'admin' | 'kitchen' | 'cashier';
 
 /** Routes each role can access */
 export const ROLE_ROUTES: Record<UserRole, string[]> = {
-  admin: ['/pos', '/tables', '/reports', '/products', '/settings'],
-  kitchen: ['/products', '/tables'],
+  admin: ['/pos', '/tables', '/reports', '/products', '/raw-materials', '/settings'],
+  kitchen: ['/products', '/tables', '/raw-materials'],
   cashier: ['/pos', '/tables', '/reports'],
 };
 

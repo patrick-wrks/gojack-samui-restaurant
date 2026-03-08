@@ -1,10 +1,18 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Tag, ChevronRight, Trash2, Minus } from 'lucide-react';
+import { Search, Plus, Tag, ChevronRight, Trash2, Minus, ChefHat } from 'lucide-react';
 import { getCategoriesForUI } from '@/store/menu-store';
 import { useCurrencySymbol } from '@/store/store-settings-store';
 import { fetchProducts, createProduct, updateProduct, updateProductStock, deleteProduct, createCategory } from '@/lib/menu';
+import {
+  fetchRawMaterials,
+  fetchProductIngredientsWithNames,
+  addProductIngredient,
+  removeProductIngredient,
+  RAW_MATERIAL_UNITS,
+} from '@/lib/raw-materials';
+import type { ProductIngredientWithName } from '@/lib/raw-materials';
 import { useMenuStore } from '@/store/menu-store';
 import type { Product } from '@/types/pos';
 import {
@@ -38,6 +46,12 @@ export default function ProductsPage() {
   const [categoryAddError, setCategoryAddError] = useState<string | null>(null);
   const [categoryAddSubmitting, setCategoryAddSubmitting] = useState(false);
   const [stockAdjustingId, setStockAdjustingId] = useState<number | null>(null);
+  const [recipeProduct, setRecipeProduct] = useState<Product | null>(null);
+  const [recipeIngredients, setRecipeIngredients] = useState<ProductIngredientWithName[]>([]);
+  const [rawMaterials, setRawMaterials] = useState<Awaited<ReturnType<typeof fetchRawMaterials>>>([]);
+  const [recipeLoading, setRecipeLoading] = useState(false);
+  const [recipeError, setRecipeError] = useState<string | null>(null);
+  const [recipeAddSubmitting, setRecipeAddSubmitting] = useState(false);
   const currency = useCurrencySymbol();
 
   const categories = getCategoriesForUI().filter((c) => c.id !== 'all');
@@ -89,6 +103,23 @@ export default function ProductsPage() {
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  useEffect(() => {
+    if (!recipeProduct) return;
+    setRecipeError(null);
+    setRecipeLoading(true);
+    Promise.all([
+      fetchProductIngredientsWithNames(recipeProduct.id),
+      fetchRawMaterials(),
+    ]).then(([ingredients, materials]) => {
+      setRecipeIngredients(ingredients);
+      setRawMaterials(materials);
+      setRecipeLoading(false);
+    }).catch(() => {
+      setRecipeLoading(false);
+      setRecipeError('โหลดข้อมูลไม่สำเร็จ');
+    });
+  }, [recipeProduct]);
 
   const handleToggleActive = useCallback(
     async (p: Product) => {
@@ -228,6 +259,37 @@ export default function ProductsPage() {
     }
   };
 
+  const handleRecipeAdd = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!recipeProduct) return;
+    const form = e.currentTarget;
+    const rawMaterialId = Number((form.elements.namedItem('recipe-raw_material') as HTMLSelectElement).value);
+    const qty = Number((form.elements.namedItem('recipe-quantity') as HTMLInputElement).value);
+    if (!rawMaterialId || qty <= 0) {
+      setRecipeError('เลือกวัตถุดิบและจำนวนต่อจาน');
+      return;
+    }
+    setRecipeError(null);
+    setRecipeAddSubmitting(true);
+    const { success, error } = await addProductIngredient(recipeProduct.id, rawMaterialId, qty);
+    setRecipeAddSubmitting(false);
+    if (success) {
+      const list = await fetchProductIngredientsWithNames(recipeProduct.id);
+      setRecipeIngredients(list);
+      (form.elements.namedItem('recipe-quantity') as HTMLInputElement).value = '';
+    } else {
+      setRecipeError(error ?? 'เพิ่มไม่สำเร็จ');
+    }
+  };
+
+  const handleRecipeRemove = async (productId: number, rawMaterialId: number) => {
+    const { success } = await removeProductIngredient(productId, rawMaterialId);
+    if (success && recipeProduct && recipeProduct.id === productId) {
+      const list = await fetchProductIngredientsWithNames(productId);
+      setRecipeIngredients(list);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
@@ -350,6 +412,9 @@ export default function ProductsPage() {
                       เปิดใช้งาน
                     </th>
                     <th className="text-left py-2 px-2.5 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8] bg-[#f7f5f0]">
+                      สูตร/วัตถุดิบ
+                    </th>
+                    <th className="text-left py-2 px-2.5 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8] bg-[#f7f5f0]">
                       {' '}
                     </th>
                   </tr>
@@ -421,6 +486,16 @@ export default function ProductsPage() {
                                 p.is_active !== false ? 'translate-x-4' : 'translate-x-0'
                               }`}
                             />
+                          </button>
+                        </td>
+                        <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white">
+                          <button
+                            type="button"
+                            onClick={() => { setRecipeProduct(p); setRecipeError(null); }}
+                            className="py-1.5 px-3 rounded-md border border-[#e4e0d8] bg-transparent text-[#9a9288] text-[11px] font-bold cursor-pointer hover:border-[#FA3E3E] hover:text-[#FA3E3E] transition-colors flex items-center gap-1"
+                          >
+                            <ChefHat className="w-3.5 h-3.5" />
+                            สูตร
                           </button>
                         </td>
                         <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white">
@@ -520,6 +595,14 @@ export default function ProductsPage() {
                         {currency}{p.price}
                       </span>
                       <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => { setRecipeProduct(p); setRecipeError(null); }}
+                          className="py-2 px-3 rounded-lg border border-[#e4e0d8] bg-transparent text-[#9a9288] text-xs font-bold touch-target flex items-center gap-1.5"
+                        >
+                          <ChefHat className="w-4 h-4" />
+                          สูตร
+                        </button>
                         <button
                           type="button"
                           onClick={() => { setEditingProduct(p); setEditError(null); }}
@@ -821,6 +904,93 @@ export default function ProductsPage() {
               </Button>
             </DialogFooter>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Recipe / Ingredients Dialog */}
+      <Dialog open={!!recipeProduct} onOpenChange={(o) => { if (!o) setRecipeProduct(null); setRecipeError(null); }}>
+        <DialogContent className="sm:max-w-[420px] border-[#e4e0d8]">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-[#1a1816]">
+              สูตร / วัตถุดิบ — {recipeProduct?.name ?? ''}
+            </DialogTitle>
+          </DialogHeader>
+          {recipeProduct && (
+            <div className="space-y-4">
+              {recipeError && (
+                <div className="rounded-lg bg-[#fef2f2] border border-[#fecaca] px-3 py-2 text-sm text-[#dc2626]">
+                  {recipeError}
+                </div>
+              )}
+              {recipeLoading ? (
+                <p className="text-sm text-[#9a9288]">กำลังโหลด...</p>
+              ) : (
+                <>
+                  <div>
+                    <Label className="text-xs font-bold text-[#9a9288] block mb-2">วัตถุดิบต่อ 1 จาน</Label>
+                    {recipeIngredients.length === 0 ? (
+                      <p className="text-sm text-[#9a9288] py-2">ยังไม่ได้กำหนดวัตถุดิบ — เมื่อขายจะไม่หักสต็อกวัตถุดิบ</p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {recipeIngredients.map((ing) => (
+                          <li key={ing.raw_material_id} className="flex items-center justify-between py-1.5 px-2 rounded-lg bg-[#f7f5f0] text-sm">
+                            <span className="text-[#1a1816]">
+                              {ing.raw_material_name} — <strong>{ing.quantity_per_serving} {ing.raw_material_unit}</strong>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleRecipeRemove(recipeProduct.id, ing.raw_material_id)}
+                              className="p-1 rounded text-[#9a9288] hover:text-[#dc2626] hover:bg-[#fef2f2]"
+                              aria-label="ลบออกจากสูตร"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <form onSubmit={handleRecipeAdd} className="flex flex-wrap items-end gap-2 pt-2 border-t border-[#e4e0d8]">
+                    <div className="flex-1 min-w-[120px] space-y-1">
+                      <Label className="text-xs font-bold text-[#9a9288]">เพิ่มวัตถุดิบ</Label>
+                      <select
+                        name="recipe-raw_material"
+                        className="w-full min-h-10 rounded-md border border-[#e4e0d8] bg-white px-3 py-2 text-sm focus:outline-none focus:border-[#FA3E3E]"
+                      >
+                        <option value="">-- เลือกวัตถุดิบ --</option>
+                        {rawMaterials
+                          .filter((rm) => !recipeIngredients.some((i) => i.raw_material_id === rm.id))
+                          .map((rm) => (
+                            <option key={rm.id} value={rm.id}>{rm.name} ({rm.unit})</option>
+                          ))}
+                        {rawMaterials.length === 0 && (
+                          <option value="" disabled>ไม่มีวัตถุดิบ — ไปเพิ่มที่หน้าวัตถุดิบ</option>
+                        )}
+                      </select>
+                    </div>
+                    <div className="w-24 space-y-1">
+                      <Label className="text-xs font-bold text-[#9a9288]">ต่อจาน</Label>
+                      <Input
+                        name="recipe-quantity"
+                        type="number"
+                        min={0.01}
+                        step="any"
+                        placeholder="0"
+                        className="border-[#e4e0d8] focus:border-[#FA3E3E]"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={recipeAddSubmitting || rawMaterials.length === 0}
+                      className="bg-[#FA3E3E] hover:bg-[#e03838] shrink-0"
+                    >
+                      {recipeAddSubmitting ? '...' : 'เพิ่ม'}
+                    </Button>
+                  </form>
+                </>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

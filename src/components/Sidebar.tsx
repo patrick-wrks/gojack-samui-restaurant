@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingCart, LayoutGrid, BarChart3, UtensilsCrossed, Settings } from 'lucide-react';
+import { ShoppingCart, LayoutGrid, BarChart3, UtensilsCrossed, Settings, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/app/providers';
 import { ROLE_ROUTES } from '@/lib/roles';
@@ -13,6 +13,7 @@ const allNavItems = [
   { href: '/tables', label: 'โต๊ะ', icon: LayoutGrid },
   { href: '/reports', label: 'รายงาน', icon: BarChart3 },
   { href: '/products', label: 'เมนู', icon: UtensilsCrossed },
+  { href: '/raw-materials', label: 'วัตถุดิบ', icon: Package },
   { href: '/settings', label: 'ตั้งค่า', icon: Settings },
 ];
 

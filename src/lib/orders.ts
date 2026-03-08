@@ -1,6 +1,6 @@
 import type { CartItem, OrderStatus, PaymentMethod } from '@/types/pos';
 import { supabase } from './supabase';
-import { decrementProductStock } from './inventory';
+import { decrementRawMaterialStock } from './inventory';
 
 export interface InsertOrderParams {
   orderNumber: number;
@@ -114,8 +114,14 @@ export async function insertOrder(params: InsertOrderParams): Promise<string> {
 
   console.log('[insertOrder] Order items saved:', rows.length, 'items');
 
-  for (const i of params.items) {
-    await decrementProductStock(i.id, i.qty, order.id);
+  try {
+    await decrementRawMaterialStock(order.id);
+  } catch (stockError) {
+    await supabase.from('orders').delete().eq('id', order.id);
+    throw new OrderInsertError(
+      stockError instanceof Error ? stockError.message : 'Insufficient raw material stock',
+      stockError
+    );
   }
 
   return order.id;
@@ -416,7 +422,7 @@ export async function addItemsToOpenOrder(
 /**
  * Complete an open order (checkout): set status, payment_method, and total.
  * Order then appears in reports (status = 'completed').
- * Decrements product stock for each order item (when track_inventory = true).
+ * Decrements raw material stock based on product_ingredients; blocks if insufficient stock.
  */
 export async function completeOrder(
   orderId: string,
@@ -427,17 +433,13 @@ export async function completeOrder(
     throw new OrderInsertError('Supabase client not configured');
   }
 
-  const { data: orderItems } = await supabase
-    .from('order_items')
-    .select('product_id, qty')
-    .eq('order_id', orderId);
-
-  if (orderItems?.length) {
-    for (const item of orderItems) {
-      if (item.product_id != null && item.qty > 0) {
-        await decrementProductStock(item.product_id, item.qty, orderId);
-      }
-    }
+  try {
+    await decrementRawMaterialStock(orderId);
+  } catch (stockError) {
+    throw new OrderInsertError(
+      stockError instanceof Error ? stockError.message : 'Insufficient raw material stock',
+      stockError
+    );
   }
 
   const { error } = await supabase

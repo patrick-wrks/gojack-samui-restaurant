@@ -82,3 +82,25 @@ export async function decrementProductStock(
     console.warn('[decrementProductStock]', productId, qty, error.message);
   }
 }
+
+/**
+ * Decrement raw material stock for all items in an order (based on product_ingredients).
+ * Calls DB function decrement_raw_material_stock. No-op if function or tables don't exist.
+ * Throws if insufficient stock so caller can block order completion.
+ */
+export async function decrementRawMaterialStock(orderId: string): Promise<void> {
+  if (!supabase) return;
+
+  const { error } = await supabase.rpc('decrement_raw_material_stock', {
+    p_order_id: orderId,
+  });
+
+  if (error) {
+    if (error.code === '42883' || error.code === '42P01') {
+      // function or table does not exist (migration not run) — no-op
+      return;
+    }
+    // Insufficient stock or other error — rethrow so order can be blocked
+    throw new Error(error.message);
+  }
+}
