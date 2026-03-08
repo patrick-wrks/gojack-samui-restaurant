@@ -39,6 +39,8 @@ export function Cart({ tableMode }: CartProps) {
     addTodayOrder,
     initOrderNum,
     refreshTodayStats,
+    orderNote,
+    setOrderNote,
   } = useCartStore();
   const posItems = cart;
   const items = tableMode ? tableMode.items : posItems;
@@ -74,10 +76,12 @@ export function Cart({ tableMode }: CartProps) {
 
   const handleAddNote = () => {
     if (tableMode) {
-      window.alert('ฟีเจอร์หมายเหตุจะเปิดใช้งานเมื่อเชื่อมต่อฐานข้อมูลแล้ว');
+      window.alert('หมายเหตุใช้ได้เฉพาะออเดอร์ที่ชำระเงินทันที (POS)');
       return;
     }
-    window.alert('ฟีเจอร์หมายเหตุจะเปิดใช้งานเมื่อเชื่อมต่อฐานข้อมูลแล้ว');
+    const current = orderNote || '';
+    const v = window.prompt('หมายเหตุออเดอร์ (เช่น ไม่ใส่ผัก, แพ้ gluten):', current);
+    if (v != null) setOrderNote(v.trim());
   };
 
   const handleConfirmOrder = async (method: PaymentMethod) => {
@@ -87,6 +91,7 @@ export function Cart({ tableMode }: CartProps) {
       total,
       paymentMethod: method,
       items: cart,
+      ...(orderNote && { note: orderNote }),
     });
     addTodayOrder(total);
     incrementOrderNum();
@@ -169,6 +174,11 @@ export function Cart({ tableMode }: CartProps) {
 
               {/* Summary */}
               <div className="mb-3 space-y-1.5 py-2 border-y border-[#e4e0d8]">
+                {orderNote ? (
+                  <div className="text-xs text-[#6b6358] pb-1">
+                    <span className="font-medium">หมายเหตุ:</span> {orderNote}
+                  </div>
+                ) : null}
                 <div className="flex justify-between items-center text-xs text-[#6b6358]">
                   <span>ยอดรวม</span>
                   <span className="text-[#1a1816] font-medium tabular-nums">

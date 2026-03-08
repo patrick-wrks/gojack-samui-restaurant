@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Trash2, Tag } from 'lucide-react';
+import { ChevronDown, Trash2, Tag, FileText } from 'lucide-react';
 import { useCartStore } from '@/store/cart-store';
 import { useCartTotals } from '@/hooks/useCartTotals';
 import { useCurrencySymbol } from '@/store/store-settings-store';
@@ -30,6 +30,8 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
     clearCart,
     incrementOrderNum,
     addTodayOrder,
+    orderNote,
+    setOrderNote,
   } = useCartStore();
   const posItems = cart;
   const items = tableMode ? tableMode.items : posItems;
@@ -58,6 +60,16 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
     }
   };
 
+  const handleAddNote = () => {
+    if (tableMode) {
+      window.alert('หมายเหตุใช้ได้เฉพาะออเดอร์ที่ชำระเงินทันที (POS)');
+      return;
+    }
+    const current = orderNote || '';
+    const v = window.prompt('หมายเหตุออเดอร์ (เช่น ไม่ใส่ผัก, แพ้ gluten):', current);
+    if (v != null) setOrderNote(v.trim());
+  };
+
   const handleConfirmOrder = async (method: PaymentMethod) => {
     const nextOrderNum = orderNum + 1;
     await insertOrder({
@@ -65,6 +77,7 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
       total,
       paymentMethod: method,
       items: cart,
+      ...(orderNote && { note: orderNote }),
     });
     addTodayOrder(total);
     incrementOrderNum();
@@ -194,9 +207,22 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
                   <Tag className="w-4 h-4" />
                   ส่วนลด
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleAddNote}
+                  className="flex-1 py-2.5 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-sm font-semibold hover:bg-[#f2f0eb] flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  หมายเหตุ
+                </Button>
               </div>
 
               <div className="mb-3 space-y-1.5 py-2 border-y border-[#e4e0d8]">
+                {orderNote ? (
+                  <div className="text-sm text-[#6b6358] pb-1">
+                    <span className="font-medium">หมายเหตุ:</span> {orderNote}
+                  </div>
+                ) : null}
                 <div className="flex justify-between items-center text-sm text-[#6b6358]">
                   <span>ยอดรวม</span>
                   <span className="text-[#1a1816] font-medium tabular-nums">
@@ -234,7 +260,7 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
           )}
           {tableMode && (
             <>
-              {/* Action buttons - identical to POS drawer (ล้าง, ส่วนลด) */}
+              {/* Action buttons - identical to POS drawer (ล้าง, ส่วนลด, หมายเหตุ) */}
               <div className="flex gap-2 mb-3">
                 <Button
                   variant="outline"
@@ -254,6 +280,14 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
                 >
                   <Tag className="w-4 h-4" />
                   ส่วนลด
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleAddNote}
+                  className="flex-1 py-2.5 h-auto rounded-lg border-[#e4e0d8] bg-white text-[#6b6358] text-sm font-semibold hover:bg-[#f2f0eb] flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  หมายเหตุ
                 </Button>
               </div>
 

@@ -10,10 +10,12 @@ export interface CartStore {
   orderNum: number;
   todayRevenue: number;
   todayOrders: number;
+  orderNote: string;
   addItem: (productId: number) => void;
   updateQty: (productId: number, delta: number) => void;
   clearCart: () => void;
   setDiscount: (amount: number) => void;
+  setOrderNote: (note: string) => void;
   setPayType: (method: PaymentMethod) => void;
   incrementOrderNum: () => void;
   addTodayOrder: (total: number) => void;
@@ -28,6 +30,7 @@ export const useCartStore = create<CartStore>((set) => ({
   orderNum: 1,
   todayRevenue: 0,
   todayOrders: 0,
+  orderNote: '',
 
   addItem: (productId) => {
     const product = useMenuStore.getState().products.find((p) => p.id === productId);
@@ -61,9 +64,11 @@ export const useCartStore = create<CartStore>((set) => ({
     });
   },
 
-  clearCart: () => set({ cart: [], discount: 0 }),
+  clearCart: () => set({ cart: [], discount: 0, orderNote: '' }),
 
   setDiscount: (amount) => set({ discount: amount }),
+
+  setOrderNote: (note) => set({ orderNote: note }),
 
   setPayType: (payType) => set({ payType }),
 

@@ -6,6 +6,7 @@ export interface InsertOrderParams {
   total: number;
   paymentMethod: PaymentMethod;
   items: CartItem[];
+  note?: string;
 }
 
 export interface OrderItemRow {
@@ -76,6 +77,7 @@ export async function insertOrder(params: InsertOrderParams): Promise<string> {
       total: params.total,
       payment_method: params.paymentMethod,
       status: 'completed',
+      ...(params.note != null && params.note !== '' && { note: params.note }),
     })
     .select('id, created_at')
     .single();
