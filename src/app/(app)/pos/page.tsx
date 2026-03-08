@@ -12,8 +12,8 @@ import { cn } from '@/lib/utils';
 
 export default function PosPage() {
   const [cartMode, setCartMode] = useState<'closed' | 'peek' | 'open'>('peek');
-  const { cart } = useCartStore();
-  const { total } = useCartTotals(cart, 0);
+  const { cart, discount } = useCartStore();
+  const { total } = useCartTotals(cart, discount);
   const currency = useCurrencySymbol();
   const itemCount = cart.reduce((sum, item) => sum + item.qty, 0);
 

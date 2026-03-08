@@ -23,6 +23,7 @@ export interface OrderWithItems {
   payment_method: PaymentMethod | null;
   status: OrderStatus;
   table_number: string | null;
+  note?: string | null;
   created_at: string;
   order_items: {
     id: string;
@@ -152,6 +153,7 @@ export async function fetchOrdersWithItems(
       payment_method,
       status,
       table_number,
+      note,
       created_at,
       order_items (
         id,
@@ -306,6 +308,7 @@ export async function fetchOpenOrders(): Promise<OrderWithItems[]> {
       payment_method,
       status,
       table_number,
+      note,
       created_at,
       order_items (
         id,
@@ -342,6 +345,7 @@ export async function fetchOpenOrderByTable(
       payment_method,
       status,
       table_number,
+      note,
       created_at,
       order_items (
         id,

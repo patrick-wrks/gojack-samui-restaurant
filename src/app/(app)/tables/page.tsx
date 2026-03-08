@@ -34,8 +34,9 @@ import {
   completeOrder,
   type OrderWithItems,
 } from '@/lib/orders';
-import type { PaymentMethod } from '@/types/pos';
+import type { DiscountInput, PaymentMethod } from '@/types/pos';
 import type { Product } from '@/types/pos';
+import { computeDiscountAmount } from '@/hooks/useCartTotals';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -216,7 +217,7 @@ export default function TablesPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [cartMode, setCartMode] = useState<'peek' | 'open'>('peek');
-  const [tableDiscount, setTableDiscount] = useState(0);
+  const [tableDiscount, setTableDiscount] = useState<DiscountInput>({ type: 'amount', value: 0 });
   const [recentAdds, setRecentAdds] = useState<RecentAdd[]>([]);
   const currency = useCurrencySymbol();
   const detailOrderBeforeMutate = useRef<OrderWithItems | null>(null);
@@ -332,7 +333,7 @@ export default function TablesPage() {
       setPaymentOpen(false);
       setCartMode('peek');
       setShowClearAllConfirm(false);
-      setTableDiscount(0);
+      setTableDiscount({ type: 'amount', value: 0 });
       setError(null);
       setViewTransition('entered');
       loadOpenOrders();
@@ -506,11 +507,12 @@ export default function TablesPage() {
     async (method: PaymentMethod) => {
       if (!detailOrder) return;
       const subtotal = Number(detailOrder.total);
-      const totalToCharge = Math.max(0, subtotal - tableDiscount);
+      const discountAmt = computeDiscountAmount(subtotal, tableDiscount);
+      const totalToCharge = Math.max(0, subtotal - discountAmt);
       haptic('success');
       await completeOrder(detailOrder.id, method, totalToCharge);
       setPaymentOpen(false);
-      setTableDiscount(0);
+      setTableDiscount({ type: 'amount', value: 0 });
       showToast('ชำระเงินสำเร็จ!', 'success');
       setTimeout(() => {
         setSelectedTable(null);
@@ -549,7 +551,8 @@ export default function TablesPage() {
   // Detail view - same cart layout as POS: sidebar on desktop, peek bar + drawer on mobile
   if (selectedTable && detailOrder) {
     const subtotal = Number(detailOrder.total);
-    const totalToCharge = Math.max(0, subtotal - tableDiscount);
+    const discountAmt = computeDiscountAmount(subtotal, tableDiscount);
+    const totalToCharge = Math.max(0, subtotal - discountAmt);
     const itemCount = detailOrder.order_items.reduce((s, i) => s + i.qty, 0);
     const productQtyMap = getProductQuantityMap(detailOrder.order_items);
     const tableCartItems = detailOrder.order_items.map((item) => ({

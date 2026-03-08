@@ -2,6 +2,13 @@ export type PaymentMethod = 'cash' | 'bank';
 
 export type OrderStatus = 'open' | 'completed' | 'cancelled';
 
+/** Discount can be applied as percentage or fixed amount */
+export type DiscountType = 'percent' | 'amount';
+export interface DiscountInput {
+  type: DiscountType;
+  value: number;
+}
+
 export interface Category {
   id: string;
   name: string;

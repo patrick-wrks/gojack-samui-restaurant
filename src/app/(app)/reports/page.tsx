@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Download, Calendar, Trash2 } from 'lucide-react';
+import { Download, Calendar, Trash2, FileText } from 'lucide-react';
 import { useOrdersRealtime } from '@/hooks/useOrdersRealtime';
 import { useCurrencySymbol } from '@/store/store-settings-store';
 import { fetchOrdersWithItems, deleteOrder } from '@/lib/orders';
@@ -42,6 +42,7 @@ export default function ReportsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<{ id: string; orderNumber: number } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [detailOrder, setDetailOrder] = useState<OrderWithItems | null>(null);
   const currency = useCurrencySymbol();
 
   // Real-time subscription
@@ -137,9 +138,15 @@ export default function ReportsPage() {
   };
 
   // Handle delete order
-  const handleDeleteClick = (orderId: string, orderNumber: number) => {
+  const handleDeleteClick = (e: React.MouseEvent, orderId: string, orderNumber: number) => {
+    e.stopPropagation();
     setOrderToDelete({ id: orderId, orderNumber });
     setDeleteDialogOpen(true);
+  };
+
+  const handleOrderClick = (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (order) setDetailOrder(order);
   };
 
   const confirmDelete = async () => {
@@ -366,8 +373,11 @@ export default function ReportsPage() {
 
             {/* Recent Orders */}
             <div className="bg-white border border-[#e4e0d8] rounded-[16px] md:rounded-[14px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <div className="text-xs font-bold text-[#6b6358] uppercase tracking-wider mb-3">
-                รายการออเดอร์ล่าสุด
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs font-bold text-[#6b6358] uppercase tracking-wider">
+                  รายการออเดอร์ล่าสุด
+                </div>
+                <span className="text-[10px] text-[#9a9288]">กดเพื่อดูรายละเอียด</span>
               </div>
 
               {/* Desktop Table */}
@@ -397,7 +407,11 @@ export default function ReportsPage() {
                   </thead>
                   <tbody>
                     {recentOrders.map((o) => (
-                      <tr key={o.id} className="hover:bg-[#f7f5f0]">
+                      <tr
+                        key={o.id}
+                        onClick={() => handleOrderClick(o.id)}
+                        className="hover:bg-[#f7f5f0] cursor-pointer transition-colors"
+                      >
                         <td className="py-2.5 px-2 border-b border-[#e4e0d8] font-bold">#{o.order_number}</td>
                         <td className="py-2.5 px-2 border-b border-[#e4e0d8] text-[#9a9288]">
                           {o.date}
@@ -411,9 +425,9 @@ export default function ReportsPage() {
                         <td className="py-2.5 px-2 border-b border-[#e4e0d8] text-right font-extrabold font-heading">
                           {currency}{o.total.toLocaleString()}
                         </td>
-                        <td className="py-2.5 px-2 border-b border-[#e4e0d8] text-center">
+                        <td className="py-2.5 px-2 border-b border-[#e4e0d8] text-center" onClick={(e) => e.stopPropagation()}>
                           <button
-                            onClick={() => handleDeleteClick(o.id, o.order_number)}
+                            onClick={(e) => handleDeleteClick(e, o.id, o.order_number)}
                             className="p-1.5 rounded-md text-[#9a9288] hover:text-red-600 hover:bg-red-50 transition-colors"
                             title="ลบออเดอร์"
                           >
@@ -431,7 +445,8 @@ export default function ReportsPage() {
                 {recentOrders.map((o) => (
                   <div
                     key={o.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-[#f7f5f0] border border-[#e4e0d8] touch-target active:bg-white"
+                    onClick={() => handleOrderClick(o.id)}
+                    className="flex items-center justify-between p-3 rounded-xl bg-[#f7f5f0] border border-[#e4e0d8] touch-target active:bg-white cursor-pointer"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -449,12 +464,12 @@ export default function ReportsPage() {
                       </div>
                       <div className="text-xs text-[#6b6358] line-clamp-1">{o.items}</div>
                     </div>
-                    <div className="flex items-center gap-2 ml-3">
+                    <div className="flex items-center gap-2 ml-3" onClick={(e) => e.stopPropagation()}>
                       <span className="font-heading text-base font-extrabold text-[#1a1816]">
                         {currency}{o.total.toLocaleString()}
                       </span>
                       <button
-                        onClick={() => handleDeleteClick(o.id, o.order_number)}
+                        onClick={(e) => handleDeleteClick(e, o.id, o.order_number)}
                         className="p-2 rounded-full text-[#9a9288] hover:text-red-600 hover:bg-red-50 transition-colors"
                         title="ลบออเดอร์"
                       >
@@ -522,6 +537,70 @@ export default function ReportsPage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Detail Dialog */}
+      <Dialog open={!!detailOrder} onOpenChange={(open) => !open && setDetailOrder(null)}>
+        <DialogContent className="sm:max-w-[420px] max-h-[85vh] overflow-y-auto border-[#e4e0d8]">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-[#1a1816] flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#FA3E3E]" />
+              รายละเอียดออเดอร์ #{detailOrder?.order_number}
+            </DialogTitle>
+          </DialogHeader>
+          {detailOrder && (
+            <div className="space-y-4 py-2">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#6b6358]">
+                <span>{new Date(detailOrder.created_at).toLocaleDateString('th-TH')}</span>
+                <span>{new Date(detailOrder.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
+                <span
+                  className={`inline-block py-0.5 px-2 rounded-md text-[10px] font-extrabold ${
+                    detailOrder.payment_method === 'cash'
+                      ? 'bg-[rgba(22,163,74,0.1)] text-[#16a34a]'
+                      : 'bg-[rgba(37,99,235,0.08)] text-[#2563eb]'
+                  }`}
+                >
+                  {detailOrder.payment_method === 'cash' ? 'เงินสด' : 'โอนเงิน'}
+                </span>
+              </div>
+
+              <div>
+                <div className="text-xs font-bold text-[#9a9288] uppercase tracking-wider mb-2">รายการอาหาร</div>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  {detailOrder.order_items.map((item) => (
+                    <div key={item.id} className="flex justify-between text-sm">
+                      <span className="text-[#6b6358]">
+                        {item.product_name} × {item.qty}
+                      </span>
+                      <span className="font-heading font-bold text-[#1a1816]">
+                        {currency}{(Number(item.price_at_sale) * item.qty).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {detailOrder.note && detailOrder.note.trim() !== '' && (
+                <div>
+                  <div className="text-xs font-bold text-[#9a9288] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5" />
+                    หมายเหตุ
+                  </div>
+                  <div className="p-3 bg-[#f7f5f0] rounded-lg border border-[#e4e0d8] text-sm text-[#6b6358] whitespace-pre-wrap">
+                    {detailOrder.note}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-[#e4e0d8] flex justify-between items-center">
+                <span className="text-sm font-bold text-[#6b6358]">ยอดรวม</span>
+                <span className="font-heading text-lg font-extrabold text-[#1a1816]">
+                  {currency}{Number(detailOrder.total).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

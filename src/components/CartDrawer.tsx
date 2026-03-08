@@ -8,6 +8,7 @@ import { useCartTotals } from '@/hooks/useCartTotals';
 import { useCurrencySymbol } from '@/store/store-settings-store';
 import { insertOrder } from '@/lib/orders';
 import { PaymentModal } from './PaymentModal';
+import { DiscountModal } from './DiscountModal';
 import type { CartTableMode } from './Cart';
 import type { PaymentMethod } from '@/types/pos';
 import { Button } from '@/components/ui/button';
@@ -35,29 +36,23 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
   } = useCartStore();
   const posItems = cart;
   const items = tableMode ? tableMode.items : posItems;
-  const tableDiscount = tableMode?.discount ?? 0;
+  const tableDiscount = tableMode?.discount ?? { type: 'amount' as const, value: 0 };
   const { subtotal, discountAmount, total } = useCartTotals(
     tableMode ? tableMode.items.map((i) => ({ ...i, id: 0, cat: '' })) : cart,
     tableMode ? tableDiscount : discount
   );
   const currency = useCurrencySymbol();
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [discountOpen, setDiscountOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number>(0);
   const [translateY, setTranslateY] = useState(0);
 
-  const handleAddDiscount = () => {
-    if (tableMode?.onDiscount) {
-      const v = window.prompt(`ส่วนลด (${currency}):`);
-      if (v != null && !Number.isNaN(Number(v)) && Number(v) >= 0) {
-        tableMode.onDiscount(Number(v));
-      }
-      return;
-    }
-    const v = window.prompt(`ส่วนลด (${currency}):`);
-    if (v != null && !Number.isNaN(Number(v)) && Number(v) >= 0) {
-      setDiscount(Number(v));
-    }
+  const handleAddDiscount = () => setDiscountOpen(true);
+
+  const handleApplyDiscount = (input: import('@/types/pos').DiscountInput) => {
+    if (tableMode?.onDiscount) tableMode.onDiscount(input);
+    else setDiscount(input);
   };
 
   const handleAddNote = () => {
@@ -344,6 +339,14 @@ export function CartDrawer({ open, onClose, tableMode }: CartDrawerProps) {
           onConfirm={handleConfirmOrder}
         />
       )}
+      <DiscountModal
+        open={discountOpen}
+        onClose={() => setDiscountOpen(false)}
+        onApply={handleApplyDiscount}
+        currency={currency}
+        subtotal={subtotal}
+        currentDiscount={tableMode ? tableDiscount : discount}
+      />
     </>
   );
 

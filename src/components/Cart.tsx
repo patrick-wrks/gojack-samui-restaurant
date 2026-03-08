@@ -6,17 +6,18 @@ import { useCartTotals } from '@/hooks/useCartTotals';
 import { useCurrencySymbol } from '@/store/store-settings-store';
 import { insertOrder } from '@/lib/orders';
 import { PaymentModal } from './PaymentModal';
+import { DiscountModal } from './DiscountModal';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { PaymentMethod } from '@/types/pos';
+import type { DiscountInput, PaymentMethod } from '@/types/pos';
 
 /** Table mode: show order for a table; actions go to API, primary CTA is "Request bill". */
 export interface CartTableMode {
   items: Array<{ id: string; name: string; price: number; qty: number }>;
   tableNumber: string;
   orderNumber: number;
-  discount?: number;
-  onDiscount?: (amount: number) => void;
+  discount?: DiscountInput;
+  onDiscount?: (input: DiscountInput) => void;
   onUpdateQty: (orderItemId: string, delta: number) => void;
   onClear?: () => void;
   onRequestBill: () => void;
@@ -44,13 +45,14 @@ export function Cart({ tableMode }: CartProps) {
   } = useCartStore();
   const posItems = cart;
   const items = tableMode ? tableMode.items : posItems;
-  const tableDiscount = tableMode?.discount ?? 0;
+  const tableDiscount = tableMode?.discount ?? { type: 'amount' as const, value: 0 };
   const { subtotal, discountAmount, total } = useCartTotals(
     tableMode ? tableMode.items.map((i) => ({ ...i, id: 0, cat: '' })) : cart,
     tableMode ? tableDiscount : discount
   );
   const currency = useCurrencySymbol();
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [discountOpen, setDiscountOpen] = useState(false);
 
   // Initialize order number from database on mount (POS only)
   useEffect(() => {
@@ -60,18 +62,11 @@ export function Cart({ tableMode }: CartProps) {
     }
   }, [tableMode, initOrderNum, refreshTodayStats]);
 
-  const handleAddDiscount = () => {
-    if (tableMode?.onDiscount) {
-      const v = window.prompt(`ส่วนลด (${currency}):`);
-      if (v != null && !Number.isNaN(Number(v)) && Number(v) >= 0) {
-        tableMode.onDiscount(Number(v));
-      }
-      return;
-    }
-    const v = window.prompt(`ส่วนลด (${currency}):`);
-    if (v != null && !Number.isNaN(Number(v)) && Number(v) >= 0) {
-      setDiscount(Number(v));
-    }
+  const handleAddDiscount = () => setDiscountOpen(true);
+
+  const handleApplyDiscount = (input: DiscountInput) => {
+    if (tableMode?.onDiscount) tableMode.onDiscount(input);
+    else setDiscount(input);
   };
 
   const handleAddNote = () => {
@@ -185,12 +180,14 @@ export function Cart({ tableMode }: CartProps) {
                     {currency}{subtotal.toLocaleString()}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#6b6358]">ส่วนลด</span>
-                  <span className="text-[#1a1816] font-medium tabular-nums">
-                    –{currency}{discountAmount.toLocaleString()}
-                  </span>
-                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[#6b6358]">ส่วนลด</span>
+                    <span className="text-[#1a1816] font-medium tabular-nums">
+                      –{currency}{discountAmount.toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center pt-2 border-t border-[#e4e0d8]">
                   <span className="text-sm font-bold text-[#1a1816]">รวมทั้งสิ้น</span>
                   <span className="text-lg font-bold text-[#1a1816] font-heading tabular-nums">
@@ -247,12 +244,14 @@ export function Cart({ tableMode }: CartProps) {
                     {currency}{subtotal.toLocaleString()}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-[#6b6358]">ส่วนลด</span>
-                  <span className="text-[#1a1816] font-medium tabular-nums">
-                    –{currency}{discountAmount.toLocaleString()}
-                  </span>
-                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[#6b6358]">ส่วนลด</span>
+                    <span className="text-[#1a1816] font-medium tabular-nums">
+                      –{currency}{discountAmount.toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center pt-2 border-t border-[#e4e0d8]">
                   <span className="text-sm font-bold text-[#1a1816]">รวมทั้งสิ้น</span>
                   <span className="text-lg font-bold text-[#1a1816] font-heading tabular-nums">
@@ -286,6 +285,14 @@ export function Cart({ tableMode }: CartProps) {
           onConfirm={handleConfirmOrder}
         />
       )}
+      <DiscountModal
+        open={discountOpen}
+        onClose={() => setDiscountOpen(false)}
+        onApply={handleApplyDiscount}
+        currency={currency}
+        subtotal={subtotal}
+        currentDiscount={tableMode ? tableDiscount : discount}
+      />
     </>
   );
 }

@@ -1,12 +1,14 @@
 import { create } from 'zustand';
-import type { CartItem, PaymentMethod } from '@/types/pos';
+import type { CartItem, DiscountInput, PaymentMethod } from '@/types/pos';
 import { useMenuStore } from '@/store/menu-store';
 import { getNextOrderNumber, fetchTodayStats } from '@/lib/orders';
+
+const defaultDiscount: DiscountInput = { type: 'amount', value: 0 };
 
 export interface CartStore {
   cart: CartItem[];
   payType: PaymentMethod;
-  discount: number;
+  discount: DiscountInput;
   orderNum: number;
   todayRevenue: number;
   todayOrders: number;
@@ -14,7 +16,7 @@ export interface CartStore {
   addItem: (productId: number) => void;
   updateQty: (productId: number, delta: number) => void;
   clearCart: () => void;
-  setDiscount: (amount: number) => void;
+  setDiscount: (input: DiscountInput) => void;
   setOrderNote: (note: string) => void;
   setPayType: (method: PaymentMethod) => void;
   incrementOrderNum: () => void;
@@ -26,7 +28,7 @@ export interface CartStore {
 export const useCartStore = create<CartStore>((set) => ({
   cart: [],
   payType: 'cash',
-  discount: 0,
+  discount: defaultDiscount,
   orderNum: 1,
   todayRevenue: 0,
   todayOrders: 0,
@@ -64,9 +66,9 @@ export const useCartStore = create<CartStore>((set) => ({
     });
   },
 
-  clearCart: () => set({ cart: [], discount: 0, orderNote: '' }),
+  clearCart: () => set({ cart: [], discount: defaultDiscount, orderNote: '' }),
 
-  setDiscount: (amount) => set({ discount: amount }),
+  setDiscount: (input) => set({ discount: input }),
 
   setOrderNote: (note) => set({ orderNote: note }),
 
