@@ -8,7 +8,7 @@ export type UserRole = 'admin' | 'kitchen' | 'cashier';
 export const ROLE_ROUTES: Record<UserRole, string[]> = {
   admin: ['/pos', '/tables', '/reports', '/products', '/raw-materials', '/settings'],
   kitchen: ['/products', '/tables', '/raw-materials'],
-  cashier: ['/pos', '/tables', '/reports'],
+  cashier: ['/pos', '/tables', '/reports', '/products', '/settings'],
 };
 
 /** Default route to redirect to when user has no access to current page */
