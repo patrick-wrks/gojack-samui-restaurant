@@ -21,6 +21,9 @@ export interface Product {
   cat: string;
   price: number;
   is_active?: boolean;
+  track_inventory?: boolean;
+  stock_qty?: number | null;
+  low_stock_threshold?: number | null;
 }
 
 export interface CartItem extends Product {

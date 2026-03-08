@@ -9,13 +9,13 @@ import {
   Check, 
   Trash2, 
   Plus, 
-  Minus, 
   ShoppingBag, 
   ShoppingCart,
   ChevronUp,
   Utensils,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Clock
 } from 'lucide-react';
 import { MenuGrid } from '@/components/MenuGrid';
 import { Cart } from '@/components/Cart';
@@ -193,6 +193,33 @@ function AddFeedbackOverlay({ recentAdds }: { recentAdds: RecentAdd[] }) {
   );
 }
 
+// Waiting timer - shows elapsed time since order created
+function WaitingTimer({ createdAt }: { createdAt: string }) {
+  const [elapsed, setElapsed] = useState(() => {
+    const start = new Date(createdAt).getTime();
+    return Math.floor((Date.now() - start) / 1000);
+  });
+
+  useEffect(() => {
+    const start = new Date(createdAt).getTime();
+    const tick = () => {
+      setElapsed(Math.floor((Date.now() - start) / 1000));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [createdAt]);
+
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  return (
+    <span className="flex items-center gap-1 text-xs font-medium text-[#6b6358] tabular-nums">
+      <Clock className="w-3.5 h-3.5 shrink-0" />
+      {mins}m {secs}s
+    </span>
+  );
+}
+
 // Get quantity map for products in order
 function getProductQuantityMap(orderItems: OrderWithItems['order_items']): Record<string, number> {
   const map: Record<string, number> = {};
@@ -210,7 +237,7 @@ export default function TablesPage() {
   const [detailOrder, setDetailOrder] = useState<OrderWithItems | null>(null);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [viewTransition, setViewTransition] = useState<'entering' | 'entered' | 'exiting'>('entered');
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -897,12 +924,17 @@ export default function TablesPage() {
                       )}>
                         โต๊ะ {num}
                       </div>
-                      <div className={cn(
-                        "w-3 h-3 rounded-full",
-                        hasOrder 
-                          ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" 
-                          : "bg-[#d4cfc5]"
-                      )} />
+                      <div className="flex items-center gap-2 shrink-0">
+                        {hasOrder && (
+                          <WaitingTimer createdAt={order.created_at} />
+                        )}
+                        <div className={cn(
+                          "w-3 h-3 rounded-full shrink-0",
+                          hasOrder 
+                            ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" 
+                            : "bg-[#d4cfc5]"
+                        )} />
+                      </div>
                     </div>
 
                     {/* Content area */}

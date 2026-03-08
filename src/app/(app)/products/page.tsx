@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Tag, ChevronRight, Trash2 } from 'lucide-react';
+import { Search, Plus, Tag, ChevronRight, Trash2, Minus } from 'lucide-react';
 import { getCategoriesForUI } from '@/store/menu-store';
 import { useCurrencySymbol } from '@/store/store-settings-store';
-import { fetchProducts, createProduct, updateProduct, deleteProduct, createCategory } from '@/lib/menu';
+import { fetchProducts, createProduct, updateProduct, updateProductStock, deleteProduct, createCategory } from '@/lib/menu';
 import { useMenuStore } from '@/store/menu-store';
 import type { Product } from '@/types/pos';
 import {
@@ -37,6 +37,7 @@ export default function ProductsPage() {
   const [categoryAddColor, setCategoryAddColor] = useState('#6b7280');
   const [categoryAddError, setCategoryAddError] = useState<string | null>(null);
   const [categoryAddSubmitting, setCategoryAddSubmitting] = useState(false);
+  const [stockAdjustingId, setStockAdjustingId] = useState<number | null>(null);
   const currency = useCurrencySymbol();
 
   const categories = getCategoriesForUI().filter((c) => c.id !== 'all');
@@ -110,6 +111,28 @@ export default function ProductsPage() {
     []
   );
 
+  const handleStockAdjust = useCallback(
+    async (p: Product, delta: number) => {
+      if (!p.track_inventory || p.stock_qty == null) return;
+      const newQty = Math.max(0, p.stock_qty + delta);
+      setStockAdjustingId(p.id);
+      setProducts((prev) =>
+        prev.map((item) => (item.id === p.id ? { ...item, stock_qty: newQty } : item))
+      );
+      const { product: updated, error } = await updateProductStock(p.id, newQty);
+      setStockAdjustingId(null);
+      if (updated) {
+        useMenuStore.getState().loadMenu();
+      } else {
+        setProducts((prev) =>
+          prev.map((item) => (item.id === p.id ? { ...item, stock_qty: p.stock_qty } : item))
+        );
+        if (error) setEditError(error ?? 'ไม่สามารถอัปเดตสต็อกได้');
+      }
+    },
+    []
+  );
+
   const filteredMenu = search
     ? products.filter((m) => m.name.toLowerCase().includes(search.toLowerCase()))
     : products;
@@ -126,12 +149,24 @@ export default function ProductsPage() {
     const name = (form.elements.namedItem('name') as HTMLInputElement).value.trim();
     const category_id = (form.elements.namedItem('category_id') as HTMLSelectElement).value;
     const price = Number((form.elements.namedItem('price') as HTMLInputElement).value);
+    const trackInventory = (form.elements.namedItem('track_inventory') as HTMLInputElement)?.checked ?? false;
+    const stockQtyRaw = (form.elements.namedItem('stock_qty') as HTMLInputElement)?.value;
+    const stockQty = trackInventory && stockQtyRaw !== '' ? Math.max(0, Number(stockQtyRaw) || 0) : undefined;
+    const lowStockRaw = (form.elements.namedItem('low_stock_threshold') as HTMLInputElement)?.value;
+    const lowStockThreshold = trackInventory && lowStockRaw !== '' ? Math.max(0, Number(lowStockRaw) || 0) : undefined;
     if (!name || !category_id || Number.isNaN(price) || price < 0) {
       setAddError('กรุณากรอกชื่อ หมวดหมู่ และราคาที่ถูกต้อง');
       return;
     }
     setAddSubmitting(true);
-    const { product: created, error } = await createProduct({ category_id, name, price });
+    const { product: created, error } = await createProduct({
+      category_id,
+      name,
+      price,
+      track_inventory: trackInventory,
+      ...(stockQty != null && { stock_qty: stockQty }),
+      ...(lowStockThreshold != null && { low_stock_threshold: lowStockThreshold }),
+    });
     setAddSubmitting(false);
     if (created) {
       setAddOpen(false);
@@ -150,9 +185,21 @@ export default function ProductsPage() {
     const name = (form.elements.namedItem('edit-name') as HTMLInputElement).value.trim();
     const category_id = (form.elements.namedItem('edit-category_id') as HTMLSelectElement).value;
     const price = Number((form.elements.namedItem('edit-price') as HTMLInputElement).value);
+    const trackInventory = (form.elements.namedItem('edit-track_inventory') as HTMLInputElement)?.checked ?? false;
+    const stockQtyRaw = (form.elements.namedItem('edit-stock_qty') as HTMLInputElement)?.value;
+    const stockQty = trackInventory && stockQtyRaw !== '' ? Math.max(0, Number(stockQtyRaw) || 0) : null;
+    const lowStockRaw = (form.elements.namedItem('edit-low_stock_threshold') as HTMLInputElement)?.value;
+    const lowStockThreshold = trackInventory && lowStockRaw !== '' ? Math.max(0, Number(lowStockRaw) || 0) : null;
     if (!name || !category_id || Number.isNaN(price) || price < 0) return;
     setEditSubmitting(true);
-    const { product: updated, error } = await updateProduct(editingProduct.id, { category_id, name, price });
+    const { product: updated, error } = await updateProduct(editingProduct.id, {
+      category_id,
+      name,
+      price,
+      track_inventory: trackInventory,
+      stock_qty: stockQty,
+      low_stock_threshold: lowStockThreshold,
+    });
     setEditSubmitting(false);
     if (updated) {
       setEditingProduct(null);
@@ -294,6 +341,12 @@ export default function ProductsPage() {
                       ราคา
                     </th>
                     <th className="text-left py-2 px-2.5 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8] bg-[#f7f5f0]">
+                      สต็อก
+                    </th>
+                    <th className="text-left py-2 px-2.5 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8] bg-[#f7f5f0]">
+                      แจ้งเตือน
+                    </th>
+                    <th className="text-left py-2 px-2.5 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8] bg-[#f7f5f0]">
                       เปิดใช้งาน
                     </th>
                     <th className="text-left py-2 px-2.5 text-[10px] font-bold text-[#9a9288] uppercase tracking-wider border-b border-[#e4e0d8] bg-[#f7f5f0]">
@@ -316,6 +369,42 @@ export default function ProductsPage() {
                         </td>
                         <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white font-extrabold text-[#1a1816] font-heading">
                           {currency}{p.price}
+                        </td>
+                        <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white">
+                          {p.track_inventory ? (
+                            <div className="flex items-center gap-1">
+                              <span className="font-heading tabular-nums text-[#1a1816]">
+                                {p.stock_qty ?? 0}
+                              </span>
+                              <div className="flex items-center gap-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleStockAdjust(p, -1)}
+                                  disabled={stockAdjustingId === p.id || (p.stock_qty ?? 0) <= 0}
+                                  className="w-6 h-6 rounded border border-[#e4e0d8] flex items-center justify-center text-[#9a9288] hover:border-[#FA3E3E] hover:text-[#FA3E3E] disabled:opacity-50"
+                                  aria-label="ลดสต็อก"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleStockAdjust(p, 1)}
+                                  disabled={stockAdjustingId === p.id}
+                                  className="w-6 h-6 rounded border border-[#e4e0d8] flex items-center justify-center text-[#9a9288] hover:border-[#FA3E3E] hover:text-[#FA3E3E] disabled:opacity-50"
+                                  aria-label="เพิ่มสต็อก"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[#9a9288]">—</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white text-[#6b6358]">
+                          {p.track_inventory && p.low_stock_threshold != null
+                            ? p.low_stock_threshold
+                            : '—'}
                         </td>
                         <td className="py-2.5 px-2.5 border-b border-[#e4e0d8] bg-white align-middle">
                           <button
@@ -376,6 +465,36 @@ export default function ProductsPage() {
                       <span className="inline-block text-[11px] py-1 px-2 rounded-md bg-[#f7f5f0] text-[#6b6358]">
                         {cat?.name ?? p.cat}
                       </span>
+                      {p.track_inventory && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-[11px] text-[#9a9288]">
+                            สต็อก: <strong className="text-[#1a1816]">{p.stock_qty ?? 0}</strong>
+                            {p.low_stock_threshold != null && (
+                              <span className="ml-1 text-[#6b6358]">(แจ้งเตือน &lt; {p.low_stock_threshold})</span>
+                            )}
+                          </span>
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              type="button"
+                              onClick={() => handleStockAdjust(p, -1)}
+                              disabled={stockAdjustingId === p.id || (p.stock_qty ?? 0) <= 0}
+                              className="w-7 h-7 rounded-lg border border-[#e4e0d8] flex items-center justify-center text-[#9a9288] active:border-[#FA3E3E] active:text-[#FA3E3E]"
+                              aria-label="ลดสต็อก"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleStockAdjust(p, 1)}
+                              disabled={stockAdjustingId === p.id}
+                              className="w-7 h-7 rounded-lg border border-[#e4e0d8] flex items-center justify-center text-[#9a9288] active:border-[#FA3E3E] active:text-[#FA3E3E]"
+                              aria-label="เพิ่มสต็อก"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 ml-2">
                       <button
@@ -473,6 +592,43 @@ export default function ProductsPage() {
                 className="border-[#e4e0d8] focus:border-[#FA3E3E]"
               />
             </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="add-track_inventory"
+                  name="track_inventory"
+                  className="rounded border-[#e4e0d8] text-[#FA3E3E] focus:ring-[#FA3E3E]"
+                />
+                <Label htmlFor="add-track_inventory" className="text-xs font-bold text-[#9a9288] cursor-pointer">
+                  ติดตามสต็อก
+                </Label>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pl-0" id="add-stock-fields">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-[#9a9288]">จำนวนสต็อก</Label>
+                  <Input
+                    name="stock_qty"
+                    type="number"
+                    min={0}
+                    step={1}
+                    placeholder="0"
+                    className="border-[#e4e0d8] focus:border-[#FA3E3E]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-[#9a9288]">แจ้งเตือนเมื่อต่ำกว่า</Label>
+                  <Input
+                    name="low_stock_threshold"
+                    type="number"
+                    min={0}
+                    step={1}
+                    placeholder="—"
+                    className="border-[#e4e0d8] focus:border-[#FA3E3E]"
+                  />
+                </div>
+              </div>
+            </div>
             <DialogFooter className="gap-2 sm:gap-0">
               <Button type="button" variant="outline" onClick={() => setAddOpen(false)} className="border-[#e4e0d8]" disabled={addSubmitting}>
                 ยกเลิก
@@ -531,6 +687,46 @@ export default function ProductsPage() {
                   required
                   className="border-[#e4e0d8] focus:border-[#FA3E3E]"
                 />
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="edit-track_inventory"
+                    name="edit-track_inventory"
+                    defaultChecked={editingProduct.track_inventory ?? false}
+                    className="rounded border-[#e4e0d8] text-[#FA3E3E] focus:ring-[#FA3E3E]"
+                  />
+                  <Label htmlFor="edit-track_inventory" className="text-xs font-bold text-[#9a9288] cursor-pointer">
+                    ติดตามสต็อก
+                  </Label>
+                </div>
+                <div className="grid grid-cols-2 gap-3 pl-0">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-[#9a9288]">จำนวนสต็อก</Label>
+                    <Input
+                      name="edit-stock_qty"
+                      type="number"
+                      min={0}
+                      step={1}
+                      defaultValue={editingProduct.stock_qty ?? ''}
+                      placeholder="0"
+                      className="border-[#e4e0d8] focus:border-[#FA3E3E]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-[#9a9288]">แจ้งเตือนเมื่อต่ำกว่า</Label>
+                    <Input
+                      name="edit-low_stock_threshold"
+                      type="number"
+                      min={0}
+                      step={1}
+                      defaultValue={editingProduct.low_stock_threshold ?? ''}
+                      placeholder="—"
+                      className="border-[#e4e0d8] focus:border-[#FA3E3E]"
+                    />
+                  </div>
+                </div>
               </div>
               <DialogFooter className="gap-2 sm:gap-0">
                 <Button type="button" variant="outline" onClick={() => setEditingProduct(null)} className="border-[#e4e0d8]" disabled={editSubmitting}>

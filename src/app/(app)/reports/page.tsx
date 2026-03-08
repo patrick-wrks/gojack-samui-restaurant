@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Download, Calendar, Trash2, FileText } from 'lucide-react';
+import { Download, Calendar, Trash2, FileText, Package } from 'lucide-react';
 import { useOrdersRealtime } from '@/hooks/useOrdersRealtime';
 import { useCurrencySymbol } from '@/store/store-settings-store';
 import { fetchOrdersWithItems, deleteOrder } from '@/lib/orders';
+import { fetchLowStockProducts, fetchStockMovements, type StockMovementRow } from '@/lib/inventory';
 import type { OrderWithItems } from '@/lib/orders';
 import type { PaymentMethod } from '@/types/pos';
+import type { Product } from '@/types/pos';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +45,9 @@ export default function ReportsPage() {
   const [orderToDelete, setOrderToDelete] = useState<{ id: string; orderNumber: number } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [detailOrder, setDetailOrder] = useState<OrderWithItems | null>(null);
+  const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovementRow[]>([]);
+  const [inventorySectionOpen, setInventorySectionOpen] = useState(true);
   const currency = useCurrencySymbol();
 
   // Real-time subscription
@@ -62,6 +67,20 @@ export default function ReportsPage() {
       setLoading(false);
     };
     loadOrders();
+  }, [period, refreshKey, startDate, endDate]);
+
+  // Fetch low stock and stock movements (inventory section)
+  useEffect(() => {
+    const loadInventory = async () => {
+      const { startDate: sDate, endDate: eDate } = getDateRange(period, startDate, endDate);
+      const [lowStock, movements] = await Promise.all([
+        fetchLowStockProducts(),
+        fetchStockMovements(sDate, eDate),
+      ]);
+      setLowStockProducts(lowStock);
+      setStockMovements(movements);
+    };
+    loadInventory();
   }, [period, refreshKey, startDate, endDate]);
 
   // Calculate all metrics from real data
@@ -228,10 +247,89 @@ export default function ReportsPage() {
             กำลังโหลดข้อมูล...
           </div>
         ) : orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-[#9a9288]">
-            <div className="text-4xl mb-3">📊</div>
-            <p>ยังไม่มีข้อมูลออเดอร์ในช่วงเวลานี้</p>
-          </div>
+          <>
+            <div className="flex flex-col items-center justify-center h-64 text-[#9a9288]">
+              <div className="text-4xl mb-3">📊</div>
+              <p>ยังไม่มีข้อมูลออเดอร์ในช่วงเวลานี้</p>
+            </div>
+            {/* Inventory section when no orders */}
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => setInventorySectionOpen((o) => !o)}
+                className="flex items-center gap-2 w-full text-left py-2 px-0 border-0 bg-transparent cursor-pointer"
+              >
+                <Package className="w-4 h-4 text-[#FA3E3E]" />
+                <span className="text-xs font-bold text-[#6b6358] uppercase tracking-wider">
+                  สต็อก / Inventory
+                </span>
+                <span className="text-[10px] text-[#9a9288]">
+                  {inventorySectionOpen ? '▼' : '▶'}
+                </span>
+              </button>
+              {inventorySectionOpen && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="bg-white border border-[#e4e0d8] rounded-[16px] md:rounded-[14px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                    <div className="text-xs font-bold text-[#6b6358] uppercase tracking-wider mb-3">
+                      สต็อกต่ำ / ขายหมด
+                    </div>
+                    {lowStockProducts.length === 0 ? (
+                      <p className="text-sm text-[#9a9288]">ไม่มีรายการสต็อกต่ำ</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {lowStockProducts.map((p) => (
+                          <li key={p.id} className="flex justify-between text-sm">
+                            <span className="text-[#6b6358]">{p.name}</span>
+                            <span
+                              className={
+                                (p.stock_qty ?? 0) <= 0
+                                  ? 'font-bold text-[#dc2626]'
+                                  : 'text-amber-600 font-medium'
+                              }
+                            >
+                              {(p.stock_qty ?? 0) <= 0 ? 'ขายหมด' : `${p.stock_qty} ชิ้น`}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  {stockMovements.length > 0 && (
+                    <div className="bg-white border border-[#e4e0d8] rounded-[16px] md:rounded-[14px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                      <div className="text-xs font-bold text-[#6b6358] uppercase tracking-wider mb-3">
+                        การเคลื่อนไหวสต็อก ({dateRangeLabel})
+                      </div>
+                      <ul className="space-y-1.5 max-h-[180px] overflow-y-auto">
+                        {stockMovements.slice(0, 20).map((m) => (
+                          <li key={m.id} className="text-[11px] text-[#6b6358] flex justify-between gap-2">
+                            <span className="min-w-0 truncate">
+                              {(Array.isArray(m.products) ? m.products[0]?.name : m.products?.name) ?? `#${m.product_id}`}
+                              {' · '}
+                              {m.type === 'sale' ? 'ขาย' : m.type === 'restock' ? 'เติม' : 'ปรับ'}
+                              {m.qty_delta < 0 ? ` -${-m.qty_delta}` : ` +${m.qty_delta}`}
+                            </span>
+                            <span className="text-[#9a9288] shrink-0">
+                              {new Date(m.created_at).toLocaleString('th-TH', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      {stockMovements.length > 20 && (
+                        <p className="text-[10px] text-[#9a9288] mt-2">
+                          แสดง 20 รายการล่าสุด
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
         ) : (
           <>
             {/* Date Range Info */}
@@ -369,6 +467,84 @@ export default function ReportsPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Inventory section: low stock + optional stock movements */}
+            <div className="mb-3">
+              <button
+                type="button"
+                onClick={() => setInventorySectionOpen((o) => !o)}
+                className="flex items-center gap-2 w-full text-left py-2 px-0 border-0 bg-transparent cursor-pointer"
+              >
+                <Package className="w-4 h-4 text-[#FA3E3E]" />
+                <span className="text-xs font-bold text-[#6b6358] uppercase tracking-wider">
+                  สต็อก / Inventory
+                </span>
+                <span className="text-[10px] text-[#9a9288]">
+                  {inventorySectionOpen ? '▼' : '▶'}
+                </span>
+              </button>
+              {inventorySectionOpen && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="bg-white border border-[#e4e0d8] rounded-[16px] md:rounded-[14px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                    <div className="text-xs font-bold text-[#6b6358] uppercase tracking-wider mb-3">
+                      สต็อกต่ำ / ขายหมด
+                    </div>
+                    {lowStockProducts.length === 0 ? (
+                      <p className="text-sm text-[#9a9288]">ไม่มีรายการสต็อกต่ำ</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {lowStockProducts.map((p) => (
+                          <li key={p.id} className="flex justify-between text-sm">
+                            <span className="text-[#6b6358]">{p.name}</span>
+                            <span
+                              className={
+                                (p.stock_qty ?? 0) <= 0
+                                  ? 'font-bold text-[#dc2626]'
+                                  : 'text-amber-600 font-medium'
+                              }
+                            >
+                              {(p.stock_qty ?? 0) <= 0 ? 'ขายหมด' : `${p.stock_qty} ชิ้น`}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  {stockMovements.length > 0 && (
+                    <div className="bg-white border border-[#e4e0d8] rounded-[16px] md:rounded-[14px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                      <div className="text-xs font-bold text-[#6b6358] uppercase tracking-wider mb-3">
+                        การเคลื่อนไหวสต็อก ({dateRangeLabel})
+                      </div>
+                      <ul className="space-y-1.5 max-h-[180px] overflow-y-auto">
+                        {stockMovements.slice(0, 20).map((m) => (
+                          <li key={m.id} className="text-[11px] text-[#6b6358] flex justify-between gap-2">
+                            <span className="min-w-0 truncate">
+                              {(Array.isArray(m.products) ? m.products[0]?.name : m.products?.name) ?? `#${m.product_id}`}
+                              {' · '}
+                              {m.type === 'sale' ? 'ขาย' : m.type === 'restock' ? 'เติม' : 'ปรับ'}
+                              {m.qty_delta < 0 ? ` -${-m.qty_delta}` : ` +${m.qty_delta}`}
+                            </span>
+                            <span className="text-[#9a9288] shrink-0">
+                              {new Date(m.created_at).toLocaleString('th-TH', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      {stockMovements.length > 20 && (
+                        <p className="text-[10px] text-[#9a9288] mt-2">
+                          แสดง 20 รายการล่าสุด
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Recent Orders */}

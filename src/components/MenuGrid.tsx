@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Check, Plus, Minus } from 'lucide-react';
+import { Search, Check, Plus } from 'lucide-react';
 import { useFilteredMenu, getCatColor } from '@/hooks/useFilteredMenu';
 import { useCartStore } from '@/store/cart-store';
 import { useMenuStore, getCategoriesForUI } from '@/store/menu-store';
@@ -28,11 +28,19 @@ function ProductCard({
   const color = getCatColor(product.cat, categories);
   const categoryName = categories.find((c) => c.id === product.cat)?.name ?? product.cat;
   const hasQuantity = quantity > 0;
-  
+  const isOutOfStock = !!(product.track_inventory && (product.stock_qty ?? 0) <= 0);
+  const isLowStock =
+    !isOutOfStock &&
+    !!product.track_inventory &&
+    product.stock_qty != null &&
+    product.low_stock_threshold != null &&
+    product.stock_qty <= product.low_stock_threshold;
+
   return (
     <button
       type="button"
-      onClick={onAdd}
+      onClick={isOutOfStock ? undefined : onAdd}
+      disabled={isOutOfStock}
       className={cn(
         // Compact height for 2-column mobile layout
         'h-[100px] sm:h-[120px]',
@@ -43,13 +51,26 @@ function ProductCard({
         'p-3 sm:p-4',
         'shadow-[0_2px_6px_rgba(0,0,0,0.04)]',
         'transition-all duration-200 ease-out',
-        'hover:border-[#FA3E3E] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
-        'active:scale-[0.97] active:shadow-inner',
-        'text-left cursor-pointer touch-target relative overflow-hidden',
+        !isOutOfStock && 'hover:border-[#FA3E3E] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
+        !isOutOfStock && 'active:scale-[0.97] active:shadow-inner',
+        'text-left touch-target relative overflow-hidden',
+        isOutOfStock ? 'cursor-not-allowed opacity-75 border-[#e4e0d8]' : 'cursor-pointer',
         isRecentlyAdded && 'border-green-500 bg-green-50/30',
-        hasQuantity && !isRecentlyAdded && 'border-[#FA3E3E]/30 bg-[#FA3E3E]/5'
+        hasQuantity && !isRecentlyAdded && !isOutOfStock && 'border-[#FA3E3E]/30 bg-[#FA3E3E]/5'
       )}
     >
+      {/* Sold out badge */}
+      {isOutOfStock && (
+        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-1 bg-[#6b7280] text-white rounded-full text-[10px] sm:text-xs font-bold shadow-md">
+          ขายหมด
+        </div>
+      )}
+      {/* Low stock badge (subtle) */}
+      {isLowStock && !hasQuantity && (
+        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-1 bg-amber-500/90 text-white rounded-full text-[10px] sm:text-xs font-bold shadow-md">
+          สต็อกน้อย
+        </div>
+      )}
       {/* Success overlay for recently added */}
       {isRecentlyAdded && (
         <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center animate-[fadeOut_.5s_ease-out_forwards]">
@@ -60,7 +81,7 @@ function ProductCard({
       )}
       
       {/* Quantity badge - top left (shows if already in order) */}
-      {hasQuantity && (
+      {hasQuantity && !isOutOfStock && (
         <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-0.5 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-[#FA3E3E] text-white rounded-full text-[10px] sm:text-xs font-bold shadow-md">
           <span>{quantity}</span>
           <span className="hidden sm:inline text-[10px] opacity-90">ในออเดอร์</span>
@@ -70,9 +91,9 @@ function ProductCard({
       {/* Add button hint */}
       <div className={cn(
         "absolute bottom-2 right-2 sm:bottom-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-200",
-        hasQuantity 
-          ? "bg-[#FA3E3E] text-white shadow-md" 
-          : "bg-[#f2f0eb] hover:bg-[#FA3E3E] hover:text-white text-[#9a9288]"
+        isOutOfStock && "bg-[#e4e0d8] text-[#9a9288]",
+        !isOutOfStock && hasQuantity && "bg-[#FA3E3E] text-white shadow-md",
+        !isOutOfStock && !hasQuantity && "bg-[#f2f0eb] hover:bg-[#FA3E3E] hover:text-white text-[#9a9288]"
       )}>
         <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
       </div>
@@ -80,7 +101,7 @@ function ProductCard({
       {/* Main content area */}
       <div className={cn(
         "flex flex-col gap-1 pr-6",
-        hasQuantity && "pt-5" // Add padding when badge is shown
+        (hasQuantity || isOutOfStock || isLowStock) && "pt-5" // Add padding when badge is shown
       )}>
         {/* Product name - 2 lines max, smaller on mobile */}
         <h3 className="text-xs sm:text-sm font-semibold text-[#1a1816] leading-tight line-clamp-2-safe">

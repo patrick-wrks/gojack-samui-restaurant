@@ -1,5 +1,6 @@
 import type { CartItem, OrderStatus, PaymentMethod } from '@/types/pos';
 import { supabase } from './supabase';
+import { decrementProductStock } from './inventory';
 
 export interface InsertOrderParams {
   orderNumber: number;
@@ -112,6 +113,10 @@ export async function insertOrder(params: InsertOrderParams): Promise<string> {
   }
 
   console.log('[insertOrder] Order items saved:', rows.length, 'items');
+
+  for (const i of params.items) {
+    await decrementProductStock(i.id, i.qty, order.id);
+  }
 
   return order.id;
 }
@@ -411,6 +416,7 @@ export async function addItemsToOpenOrder(
 /**
  * Complete an open order (checkout): set status, payment_method, and total.
  * Order then appears in reports (status = 'completed').
+ * Decrements product stock for each order item (when track_inventory = true).
  */
 export async function completeOrder(
   orderId: string,
@@ -419,6 +425,19 @@ export async function completeOrder(
 ): Promise<void> {
   if (!supabase) {
     throw new OrderInsertError('Supabase client not configured');
+  }
+
+  const { data: orderItems } = await supabase
+    .from('order_items')
+    .select('product_id, qty')
+    .eq('order_id', orderId);
+
+  if (orderItems?.length) {
+    for (const item of orderItems) {
+      if (item.product_id != null && item.qty > 0) {
+        await decrementProductStock(item.product_id, item.qty, orderId);
+      }
+    }
   }
 
   const { error } = await supabase

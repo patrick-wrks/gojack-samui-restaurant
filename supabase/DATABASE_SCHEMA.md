@@ -14,10 +14,11 @@ This document tracks all database tables, their structure, and RLS policies for 
 2. [Products](#products)
 3. [Orders](#orders)
 4. [Order Items](#order_items)
-5. [Store Settings](#store_settings)
-6. [Realtime Configuration](#realtime-configuration)
-7. [Common Queries](#common-queries)
-8. [Frontend Functions](#frontend-functions)
+5. [Stock Movements](#stock_movements)
+6. [Store Settings](#store_settings)
+7. [Realtime Configuration](#realtime-configuration)
+8. [Common Queries](#common-queries)
+9. [Frontend Functions](#frontend-functions)
 
 ---
 
@@ -28,6 +29,7 @@ This document tracks all database tables, their structure, and RLS policies for 
 - ✅ RLS Policies - Row Level Security for authenticated users
 - ✅ Realtime - Live updates for menu and orders
 - ✅ **Delete Orders** - Remove orders from Reports page (with confirmation dialog)
+- ✅ **Stock inventory** - Track inventory per product; edit on Menu page; decrement on order completion; low-stock and movement reports
 
 ---
 
@@ -63,6 +65,9 @@ Menu items/products.
 | price | NUMERIC(10,2) | NOT NULL, CHECK (price >= 0) | Price in THB |
 | is_active | BOOLEAN | NOT NULL, DEFAULT true | Show/hide in menu |
 | sort_order | INT | NOT NULL, DEFAULT 0 | Display order |
+| track_inventory | BOOLEAN | NOT NULL, DEFAULT false | When true, stock is tracked and decremented on sale |
+| stock_qty | INT | NULL, CHECK (stock_qty IS NULL OR stock_qty >= 0) | Current stock; NULL when not tracking |
+| low_stock_threshold | INT | NULL, CHECK (low_stock_threshold IS NULL OR low_stock_threshold >= 0) | Alert when stock <= this |
 
 **RLS Policy:** `products_authenticated_all` - All authenticated users can read/write
 
@@ -144,6 +149,30 @@ CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id)
 
 ---
 
+## Stock Movements
+
+Audit log of stock changes (sales, adjustments, restocks). Created by `009_inventory.sql`.
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Auto-generated |
+| product_id | BIGINT | NOT NULL, FK → products(id) ON DELETE CASCADE | Product |
+| type | TEXT | NOT NULL, CHECK (type IN ('adjustment', 'sale', 'restock')) | Movement type |
+| qty_delta | INT | NOT NULL | Positive = add, negative = subtract |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | When the movement occurred |
+| order_id | UUID | FK → orders(id) ON DELETE SET NULL | Set for 'sale' when order completes |
+| note | TEXT | | Optional reason |
+
+**RLS Policy:** `stock_movements_authenticated_all` - All authenticated users can read/write
+
+**Indexes:**
+- `idx_stock_movements_product_id` on product_id
+- `idx_stock_movements_created_at` on created_at DESC
+
+**Function:** `decrement_product_stock(p_product_id BIGINT, p_qty INT, p_order_id UUID DEFAULT NULL)` — Atomically decrements product stock when `track_inventory = true`, and inserts a 'sale' row into `stock_movements`. Called from app when an order is completed (POS or Tables checkout).
+
+---
+
 ## Store Settings (Optional)
 
 Bank account and store info for receipts. Check if this exists.
@@ -191,9 +220,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE orders;
 
 ### ✅ Tables That Exist (Verify in Supabase)
 1. categories - Menu categories
-2. products - Menu items
+2. products - Menu items (with inventory columns from 009)
 3. orders - Order headers (POS + table orders; run 005 then 007 for table support)
 4. order_items - Order line items
+5. stock_movements - Stock movement audit (from 009)
 
 ### 📝 Optional Tables
 1. store_settings - Bank info for receipts
@@ -206,10 +236,11 @@ ALTER PUBLICATION supabase_realtime ADD TABLE orders;
 2. ✅ Create products table
 3. ✅ Create orders + order_items (run `005_orders.sql`)
 4. ✅ **Extend orders for table service** (run `007_table_orders.sql` - adds table_number, status 'open', nullable payment_method)
-5. ✅ Enable RLS policies
-6. ✅ Enable realtime
-7. ✅ Seed categories data
-8. ✅ Seed products data
+5. ✅ **Stock inventory** (run `009_inventory.sql` - adds track_inventory, stock_qty, low_stock_threshold to products; creates stock_movements and decrement_product_stock function)
+6. ✅ Enable RLS policies
+7. ✅ Enable realtime
+8. ✅ Seed categories data
+9. ✅ Seed products data
 
 ---
 
@@ -290,5 +321,7 @@ Local migration files in `/supabase/migrations/`:
 - `005_orders.sql` - Orders and order_items
 - `006_store_bank_info.sql` - Store settings
 - `007_table_orders.sql` - Table orders: add `table_number`, extend `status` to 'open', nullable `payment_method`
+- `008_orders_note.sql` - Add `note` to orders
+- `009_inventory.sql` - Products: add `track_inventory`, `stock_qty`, `low_stock_threshold`; create `stock_movements` table and `decrement_product_stock()` function
 
 **Note:** These files are for reference. SQL must be run manually in Supabase Dashboard (or via Supabase CLI).
